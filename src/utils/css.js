@@ -159,7 +159,12 @@ export function getStyleKey(snapshot, tagName) {
   const skipWidth = isInline || INLINE_SIZED_TAGS.has(tagName)
   for (let [prop, value] of Object.entries(snapshot)) {
     if (shouldIgnoreProp(prop)) continue
-    if (skipWidth && (prop === 'width' || prop === 'min-width' || prop === 'max-width')) continue
+    if (skipWidth && (prop === 'width' || prop === 'min-width' || prop === 'max-width')) {
+      if (prop === 'width' && snapshot['_snapdom-pinned-width']) {
+        /* keep pinned layout width for FO parity */
+      } else continue
+    }
+    if (prop.startsWith('_snapdom-')) continue
     const def = defaults[prop]
     if (value && value !== def) entries.push(`${prop}:${value}`)
   }

@@ -2,107 +2,151 @@
   "fresh": {
     "diffs": [
       {
-        "path": "main[0]:\"Checkout \"",
-        "tag": "main",
-        "prop": "height",
-        "live": "689px",
-        "clone": "627px",
-        "snapClass": "c6",
-        "snapCss": "689px"
+        "path": "header[0]:\"ShopDemo1 \"",
+        "tag": "header",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "28px",
+        "snapClass": "c3",
+        "snapCss": "28px"
       },
       {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \"",
-        "tag": "form",
-        "prop": "height",
-        "live": "513px",
-        "clone": "451px",
-        "snapClass": "c8",
-        "snapCss": "(not in class)"
+        "path": "header[0]:\"ShopDemo1 \" > span[0]:\"ShopDemo1\"",
+        "tag": "span",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "38px",
+        "snapClass": "c9",
+        "snapCss": "38px"
+      },
+      {
+        "path": "header[0]:\"ShopDemo1 \" > span[0]:\"ShopDemo1\"",
+        "tag": "span",
+        "prop": "width",
+        "live": "185.156px",
+        "clone": "185.141px",
+        "snapClass": "c9",
+        "snapCss": "185.156px"
+      },
+      {
+        "path": "header[0]:\"ShopDemo1 \" > nav[0]:\"HomeProducts\" > a[0]:\"Home\"",
+        "tag": "a",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "23px",
+        "snapClass": "c1",
+        "snapCss": "23px"
+      },
+      {
+        "path": "header[0]:\"ShopDemo1 \" > nav[0]:\"HomeProducts\" > a[1]:\"Products\"",
+        "tag": "a",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "23px",
+        "snapClass": "c2",
+        "snapCss": "23px"
+      },
+      {
+        "path": "main[0]:\"Checkout \"",
+        "tag": "main",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "28px",
+        "snapClass": "c7",
+        "snapCss": "28px"
       },
       {
         "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[0]:\"Email Address\"",
         "tag": "label",
-        "prop": "height",
-        "live": "153px",
-        "clone": "122px",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "56px",
+        "snapClass": "c11",
+        "snapCss": "56px"
+      },
+      {
+        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[0]:\"Email Address\" > span[0]:\"Email Address\"",
+        "tag": "span",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "56px",
         "snapClass": "c12",
-        "snapCss": "(not in class)"
+        "snapCss": "56px"
       },
       {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[0]:\"Email Address\" > input[0]",
-        "tag": "input",
-        "prop": "height",
-        "live": "87px",
-        "clone": "28px",
-        "snapClass": "c13",
-        "snapCss": "(not in class)"
-      },
-      {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[1]:\"Remember my details\" > input[0]",
-        "tag": "input",
-        "prop": "height",
-        "live": "24px",
-        "clone": "18px",
-        "snapClass": "c14",
-        "snapCss": "(not in class)"
+        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[1]:\"Remember my details\"",
+        "tag": "label",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "56px",
+        "snapClass": "c10",
+        "snapCss": "56px"
       },
       {
         "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[2]:\"Promo Code\"",
         "tag": "label",
-        "prop": "height",
-        "live": "153px",
-        "clone": "122px",
-        "snapClass": "c12",
-        "snapCss": "(not in class)"
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "56px",
+        "snapClass": "c11",
+        "snapCss": "56px"
       },
       {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[2]:\"Promo Code\" > input[0]",
-        "tag": "input",
-        "prop": "height",
-        "live": "87px",
-        "clone": "28px",
-        "snapClass": "c13",
-        "snapCss": "(not in class)"
+        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[2]:\"Promo Code\" > span[0]:\"Promo Code\"",
+        "tag": "span",
+        "prop": "line-height",
+        "live": "normal",
+        "clone": "56px",
+        "snapClass": "c12",
+        "snapCss": "56px"
       }
     ],
-    "matchCount": 95,
-    "diffCount": 7,
+    "matchCount": 227,
+    "diffCount": 11,
     "classCount": 14,
-    "svgBytes": 55929,
+    "svgBytes": 57670,
     "cloneProbe": {
       "hasCaptureId": true,
       "checkoutPage": true,
       "foreignObject": true,
       "foDivs": 2
     },
-    "svgHead": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"498\" height=\"598\" viewBox=\"0 0 498 598\" font-size=\"16px\"><foreignObject xmlns=\"http://www.w3.org/2000/svg\" x=\"0\" y=\"0\" width=\"498\" height=\"598\" style=\"overflow: visible;\"><style xmlns=\"http://www.w3.org/1999/xhtml\">a,label,span { -webkit-border-horizontal-spacing:0px;-webkit-border-image:none;-webkit-border-vertical-spacing:0px;-webkit-box-align:stret",
+    "svgHead": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"498\" height=\"769\" viewBox=\"0 0 498 769\" font-size=\"16px\" style=\"display:block;shape-rendering:geometricPrecision;overflow:visible;\"><foreignObject xmlns=\"http://www.w3.org/2000/svg\" x=\"0\" y=\"0\" width=\"498\" height=\"769\" style=\"overflow: visible;\"><style xmlns=\"http://www.w3.org/1999/xhtml\">a,label,span { -webkit-border-horizontal-spacing:0px;-webkit-bo",
     "sampleClasses": [
       {
         "class": "c8",
-        "display": "flex",
-        "fontSize": "24px"
+        "lineHeight": "96px",
+        "height": "96px",
+        "display": "block",
+        "fontSize": "80px"
       },
       {
         "class": "c10",
+        "lineHeight": "56px",
+        "height": "132px",
         "display": "block",
         "fontSize": "48px"
       },
       {
         "class": "c11",
+        "lineHeight": "56px",
+        "height": "153px",
         "display": "block",
         "fontSize": "48px"
       },
       {
         "class": "c12",
+        "lineHeight": "56px",
         "display": "block",
         "fontSize": "48px"
       },
       {
         "class": "c13",
+        "height": "87px",
         "display": "inline-block",
         "fontSize": "50px"
       }
     ]
   },
-  "generatedAt": "2026-05-26T17:03:38.585Z"
+  "generatedAt": "2026-05-27T15:49:43.389Z"
 }

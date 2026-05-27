@@ -64,6 +64,8 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
   pushNum('box.top', liveMetrics.box.top, cloneMetrics.box.top)
   pushNum('box.bottom', liveMetrics.box.bottom, cloneMetrics.box.bottom)
   pushNum('box.height', liveMetrics.box.height, cloneMetrics.box.height)
+  pushNum('box.width', liveMetrics.box.width, cloneMetrics.box.width)
+  pushNum('box.left', liveMetrics.box.left, cloneMetrics.box.left)
 
   // --- Line box from Range (informational — often equals line-height box, not cap ink) ---
   if (liveMetrics.inkRelBorder && cloneMetrics.inkRelBorder) {
@@ -268,6 +270,8 @@ function buildInputStructureRows(liveMetrics, cloneMetrics, usedHeight) {
   pushNum('box.top', liveMetrics.box.top, cloneMetrics.box.top)
   pushNum('box.bottom', liveMetrics.box.bottom, cloneMetrics.box.bottom)
   pushNum('box.height', liveMetrics.box.height, cloneMetrics.box.height)
+  pushNum('box.width', liveMetrics.box.width, cloneMetrics.box.width)
+  pushNum('box.left', liveMetrics.box.left, cloneMetrics.box.left)
   if (usedHeight) {
     const liveH = parseFloat(usedHeight.live)
     const cloneH = parseFloat(usedHeight.clone)

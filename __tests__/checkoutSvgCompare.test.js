@@ -6,14 +6,17 @@ import {
   compareLayoutToSvg,
   compareEmailFieldMetrics,
   compareLiveCanvasCapInk,
+  compareCheckoutStructure,
   parseClassRules,
   sampleCanvasRegion,
   measureCapInk,
   LENGTH_EQ_EPS,
+  lengthsDifferByTol,
 } from './helpers/svgLiveCompare.js'
 import {
   usesNormalLineHeight,
   measureLayoutLineBoxPx,
+  measureNormalLineHeightPx,
 } from '../src/utils/preciseLineHeight.js'
 import { compareVisualDiff } from './helpers/visualDiff.js'
 
@@ -85,10 +88,117 @@ describe('checkout SVG vs live alignment', () => {
     root = null
   })
 
+  const TEXT_LANDMARK_TITLES = [
+    'Logo',
+    'Nav: Home',
+    'Nav: Products',
+    'Checkout (h2)',
+    'Email Address (label)',
+    'Remember my details',
+    'Promo Code (label)',
+  ]
+
+  it('all checkout elements match layout box vs SVG clone exactly', async () => {
+    const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
+    const { layoutDiffs } = compareLayoutToSvg(root, svg, 0)
+    expect(
+      layoutDiffs,
+      layoutDiffs.length ? JSON.stringify(layoutDiffs.slice(0, 12), null, 2) : '',
+    ).toEqual([])
+  })
+
+  it('max layout drift across all elements is zero (exact)', async () => {
+    const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
+    const { layoutDiffs } = compareLayoutToSvg(root, svg, 0)
+    let max = 0
+    /** @type {import('./helpers/svgLiveCompare.js').LayoutDiff|null} */
+    let worst = null
+    let worstKey = ''
+    for (const d of layoutDiffs) {
+      for (const [key, val] of [
+        ['top', d.deltaTop],
+        ['left', d.deltaLeft],
+        ['width', d.deltaWidth],
+        ['height', d.deltaHeight],
+      ]) {
+        const a = Math.abs(val)
+        if (a > max) {
+          max = a
+          worst = d
+          worstKey = key
+        }
+      }
+    }
+    expect(
+      max,
+      worst ? `${worst.path} Δ${worstKey}=${max}px` : 'no drift',
+    ).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+  })
+
+  it('all text nodes preserve letter-spacing and font-kerning vs SVG clone', async () => {
+    const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
+    const { diffs } = compareLiveToSvg(root, svg, ['letter-spacing', 'font-kerning'])
+    expect(diffs, JSON.stringify(diffs.slice(0, 12), null, 2)).toEqual([])
+  })
+
+  it('landmarks preserve border-box width and kerning-related styles vs SVG clone', async () => {
+    const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
+    const { sections } = compareCheckoutStructure(root, svg)
+    for (const title of TEXT_LANDMARK_TITLES) {
+      const sec = sections.find((s) => s.title === title)
+      expect(sec, title).toBeTruthy()
+      const liveBox = sec.liveMetrics.box
+      const cloneBox = sec.cloneMetrics.box
+      expect(lengthsDifferByTol(cloneBox.width, liveBox.width, 0)).toBe(false)
+      expect(lengthsDifferByTol(cloneBox.left, liveBox.left, 0)).toBe(false)
+      expect(sec.cloneMetrics['letter-spacing']).toBe(sec.liveMetrics['letter-spacing'])
+      expect(sec.cloneMetrics['font-kerning']).toBe(sec.liveMetrics['font-kerning'])
+      const liveAdv = sec.liveMetrics.advanceWidthFull
+      const cloneAdv = sec.cloneMetrics.advanceWidthFull
+      if (typeof liveAdv === 'number' && typeof cloneAdv === 'number') {
+        expect(lengthsDifferByTol(cloneAdv, liveAdv, 0)).toBe(false)
+      }
+    }
+  })
+
+  it('nav links match box and cap ink vs SVG clone (intrinsic normal line-height pin)', async () => {
+    const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
+    const { sections } = compareCheckoutStructure(root, svg)
+    const classMap = parseClassRules(svg)
+    for (const title of ['Nav: Home', 'Nav: Products']) {
+      const sec = sections.find((s) => s.title === title)
+      expect(sec, title).toBeTruthy()
+      const liveEl = sec.liveEl
+      const liveBox = sec.liveMetrics.box
+      const cloneBox = sec.cloneMetrics.box
+      expect(Math.abs(cloneBox.top - liveBox.top)).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+      expect(Math.abs(cloneBox.height - liveBox.height)).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+      expect(sec.liveMetrics['line-height']).toBe('normal')
+
+      const intrinsic = measureNormalLineHeightPx(liveEl, getComputedStyle(liveEl))
+      expect(intrinsic).not.toBeNull()
+      const cls = [...svg.matchAll(new RegExp(`<a[^>]*class="([^"]+)"[^>]*>${title.replace('Nav: ', '')}<`, 'g'))][0]?.[1]
+        ?.split(/\s+/)
+        .find((c) => /^c\d+$/.test(c))
+      expect(cls).toBeTruthy()
+      const rules = classMap.get(cls)
+      const lh = rules?.['line-height']
+      expect(lh).toMatch(/^\d+(\.\d+)?px$/)
+      expect(Math.abs(parseFloat(lh) - (intrinsic ?? 0))).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+      expect(rules?.['align-self']).toBe('flex-start')
+
+      const liveCap = sec.liveMetrics.capInkRelBorder?.top
+      const cloneCap = sec.cloneMetrics.capInkRelBorder?.top
+      if (liveCap != null && cloneCap != null) {
+        expect(Math.abs(cloneCap - liveCap)).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+      }
+    }
+  })
+
   it('pins line-height to painted layout box when author uses normal', async () => {
     const span = root.querySelector('label span')
     const cs = getComputedStyle(span)
-    expect(usesNormalLineHeight(cs, span)).toBe(true)
+    expect(usesNormalLineHeight(cs)).toBe(true)
     const layout = measureLayoutLineBoxPx(cs, span)
     expect(layout).not.toBeNull()
 

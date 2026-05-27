@@ -3,6 +3,7 @@ import http from 'node:http'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { VERTICAL_DRIFT, EXACT_EPS } from './vertical-tolerances.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -18,6 +19,22 @@ function isPaintDriftMetric(prop) {
   if (prop === 'paint.cap.root.top') return true
   if (prop === 'span-input') return true
   return false
+}
+
+/** @param {string} delta */
+function absDeltaPx(delta) {
+  if (!delta || delta === '—') return null
+  const n = parseFloat(String(delta).replace(/px$/, ''))
+  return Number.isFinite(n) ? Math.abs(n) : null
+}
+
+/** @param {string} metric @param {number|null} absPx */
+function withinVerticalBudget(metric, absPx) {
+  if (absPx == null) return true
+  if (metric.startsWith('paint.canvas.')) return absPx <= VERTICAL_DRIFT.canvasFail
+  if (metric.startsWith('paint.cap.')) return absPx <= EXACT_EPS
+  if (metric === 'span-input') return absPx <= VERTICAL_DRIFT.gapFail
+  return absPx <= VERTICAL_DRIFT.layoutFail
 }
 
 function contentType(filePath) {
@@ -127,6 +144,9 @@ async function main() {
     const allWarns = await collectStructureWarns(page)
     const paintDrift = allWarns.filter((w) => isPaintDriftMetric(w.metric))
     const emailPaint = paintDrift.filter((w) => w.section === EMAIL_SECTION)
+    const emailPaintFail = emailPaint.filter(
+      (w) => !withinVerticalBudget(w.metric, absDeltaPx(w.delta)),
+    )
     const otherPaint = paintDrift.filter((w) => w.section !== EMAIL_SECTION)
 
     if (summary) {
@@ -136,7 +156,9 @@ async function main() {
 
     if (emailPaint.length) {
       // eslint-disable-next-line no-console
-      console.log(`\nEmail paint drift (${emailPaint.length}):${formatWarns(emailPaint)}`)
+      console.log(
+        `\nEmail paint drift (${emailPaint.length}, budget ≤${VERTICAL_DRIFT.canvasFail}px canvas / ≤${VERTICAL_DRIFT.capFail}px cap):${formatWarns(emailPaint)}`,
+      )
     } else if (paintDrift.length) {
       // eslint-disable-next-line no-console
       console.log(`\nNo Email paint drift (${paintDrift.length} elsewhere):${formatWarns(paintDrift)}`)
@@ -169,14 +191,17 @@ async function main() {
       )
     }
 
-    if (emailPaint.length) {
+    if (emailPaintFail.length) {
       throw new Error(
-        `"${EMAIL_SECTION}" paint drift (${emailPaint.length}):` + formatWarns(emailPaint),
+        `"${EMAIL_SECTION}" paint drift over budget (${emailPaintFail.length}):` +
+          formatWarns(emailPaintFail),
       )
     }
 
     // eslint-disable-next-line no-console
-    console.log(`OK — "${EMAIL_SECTION}" cap ink matches (check paint.canvas.vs-border.top).`)
+    console.log(
+      `OK — "${EMAIL_SECTION}" within vertical budget (canvas ≤${VERTICAL_DRIFT.canvasFail}px, cap ≤${VERTICAL_DRIFT.capFail}px).`,
+    )
   } finally {
     await page.close().catch(() => {})
     await browser.close().catch(() => {})

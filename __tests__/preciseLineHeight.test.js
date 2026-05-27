@@ -69,6 +69,26 @@ describe('inlineAllStyles line-height capture', () => {
     expect(getStyleKey({ 'line-height': '96px' }, 'h2')).toContain('line-height:96px')
   })
 
+  it('does not pin line-height on flex-stretched nav links', async () => {
+    const nav = document.createElement('nav')
+    nav.style.cssText = 'display:flex;gap:20px;font-size:20px'
+    const a = document.createElement('a')
+    a.href = '#'
+    a.textContent = 'Home'
+    a.style.color = '#666'
+    nav.appendChild(a)
+    document.body.appendChild(nav)
+
+    const clone = a.cloneNode(true)
+    const session = { styleMap: new Map(), styleCache: new WeakMap(), nodeMap: new Map() }
+    await inlineAllStyles(a, clone, session, { cache: 'disabled' })
+
+    document.body.removeChild(nav)
+    expect(clone.style.lineHeight).toBe('')
+    const key = session.styleMap.get(clone) || ''
+    expect(key.includes('line-height:')).toBe(false)
+  })
+
   it('strips auto-derived height on labels wrapping inputs', async () => {
     const label = document.createElement('label')
     label.style.cssText = 'display:block;font-size:48px;font-weight:700;color:#444'

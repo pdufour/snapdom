@@ -3,12 +3,53 @@
  * @module utils/preciseLineHeight
  */
 
+/** Single-line content box height (padding only) — test helper. */
+export function measureLayoutLineBoxPx(style, el) {
+  if (!(el instanceof Element) || el.childElementCount > 0) return null
+  if (!(el.textContent || '').trim()) return null
+  const pad =
+    (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+  const h = el.getBoundingClientRect().height
+  if (h <= pad) return null
+  const content = h - pad
+  return el.scrollHeight <= content + 2 ? content : null
+}
+
 /**
- * Returns the actual px height of the line box for a single-line element.
- * @param {CSSStyleDeclaration} style
+ * Used `line-height: normal` for one line — inline probe, not flex-stretched layout box.
  * @param {Element} el
+ * @param {CSSStyleDeclaration} style
  * @returns {number|null}
  */
+export function measureNormalLineHeightPx(el, style) {
+  if (!(el instanceof Element) || el.childElementCount > 0) return null
+  const text = (el.textContent || '').trim()
+  if (!text) return null
+
+  const probe = document.createElement('span')
+  probe.textContent = text
+  probe.style.cssText =
+    'position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;' +
+    'display:inline-block;margin:0;padding:0;border:0;line-height:normal;white-space:nowrap;'
+  for (const prop of [
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-style',
+    'font-stretch',
+    'font-variant',
+    'letter-spacing',
+    'word-spacing',
+    'text-transform',
+  ]) {
+    probe.style.setProperty(prop, style.getPropertyValue(prop))
+  }
+  document.documentElement.appendChild(probe)
+  const h = probe.getBoundingClientRect().height
+  probe.remove()
+  return h > 0 ? h : null
+}
+
 export function resolveLineHeightPxForCapture(style, el) {
   if (!(el instanceof Element) || el.childElementCount > 0) return null
   const text = (el.textContent || '').trim()

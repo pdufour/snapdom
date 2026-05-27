@@ -17,12 +17,20 @@ const HOST = process.env.HOST ?? '127.0.0.1'
 const PORT = Number(process.env.PORT) || 5174
 
 const PROPS = [
+  'relTop',
+  'relLeft',
   'line-height',
   'height',
+  'width',
   'display',
   'font-size',
   'margin-bottom',
   'font-weight',
+  'vertical-align',
+  'top',
+  'left',
+  'padding-top',
+  'padding-bottom',
 ]
 
 const MIME = {
@@ -193,8 +201,25 @@ async function runCompare(page, svgOverride) {
         const snap = cls ? classMap.get(cls) || {} : {}
 
         for (const prop of PROPS_LIST) {
-          const liveVal = readProp(liveCs, prop)
-          const cloneVal = readProp(cloneCs, prop)
+          let liveVal, cloneVal
+          if (prop === 'relTop') {
+            const rL = liveEl.getBoundingClientRect()
+            const rC = liveRoot.getBoundingClientRect()
+            liveVal = `${(rL.top - rC.top).toFixed(3)}px`
+            const rLc = cloneEl.getBoundingClientRect()
+            const rCc = cloneRoot.getBoundingClientRect()
+            cloneVal = `${(rLc.top - rCc.top).toFixed(3)}px`
+          } else if (prop === 'relLeft') {
+            const rL = liveEl.getBoundingClientRect()
+            const rC = liveRoot.getBoundingClientRect()
+            liveVal = `${(rL.left - rC.left).toFixed(3)}px`
+            const rLc = cloneEl.getBoundingClientRect()
+            const rCc = cloneRoot.getBoundingClientRect()
+            cloneVal = `${(rLc.left - rCc.left).toFixed(3)}px`
+          } else {
+            liveVal = readProp(liveCs, prop)
+            cloneVal = readProp(cloneCs, prop)
+          }
           const snapVal = snap[prop] ?? '(not in class)'
           const row = {
             path: p,

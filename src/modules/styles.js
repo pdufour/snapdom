@@ -1,4 +1,9 @@
-import { resolveLineHeightPxForCapture, usesNormalLineHeight, formatLineHeightPx } from '../utils/preciseLineHeight.js'
+import {
+  resolveLineHeightPxForCapture,
+  measureNormalLineHeightPx,
+  usesNormalLineHeight,
+  formatLineHeightPx,
+} from '../utils/preciseLineHeight.js'
 import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
 
@@ -38,6 +43,61 @@ function setupInvalidationOnce(root = document.documentElement) {
   } catch { }
 }
 
+/**
+ * Item de flex/grid (mirando display del padre, 1 getComputedStyle).
+ * @param {Element} el
+ */
+function isFlexOrGridItem(el) {
+  const p = el.parentElement
+  if (!p) return false
+  const pd = getComputedStyle(p).display || ''
+  return pd.includes('flex') || pd.includes('grid')
+}
+
+/**
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function effectiveCrossAlign(el, style) {
+  const self = style.alignSelf || 'auto'
+  if (self !== 'auto' && self !== 'normal') return self
+  const p = el.parentElement
+  if (!p) return 'stretch'
+  return getComputedStyle(p).alignItems || 'normal'
+}
+
+/**
+ * Flex/grid items stretched on the cross axis: layout box height ≠ line-height.
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function isFlexCrossStretchItem(el, style) {
+  if (!isFlexOrGridItem(el)) return false
+  const cross = effectiveCrossAlign(el, style)
+  if (cross === 'stretch') return true
+  if (cross === 'normal') {
+    const p = el.parentElement
+    const pd = p ? getComputedStyle(p).display || '' : ''
+    return pd.includes('flex')
+  }
+  return false
+}
+
+/** @param {Element} el @param {CSSStyleDeclaration} style */
+function shouldPinLineHeightForCapture(el, style) {
+  return !isFlexCrossStretchItem(el, style)
+}
+
+/** Single-line text in a cross-stretched flex/grid item (nav links, etc.). */
+function isFlexCrossStretchTextLeaf(el, style) {
+  return (
+    isFlexCrossStretchItem(el, style) &&
+    usesNormalLineHeight(style) &&
+    el.childElementCount === 0 &&
+    !!(el.textContent || '').trim()
+  )
+}
+
 function snapshotComputedStyleFull(el, style, options = {}) {
   const out = {}
   const vis = style.getPropertyValue('visibility')
@@ -58,16 +118,40 @@ function snapshotComputedStyleFull(el, style, options = {}) {
 
   // #324: Pin line-height to actual layout box for text-containing elements.
   // This prevents drift when "normal" or relative values resolve differently in SVG.
+  // Skip flex/grid cross-stretch items: layout box height is the flex line, not line-height
+  // (e.g. checkout header nav links); pinning it shifts text vs live.
   const pinLh = options.pinLineHeight !== false
   if (pinLh) {
     const isNormal = usesNormalLineHeight(style)
     const lhVal = style.getPropertyValue('line-height')
     const isRelative = lhVal && !lhVal.endsWith('px') && lhVal !== '0'
 
-    if (isNormal || isRelative) {
+    if (shouldPinLineHeightForCapture(el, style) && (isNormal || isRelative)) {
       const px = resolveLineHeightPxForCapture(style, el)
       if (px !== null) {
         out['line-height'] = formatLineHeightPx(px)
+      }
+    } else if (isFlexCrossStretchTextLeaf(el, style)) {
+      // Cross-stretch: layout box height is flex line size, not line-height. FO must not
+      // re-stretch or pin stretched height — use intrinsic normal + flex-start alignment.
+      const px = measureNormalLineHeightPx(el, style)
+      if (px !== null) {
+        out['line-height'] = formatLineHeightPx(px)
+      }
+      const selfAlign = style.alignSelf || 'auto'
+      if (selfAlign === 'auto' || selfAlign === 'normal' || selfAlign === 'stretch') {
+        out['align-self'] = 'flex-start'
+      }
+      out['height'] = 'auto'
+      out['min-height'] = 'auto'
+    }
+
+    // Pin border-box width on single-line text leaves so FO matches live (avoids 1/128px drift).
+    if (el.childElementCount === 0 && (el.textContent || '').trim()) {
+      const w = el.getBoundingClientRect().width
+      if (Number.isFinite(w) && w > 0) {
+        out['width'] = formatLineHeightPx(w)
+        out['_snapdom-pinned-width'] = '1'
       }
     }
   }
@@ -317,17 +401,6 @@ function hasBox(cs) {
   if ((parseFloat(cs.paddingBottom) || 0) > 0) return true
   const ob = cs.overflowBlock || cs.overflowY || 'visible'
   return ob !== 'visible'
-}
-
-/**
- * Item de flex/grid (mirando display del padre, 1 getComputedStyle).
- * @param {Element} el
- */
-function isFlexOrGridItem(el) {
-  const p = el.parentElement
-  if (!p) return false
-  const pd = getComputedStyle(p).display || ''
-  return pd.includes('flex') || pd.includes('grid')
 }
 
 /**

@@ -1088,6 +1088,18 @@ export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0) {
   const findLabel = (text) => findLiveCloneByText(liveRoot, cloneRoot, text)
 
   addSection('Logo', liveRoot.querySelector('.logo'), cloneRoot?.querySelector('.logo'))
+
+  const liveNav = liveRoot.querySelector('.checkout-header nav')
+  const cloneNav = cloneRoot?.querySelector('.checkout-header nav')
+  if (liveNav && cloneNav) {
+    const liveAnchors = [...liveNav.querySelectorAll('a')]
+    const cloneAnchors = [...cloneNav.querySelectorAll('a')]
+    liveAnchors.forEach((liveA, i) => {
+      const label = (liveA.textContent || '').trim() || `link ${i + 1}`
+      addSection(`Nav: ${label}`, liveA, cloneAnchors[i])
+    })
+  }
+
   addSection('Checkout (h2)', liveRoot.querySelector('h2'), cloneRoot?.querySelector('h2'))
 
   const email = findLabel('Email Address')
