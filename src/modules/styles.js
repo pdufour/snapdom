@@ -1,7 +1,6 @@
 import { resolveLineHeightPxForCapture, usesNormalLineHeight, formatLineHeightPx } from '../utils/preciseLineHeight.js'
 import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
-import { pushDebugLine } from '../utils/debugLog.js'
 
 const snapshotCache = new WeakMap()
 const snapshotKeyCache = new Map()
@@ -69,11 +68,6 @@ function snapshotComputedStyleFull(el, style, options = {}) {
       const px = resolveLineHeightPxForCapture(style, el)
       if (px !== null) {
         out['line-height'] = formatLineHeightPx(px)
-        if (options.debug) {
-          pushDebugLine(`[${el.tagName.toLowerCase()}] pinned layout box line-height: ${out['line-height']}`)
-        }
-      } else if (options.debug) {
-        pushDebugLine(`[${el.tagName.toLowerCase()}] kept line-height: ${lhVal}`)
       }
     }
   }
@@ -89,9 +83,6 @@ function snapshotComputedStyleFull(el, style, options = {}) {
     } catch { /* non-blocking */ }
   }
 
-  if (options.debug) {
-    pushDebugLine(`[${el.tagName.toLowerCase()}] class line-height: ${out['line-height'] || 'n/a'}`)
-  }
     // Asegurar props de decoración de texto (algunos motores no las listan en la iteración)
   const EXTRA_TEXT_DECORATION_PROPS = [
     'text-decoration-line',
