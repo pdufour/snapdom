@@ -271,8 +271,11 @@ export function estimateKeptHeight(container, options) {
   return bt + bb + pt + pb + contentSpan
 }
 
-export const limitDecimals = (v, n = 3) =>
-  Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : v
+export const limitDecimals = (v, n = 6) => {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return v
+  const factor = 10 ** n
+  return Math.round(v * factor) / factor
+}
 
 /**
  * Layout envelope for foreignObject width/height (CSS px).

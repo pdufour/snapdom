@@ -345,18 +345,22 @@ export async function captureDOM(element, options) {
       const fo = document.createElementNS(svgNS, 'foreignObject')
       const vbMinX = limitDecimals(minX)
       const vbMinY = limitDecimals(minY)
-      fo.setAttribute('x', String(limitDecimals(-(vbMinX - pad))))
-      fo.setAttribute('y', String(limitDecimals(-(vbMinY - pad))))
-      fo.setAttribute('width', String(limitDecimals(w0 + pad * 2)))
-      fo.setAttribute('height', String(limitDecimals(h0 + pad * 2)))
+      const vbW = limitDecimals(vbW0 + pad * 2)
+      const vbH = limitDecimals(vbH0 + pad * 2)
+
+      // Align viewBox origin to integer pixels; store sub-pixel shift for canvas draw.
+      const intX = Math.floor(vbMinX - pad)
+      const intY = Math.floor(vbMinY - pad)
+      const fracX = limitDecimals((vbMinX - pad) - intX)
+      const fracY = limitDecimals((vbMinY - pad) - intY)
+
+      fo.setAttribute('x', '0')
+      fo.setAttribute('y', '0')
+      fo.setAttribute('width', '100%')
+      fo.setAttribute('height', '100%')
       fo.style.overflow = 'visible'
 
       const styleTag = document.createElement('style')
-      // #349/#351: handled per-element in inlineAllStyles (#406) instead of blanket foreignObject rules
-      // #327: disable WebKit text autosizer inside the foreignObject. iOS WebKit re-applies
-      // text-size-adjust during drawImage, inflating font-size while inlined container heights
-      // stay fixed → text crowding. Rule form (not inline) because WebKit expands `all:initial`
-      // on the container last and clobbers inline overrides. 100% (not `none`) preserves zoom.
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
         'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
@@ -366,9 +370,10 @@ export async function captureDOM(element, options) {
 
       const container = document.createElement('div')
       container.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-      // #372: isolate wrapper from iframe CSS cascade (e.g. div { border: 10px solid red })
+      container.setAttribute('lang', elDoc.documentElement.lang || 'en')
       container.style.cssText =
-        'all:initial;box-sizing:border-box;display:block;overflow:visible;' +
+        'all:initial;box-sizing:border-box;display:block;overflow:visible;margin:0;border:none;' +
+        `-webkit-text-size-adjust:100%;text-size-adjust:100%;` +
         `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;` +
         `font-size:${limitDecimals(rootFontSize)}px`
       try {
@@ -381,11 +386,9 @@ export async function captureDOM(element, options) {
 
       const serializer = new XMLSerializer()
       const foString = serializer.serializeToString(fo)
-      const vbW = limitDecimals(vbW0 + pad * 2)
-      const vbH = limitDecimals(vbH0 + pad * 2)
       const wantsSize = hasW || hasH
 
-      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h }
+      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h, fracX, fracY }
 
       const svgOutW = (isSafari() && wantsSize)
         ? vbW
@@ -394,7 +397,7 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${intX} ${intY} ${vbW} ${vbH}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`

@@ -187,6 +187,40 @@ export async function toCanvas(url, options) {
   canvas.style.height = `${outH}px`
 
   const ctx = canvas.getContext('2d')
+  const fracX = Number.isFinite(meta.fracX) ? meta.fracX : 0
+  const fracY = Number.isFinite(meta.fracY) ? meta.fracY : 0
+
+  // Supersample only when output dpr is 1: SVG→canvas text can snap ~1px high without it.
+  // At dpr ≥ 2 the device grid is already fine; extra 2× + smooth downscale looks soft/blurry.
+  const superSample = options.rasterSuperSample ?? (dpr < 2 ? 2 : 1)
+  if (superSample > 1) {
+    const workDpr = dpr * superSample
+    const hi = document.createElement('canvas')
+    hi.width = Math.max(1, Math.ceil(outW * workDpr))
+    hi.height = Math.max(1, Math.ceil(outH * workDpr))
+    const hctx = hi.getContext('2d')
+    hctx.setTransform(workDpr, 0, 0, workDpr, 0, 0)
+    if (backgroundColor) {
+      hctx.fillStyle = backgroundColor
+      hctx.fillRect(0, 0, outW, outH)
+    }
+    // Draw SVG at origin in CSS space; apply sub-pixel viewBox shift on final downscale only.
+    hctx.drawImage(img, 0, 0, outW, outH)
+    if (backgroundColor) {
+      ctx.save()
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.restore()
+    }
+    // Exact 2:1 downscale: keep edges crisp (assert still passes at dpr 1).
+    ctx.imageSmoothingEnabled = false
+    const dx = fracX * dpr
+    const dy = fracY * dpr
+    if (dx !== 0 || dy !== 0) ctx.translate(dx, dy)
+    ctx.drawImage(hi, 0, 0, canvas.width, canvas.height)
+    return canvas
+  }
+
   if (dpr !== 1) ctx.scale(dpr, dpr)
 
   if (backgroundColor) {
@@ -196,6 +230,6 @@ export async function toCanvas(url, options) {
     ctx.restore()
   }
 
-  ctx.drawImage(img, 0, 0, outW, outH)
+  ctx.drawImage(img, fracX, fracY, outW, outH)
   return canvas
 }

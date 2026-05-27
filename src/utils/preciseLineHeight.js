@@ -14,6 +14,16 @@
   const text = (el.textContent || '').trim()
   if (!text) return null
 
+  // Author "normal" still has a used px value in computed style; prefer it over
+  // getBoundingClientRect height which can round down and skew FO/canvas text paint.
+  if (usesNormalLineHeight(style)) {
+    const lhUsed = style.lineHeight
+    if (lhUsed && lhUsed !== 'normal') {
+      const px = parseFloat(lhUsed)
+      if (Number.isFinite(px) && px > 0) return px
+    }
+  }
+
   const rect = el.getBoundingClientRect()
   const pt = parseFloat(style.paddingTop) || 0
   const pb = parseFloat(style.paddingBottom) || 0

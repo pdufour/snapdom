@@ -7,6 +7,13 @@ import {
 /** Report metadata: numeric rows use {@link LENGTH_EQ_EPS} float-safe equality (no px slack budget). */
 const STRUCTURE_EXACT_TOLERANCE = 0
 
+/** Same device-pixel grid as canvas raster (cap model can be subpixel). */
+function onCanvasDeviceGrid(v, dpr = 1) {
+  if (!Number.isFinite(v)) return v
+  const grid = Math.max(1, dpr)
+  return Math.round(v * grid) / grid
+}
+
 /**
  * Readable names for Canvas `TextMetrics`-derived snapshot fields ({@see measureFontBoxPx}).
  * @type {[snapshotKey: string, label: string][]}
@@ -34,8 +41,9 @@ const CANVAS_FONT_METRIC_ROWS = [
  * @param {object|null} cloneMetrics
  * @param {{ live: number, clone: number }|null|undefined} siblingGap
  * @param {{ topInBorder: number, bottomInBorder?: number, height?: number }|null|undefined} canvasCapInk
+ * @param {number} [dpr]
  */
-function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCapInk = null) {
+function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCapInk = null, dpr = 1) {
   if (!liveMetrics || !cloneMetrics) return []
 
   /** @type {{ prop: string, live: string|number|null, clone: string|number|null, delta: number|null }[]} */
@@ -94,13 +102,13 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
   if (liveMetrics.capInkRelBorder && canvasCapInk) {
     pushNum(
       'paint.canvas.vs-border.top',
-      liveMetrics.capInkRelBorder.top,
-      canvasCapInk.topInBorder,
+      onCanvasDeviceGrid(liveMetrics.capInkRelBorder.top, dpr),
+      onCanvasDeviceGrid(canvasCapInk.topInBorder, dpr),
     )
     pushNum(
       'paint.canvas.vs-border.height',
-      liveMetrics.capInkRelBorder.height,
-      canvasCapInk.height ?? null,
+      onCanvasDeviceGrid(liveMetrics.capInkRelBorder.height, dpr),
+      onCanvasDeviceGrid(canvasCapInk.height ?? NaN, dpr),
     )
   }
   // Same cap ink, root-relative (for overlay alignment)
@@ -109,7 +117,11 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
     pushNum('paint.cap.root.bottom', liveMetrics.capInk.bottom, cloneMetrics.capInk.bottom)
   }
   if (liveMetrics.capInk && canvasCapInk) {
-    pushNum('paint.canvas.root.top', liveMetrics.capInk.top, canvasCapInk.top)
+    pushNum(
+      'paint.canvas.root.top',
+      onCanvasDeviceGrid(liveMetrics.capInk.top, dpr),
+      onCanvasDeviceGrid(canvasCapInk.top, dpr),
+    )
   }
 
   // --- Legacy alias (line box) ---
@@ -308,6 +320,7 @@ export function buildCheckoutStructureReport(root, svgMarkup, opts = {}) {
               sec.cloneMetrics,
               sec.siblingGap,
               canvasCapInk,
+              dpr,
             ),
     }
   })

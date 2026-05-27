@@ -24,13 +24,14 @@ function measureLayoutLineBoxPx(style, el) {
 function resolveLineHeightPx(style, el = null) {
   const fs = parseFloat(style.fontSize) || 16
   let px = NaN
+  const gp = (style.getPropertyValue('line-height') || '').trim()
+  const authorNormal = gp === 'normal' || gp === ''
   const lhUsed = style.lineHeight
   if (lhUsed && lhUsed !== 'normal') {
     const n = parseFloat(lhUsed)
     if (Number.isFinite(n) && n > 0) px = n
   }
-  if (!Number.isFinite(px)) {
-    const gp = (style.getPropertyValue('line-height') || '').trim()
+  if (!Number.isFinite(px) && !authorNormal) {
     if (gp && gp !== 'normal') {
       if (gp.endsWith('px')) px = parseFloat(gp)
       else if (gp.endsWith('%')) px = (parseFloat(gp) / 100) * fs
