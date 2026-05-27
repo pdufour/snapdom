@@ -274,6 +274,32 @@ export function estimateKeptHeight(container, options) {
 export const limitDecimals = (v, n = 3) =>
   Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : v
 
+/**
+ * Layout envelope for foreignObject width/height (CSS px).
+ * Covers fractional getBoundingClientRect extent and integer offset sizes so the
+ * FO box is never shorter than the painted layout (avoids ~1 device px vertical drift).
+ *
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} [cs]
+ * @returns {{ width: number, height: number }}
+ */
+export function captureLayoutEnvelopePx(el, cs) {
+  const style = cs || getComputedStyle(el)
+  const rect = el.getBoundingClientRect()
+  const offsetW = el.offsetWidth || 0
+  const offsetH = el.offsetHeight || 0
+  const parsedW = parseFloat(style.width) || 0
+  const parsedH = parseFloat(style.height) || 0
+  const rectW = rect.width || 0
+  const rectH = rect.height || 0
+  const w = Math.max(offsetW, parsedW, rectW)
+  const h = Math.max(offsetH, parsedH, rectH)
+  return {
+    width: Math.max(1, limitDecimals(Math.ceil(w - 1e-6))),
+    height: Math.max(1, limitDecimals(Math.ceil(h - 1e-6))),
+  }
+}
+
 /** Match ::-webkit-scrollbar and related pseudos (#334) */
 const SCROLLBAR_PSEUDO = /::-webkit-scrollbar(-[a-z]+)?\b/i
 

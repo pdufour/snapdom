@@ -19,7 +19,8 @@ import {
   shrinkAutoSizeBoxes,
   estimateKeptHeight,
   limitDecimals,
-  collectScrollbarCSS
+  collectScrollbarCSS,
+  captureLayoutEnvelopePx,
 } from '../utils/capture.helpers.js'
 import {
   parseBoxShadow,
@@ -182,12 +183,15 @@ export async function captureDOM(element, options) {
     idle(() => {
       const csEl = getStyle(state.element)
 
-      const rect = state.element.getBoundingClientRect()
-      let w0 = Math.max(1, limitDecimals(state.element.offsetWidth || parseFloat(csEl.width) || rect.width || 1))
-      let h0 = Math.max(1, limitDecimals(state.element.offsetHeight || parseFloat(csEl.height) || rect.height || 1))
+      const envelope = captureLayoutEnvelopePx(state.element, csEl)
+      let w0 = envelope.width
+      let h0 = envelope.height
       // body/documentElement: measure clone in-document to get true content height (Chrome clamps offset/scroll)
       // Use element's ownerDocument for iframe support (#371)
       const elDoc = state.element.ownerDocument || document
+      const rootCs = getStyle(elDoc.documentElement)
+      const rootFontSize = parseFloat(rootCs?.fontSize) || 16
+      const rootFontFamily = rootCs?.fontFamily || 'sans-serif'
       const isRoot = state.element === elDoc.body || state.element === elDoc.documentElement
       if (isRoot) {
         const docH = Math.max(
@@ -355,7 +359,7 @@ export async function captureDOM(element, options) {
       // on the container last and clobbers inline overrides. 100% (not `none`) preserves zoom.
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
-        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}'
+        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
       styleTag.textContent =
         (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
       fo.appendChild(styleTag)
@@ -365,7 +369,11 @@ export async function captureDOM(element, options) {
       // #372: isolate wrapper from iframe CSS cascade (e.g. div { border: 10px solid red })
       container.style.cssText =
         'all:initial;box-sizing:border-box;display:block;overflow:visible;' +
-        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px`
+        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;` +
+        `font-size:${limitDecimals(rootFontSize)}px`
+      try {
+        container.style.setProperty('font-family', rootFontFamily)
+      } catch { /* non-blocking */ }
 
       //state.clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
       container.appendChild(state.clone)
@@ -386,8 +394,7 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const rootFontSize = parseFloat(getStyle(elDoc.documentElement)?.fontSize) || 16
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px" style="shape-rendering:geometricPrecision">`
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`

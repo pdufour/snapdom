@@ -8,7 +8,8 @@ import {
   shrinkAutoSizeBoxes,
   estimateKeptHeight,
   limitDecimals,
-  collectScrollbarCSS
+  collectScrollbarCSS,
+  captureLayoutEnvelopePx,
 } from '../src/utils/capture.helpers.js'
 
 beforeEach(() => {
@@ -154,6 +155,31 @@ describe('limitDecimals', () => {
   it('returns v unchanged for non-finite', () => {
     expect(limitDecimals(NaN)).toBeNaN()
     expect(limitDecimals(Infinity)).toBe(Infinity)
+  })
+})
+
+describe('captureLayoutEnvelopePx', () => {
+  it('ceils fractional getBoundingClientRect above integer offsetHeight', () => {
+    const el = document.createElement('div')
+    el.style.cssText = 'width:100px;height:80px;font-size:14px;line-height:1.4'
+    el.textContent = 'line'
+    document.body.appendChild(el)
+    const cs = getComputedStyle(el)
+    const offsetH = el.offsetHeight
+    const rectH = el.getBoundingClientRect().height
+    const env = captureLayoutEnvelopePx(el, cs)
+    document.body.removeChild(el)
+    expect(env.width).toBeGreaterThanOrEqual(100)
+    expect(env.height).toBeGreaterThanOrEqual(Math.max(offsetH, Math.ceil(rectH - 1e-6)))
+  })
+
+  it('returns at least 1px for tiny elements', () => {
+    const el = document.createElement('span')
+    document.body.appendChild(el)
+    const env = captureLayoutEnvelopePx(el)
+    document.body.removeChild(el)
+    expect(env.width).toBeGreaterThanOrEqual(1)
+    expect(env.height).toBeGreaterThanOrEqual(1)
   })
 })
 
