@@ -200,7 +200,6 @@ export function usesNormalLineHeight(style, el = null) {
 
   const gp = (style.getPropertyValue('line-height') || '').trim()
   if (!gp || gp === 'normal' || style.lineHeight === 'normal') return true
-  if (EXPLICIT_LH_RE.test(gp) || UNITLESS_LH_RE.test(gp)) return false
 
   // Some engines resolve `normal` to px in getPropertyValue; treat as normal when
   // it matches font-metric line box and the element has no inline line-height.
@@ -214,6 +213,9 @@ export function usesNormalLineHeight(style, el = null) {
     }
   }
 
+  // If the engine gave us a concrete length/number and it didn't match the heuristics,
+  // treat it as authored (not `normal`).
+  if (EXPLICIT_LH_RE.test(gp) || UNITLESS_LH_RE.test(gp)) return false
   return false
 }
 
