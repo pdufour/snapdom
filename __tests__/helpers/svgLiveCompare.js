@@ -1,4 +1,8 @@
-import { resolveLineHeightPx } from '../../src/utils/preciseLineHeight.js'
+import {
+  resolveLineHeightPx,
+  measureLayoutLineBoxPx,
+  usesNormalLineHeight,
+} from '../../src/utils/preciseLineHeight.js'
 
 /**
  * Numeric length equality for geometry from browser APIs (`tolPx` 0).
@@ -465,7 +469,14 @@ export function measureFontMetricInk(el, root, fontBoxPre = null) {
 
   const borderTop = parseFloat(cs.borderTopWidth) || 0
   const paddingTop = parseFloat(cs.paddingTop) || 0
-  const lineHeightPx = resolveLineHeightPx(cs, el)
+  let lineHeightPx = resolveLineHeightPx(cs, el)
+  /** Match {@link pinLineHeightPx}: `normal` is pinned using painted layout box, not typed-OM / font fallback. */
+  if (usesNormalLineHeight(cs, el)) {
+    const layoutLh = measureLayoutLineBoxPx(cs, el)
+    if (layoutLh != null && layoutLh > 0) {
+      lineHeightPx = layoutLh
+    }
+  }
   const halfLeading = Math.max(0, (lineHeightPx - fontBox.height) / 2)
   const contentTop = box.top + borderTop + paddingTop
   const top = contentTop + halfLeading
