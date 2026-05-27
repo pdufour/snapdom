@@ -29,67 +29,42 @@ async function main() {
   const port = server.address().port
 
   const browser = await chromium.launch()
-  const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 4 })
+  const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 2 })
   
   await page.goto(`http://127.0.0.1:${port}/__localtests__/lh-debug.html`)
   
   const testStrategy = async (name, setupFn) => {
-    return await page.evaluate(async ({ strategyName, setupCode }) => {
-      const { snapdom } = await import('/dist/snapdom.mjs')
+    await page.evaluate((setupCode) => {
       const target = document.getElementById('target')
       const label = document.getElementById('target-label')
-      
-      // Reset
       target.style.cssText = ''
       label.style.cssText = 'display: block; font-size: 48px; font-weight: 700; color: #444; margin: 0 0 25px 0; letter-spacing: normal;'
+      const setupCodeFn = new Function('target', 'label', setupCode)
+      setupCodeFn(target, label)
+    }, setupFn)
+
+    const emailHandle = await page.locator('#target')
+    const livePng = await emailHandle.screenshot()
+    
+    return await page.evaluate(async ({ strategyName, livePngBase64 }) => {
+      const { snapdom } = await import('/dist/snapdom.mjs')
+      const target = document.getElementById('target')
       
-      // Apply strategy
-      eval(setupCode)
-      
-      const el = document.getElementById('test')
-      const tr = el.getBoundingClientRect()
-      
-      // We manually build a special SVG to test the strategy
-      const svgNS = "http://www.w3.org/2000/svg"
-      const svg = document.createElementNS(svgNS, "svg")
-      svg.setAttribute("width", tr.width)
-      svg.setAttribute("height", tr.height)
-      
-      // STRATEGY: Fractional ViewBox
-      if (strategyName === 'frac-vb') {
-         svg.setAttribute("viewBox", "0.18 0.18 " + tr.width + " " + tr.height)
-      } else {
-         svg.setAttribute("viewBox", "0 0 " + tr.width + " " + tr.height)
-      }
-      
-      const fo = document.createElementNS(svgNS, "foreignObject")
-      fo.setAttribute("x", "0")
-      fo.setAttribute("y", "0")
-      fo.setAttribute("width", "100%")
-      fo.setAttribute("height", "100%")
-      
-      const clone = el.cloneNode(true)
-      fo.appendChild(clone)
-      svg.appendChild(fo)
-      
-      const svgText = new XMLSerializer().serializeToString(svg)
-      const svgUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText)
-      
-      async function measureInk(urlOrB64, w, h) {
+      async function measureInk(urlOrB64) {
         const img = new Image()
-        img.src = urlOrB64
+        img.src = urlOrB64.startsWith('data:') ? urlOrB64 : `data:image/png;base64,${urlOrB64}`
         await new Promise(r => img.onload = r)
         const canvas = document.createElement('canvas')
         const dpr = window.devicePixelRatio || 1
-        canvas.width = Math.round(w * dpr)
-        canvas.height = Math.round(h * dpr)
+        canvas.width = img.width
+        canvas.height = img.height
         const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0)
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
         let firstY = -1
         for (let i = 0; i < canvas.height; i++) {
           for (let j = 0; j < canvas.width; j++) {
-            if (data[(i * canvas.width + j) * 4 + 3] > 50) {
+            if (data[(i * canvas.width + j) * 4 + 3] > 10) {
               firstY = i
               break
             }
@@ -99,17 +74,22 @@ async function main() {
         return firstY / dpr
       }
 
-      const rasterInkTop = await measureInk(svgUrl, tr.width, tr.height)
+      const liveInkTop = await measureInk(livePngBase64)
+      const targetCanvas = await snapdom.toCanvas(target, { embedFonts: true })
+      const rasterInkTop = await measureInk(targetCanvas.toDataURL())
       
       return {
         strategy: strategyName,
-        rasterInkTop
+        liveInkTop,
+        rasterInkTop,
+        drift: rasterInkTop - liveInkTop
       }
-    }, { strategyName: name, setupCode: setupFn })
+    }, { strategyName: name, livePngBase64: livePng.toString('base64') })
   }
   
-  console.log(await testStrategy('integer', ''))
-  console.log(await testStrategy('frac-vb', ''))
+  console.log(await testStrategy('normal', ''))
+  console.log(await testStrategy('lh-0.999-flex', 'target.style.display = "inline-flex"; target.style.alignItems = "center"; target.style.lineHeight = "0.999"; target.style.height = "56px"; target.style.verticalAlign = "top"'))
+  console.log(await testStrategy('lh-0.999-pad', 'target.style.display = "inline-block"; target.style.lineHeight = "0.999"; target.style.paddingTop = "4.024px"; target.style.verticalAlign = "top"'))
 
   await browser.close()
   server.close()

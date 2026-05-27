@@ -69,11 +69,6 @@ function snapshotComputedStyleFull(el, style, options = {}) {
       const px = resolveLineHeightPxForCapture(style, el)
       if (px !== null) {
         out['line-height'] = formatLineHeightPx(px)
-        if (options.debug) {
-          pushDebugLine(`[${el.tagName.toLowerCase()}] pinned layout box line-height: ${out['line-height']}`)
-        }
-      } else if (options.debug) {
-        pushDebugLine(`[${el.tagName.toLowerCase()}] kept line-height: ${lhVal}`)
       }
     }
   }
@@ -89,9 +84,6 @@ function snapshotComputedStyleFull(el, style, options = {}) {
     } catch { /* non-blocking */ }
   }
 
-  if (options.debug) {
-    pushDebugLine(`[${el.tagName.toLowerCase()}] class line-height: ${out['line-height'] || 'n/a'}`)
-  }
     // Asegurar props de decoración de texto (algunos motores no las listan en la iteración)
   const EXTRA_TEXT_DECORATION_PROPS = [
     'text-decoration-line',
@@ -244,7 +236,7 @@ function normalizeInlineStyleToComputed(source, clone, computed) {
   }
 }
 
-export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
+export function inlineAllStyles(source, clone, sessionOrCtx, opts) {
   if (source.tagName === 'STYLE') return
 
   const ctx = _resolveCtx(sessionOrCtx, opts)
@@ -254,7 +246,7 @@ export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
 
   if (resetMode === 'disabled' && !ctx.session.__bumpedForDisabled) {
     bumpEpoch()
-    snapshotKeyCache.clear()
+    ctx.persist.snapshotKeyCache.clear()
     ctx.session.__bumpedForDisabled = true
   }
 
@@ -292,12 +284,13 @@ export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
   const sig = styleSignature(snap)
   let key = persist.snapshotKeyCache.get(sig)
   if (!key) {
-    const tag = source.tagName?.toLowerCase() || 'div'
+    const tag = source.localName || source.tagName?.toLowerCase() || 'div'
     key = getStyleKey(snap, tag)
     persist.snapshotKeyCache.set(sig, key)
   }
   session.styleMap.set(clone, key)
 }
+
 /**
  * @param {Element} el
  * @returns {boolean}
@@ -373,7 +366,7 @@ function stripHeightForWrappers(el, cs, snap) {
   if (el instanceof HTMLElement && el.style && el.style.height) return
 
   // 2) Solo div/section/article/main/aside/header/footer/nav (no ol/ul/li: layout de listas)
-  const tag = el.tagName && el.tagName.toLowerCase()
+  const tag = el.localName || el.tagName?.toLowerCase()
   const ALLOWED_TAGS = ['div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav', 'span', 'label']
   if (!tag || !ALLOWED_TAGS.includes(tag)) return
 

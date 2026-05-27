@@ -1,5 +1,5 @@
 /**
- * Core logic for capturing DOM elements as SVG data URLs.
+ * Core logic for capturing DOM elements as SVG data URL.
  * @module capture
  */
 
@@ -341,31 +341,38 @@ export async function captureDOM(element, options) {
       const fo = document.createElementNS(svgNS, 'foreignObject')
       const vbMinX = limitDecimals(minX)
       const vbMinY = limitDecimals(minY)
-      fo.setAttribute('x', String(limitDecimals(-(vbMinX - pad))))
-      fo.setAttribute('y', String(limitDecimals(-(vbMinY - pad))))
-      fo.setAttribute('width', String(limitDecimals(w0 + pad * 2)))
-      fo.setAttribute('height', String(limitDecimals(h0 + pad * 2)))
+      const vbW = limitDecimals(vbW0 + pad * 2)
+      const vbH = limitDecimals(vbH0 + pad * 2)
+
+      // #Snapping-Fix: Align SVG ViewBox origin to integer pixels to avoid browser-level snapping.
+      // Store the fractional sub-pixel shift in metadata for the drawer to handle.
+      const intX = Math.floor(vbMinX - pad)
+      const intY = Math.floor(vbMinY - pad)
+      const fracX = limitDecimals((vbMinX - pad) - intX)
+      const fracY = limitDecimals((vbMinY - pad) - intY)
+
+      fo.setAttribute('x', '0')
+      fo.setAttribute('y', '0')
+      fo.setAttribute('width', '100%')
+      fo.setAttribute('height', '100%')
       fo.style.overflow = 'visible'
 
       const styleTag = document.createElement('style')
-      // #349/#351: handled per-element in inlineAllStyles (#406) instead of blanket foreignObject rules
-      // #327: disable WebKit text autosizer inside the foreignObject. iOS WebKit re-applies
-      // text-size-adjust during drawImage, inflating font-size while inlined container heights
-      // stay fixed → text crowding. Rule form (not inline) because WebKit expands `all:initial`
-      // on the container last and clobbers inline overrides. 100% (not `none`) preserves zoom.
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
-        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}'
+        '* { text-rendering: geometricPrecision !important; -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; }'
       styleTag.textContent =
         (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
       fo.appendChild(styleTag)
 
       const container = document.createElement('div')
       container.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-      // #372: isolate wrapper from iframe CSS cascade (e.g. div { border: 10px solid red })
+      container.setAttribute('lang', elDoc.documentElement.lang || 'en')
+      // Cleanest isolation. Element is at its document coordinates.
       container.style.cssText =
-        'all:initial;box-sizing:border-box;display:block;overflow:visible;' +
-        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px`
+        'all:initial;box-sizing:border-box;display:block;overflow:visible;margin:0;border:none;' +
+        `-webkit-text-size-adjust:100%;text-size-adjust:100%;` +
+        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;`
 
       //state.clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
       container.appendChild(state.clone)
@@ -373,11 +380,10 @@ export async function captureDOM(element, options) {
 
       const serializer = new XMLSerializer()
       const foString = serializer.serializeToString(fo)
-      const vbW = limitDecimals(vbW0 + pad * 2)
-      const vbH = limitDecimals(vbH0 + pad * 2)
       const wantsSize = hasW || hasH
 
-      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h }
+      // Store fractional offset for precise canvas draw alignment
+      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h, fracX, fracY }
 
       const svgOutW = (isSafari() && wantsSize)
         ? vbW
@@ -387,7 +393,8 @@ export async function captureDOM(element, options) {
         : limitDecimals(outH + pad * 2)
 
       const rootFontSize = parseFloat(getStyle(elDoc.documentElement)?.fontSize) || 16
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px" style="shape-rendering:geometricPrecision">`
+      // Use integer viewBox for stability. Content starts at intX, intY.
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${intX} ${intY} ${vbW} ${vbH}" font-size="${rootFontSize}px" style="text-rendering:geometricPrecision">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`

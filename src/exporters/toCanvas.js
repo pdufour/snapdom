@@ -196,6 +196,10 @@ export async function toCanvas(url, options) {
     ctx.restore()
   }
 
-  ctx.drawImage(img, 0, 0, outW, outH)
+  const fracX = Number.isFinite(meta.fracX) ? meta.fracX : 0
+  const fracY = Number.isFinite(meta.fracY) ? meta.fracY : 0
+
+  // Apply fractional sub-pixel shift to restore doc coordinate precision
+  ctx.drawImage(img, fracX, fracY, outW, outH)
   return canvas
 }

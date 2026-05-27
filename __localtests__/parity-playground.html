@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Snapdom Sub-Pixel Parity Playground (High Velocity)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { font-size: 20px; margin-bottom: 10px; }
+    .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+    button { padding: 8px 16px; cursor: pointer; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-weight: 600; }
+    button:disabled { background: #94a3b8; }
+    
+    #host { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+      gap: 10px; 
+      background: #fff; 
+      padding: 10px; 
+      border-radius: 8px;
+    }
+    
+    .test-case {
+      border: 1px solid #eee;
+      padding: 5px;
+      position: relative;
+      background: #fff;
+    }
+    
+    .test-label {
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .target-wrap {
+      background: #fff;
+      border: 1px dashed #ddd;
+    }
+    
+    .target {
+      font-size: 32px;
+      font-weight: 700;
+      color: #111;
+      background: rgba(0,0,0,0.03);
+    }
+    
+    .results {
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 12px;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .drift-zero { color: #4ade80; }
+    .drift-bad { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>Sub-Pixel Parity Playground</h1>
+  <div class="controls">
+    <button id="btn-generate">Generate 500 Tests</button>
+    <button id="btn-verify" disabled>Verify All (Massive Scan)</button>
+    <span id="status"></span>
+  </div>
+  
+  <div id="host"></div>
+  <div id="results" class="results" style="display: none;"></div>
+
+  <script type="module">
+    const host = document.getElementById('host');
+    const btnGenerate = document.getElementById('btn-generate');
+    const btnVerify = document.getElementById('btn-verify');
+    const results = document.getElementById('results');
+    const status = document.getElementById('status');
+
+    const L_HEIGHTS = ['normal', '1', '0.9', '0.99', '0.999'];
+    const V_ALIGNS = ['top', 'middle', 'baseline'];
+    const DISPLAYS = ['block', 'inline-block'];
+    const OFFSETS = [0, 0.18, 0.25, 0.5, 0.75];
+
+    let testCount = 0;
+
+    btnGenerate.onclick = () => {
+      host.innerHTML = '';
+      testCount = 0;
+      const combos = [];
+      for (const lh of L_HEIGHTS) {
+        for (const va of V_ALIGNS) {
+          for (const disp of DISPLAYS) {
+            for (const off of OFFSETS) {
+              combos.push({ lh, va, disp, off });
+            }
+          }
+        }
+      }
+      combos.forEach(config => createTestCase(config));
+      btnVerify.disabled = false;
+      status.innerText = `Generated ${testCount} tests.`;
+    };
+
+    function createTestCase(config) {
+      const id = `test-${testCount++}`;
+      const div = document.createElement('div');
+      div.className = 'test-case';
+      div.id = id;
+      const label = document.createElement('div');
+      label.className = 'test-label';
+      label.innerText = `lh:${config.lh} va:${config.va} d:${config.disp} off:${config.off}`;
+      const wrap = document.createElement('div');
+      wrap.className = 'target-wrap';
+      wrap.style.marginTop = `${config.off}px`;
+      const target = document.createElement('div');
+      target.className = 'target';
+      target.innerText = 'Hg';
+      target.style.lineHeight = config.lh;
+      target.style.verticalAlign = config.va;
+      target.style.display = config.disp;
+      wrap.appendChild(target);
+      div.appendChild(label);
+      div.appendChild(wrap);
+      host.appendChild(div);
+    }
+
+    btnVerify.onclick = async () => {
+      btnVerify.disabled = true;
+      status.innerText = 'Rasterizing massive SVG...';
+      const { snapdom } = await import('../dist/snapdom.mjs');
+      
+      // Capture the WHOLE host in one go
+      const canvas = await snapdom.toCanvas(host, { embedFonts: true });
+      const ctx = canvas.getContext('2d');
+      const fullData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const dpr = window.devicePixelRatio || 1;
+      
+      status.innerText = 'Scanning pixels...';
+      const testElements = document.querySelectorAll('.test-case');
+      const reports = [];
+      const hostRect = host.getBoundingClientRect();
+
+      for (const el of testElements) {
+        const target = el.querySelector('.target');
+        const config = el.querySelector('.test-label').innerText;
+        const rect = target.getBoundingClientRect();
+        
+        // Find relative coordinates in the massive canvas
+        const localX = (rect.left - hostRect.left) * dpr;
+        const localY = (rect.top - hostRect.top) * dpr;
+        const localW = rect.width * dpr;
+        const localH = rect.height * dpr;
+
+        // Measure live ink (pre-calculated by run-playground.mjs)
+        const liveInkDocTop = await window.measureInkOfElement(target);
+        
+        // Measure raster ink in this local patch of the massive canvas
+        let firstY = -1;
+        const startY = Math.max(0, Math.floor(localY));
+        const endY = Math.min(canvas.height, Math.ceil(localY + localH));
+        const startX = Math.max(0, Math.floor(localX));
+        const endX = Math.min(canvas.width, Math.ceil(localX + localW));
+
+        for (let y = startY; y < endY; y++) {
+          for (let x = startX; x < endX; x++) {
+            if (fullData[(y * canvas.width + x) * 4 + 3] > 10) {
+              firstY = y;
+              break;
+            }
+          }
+          if (firstY !== -1) break;
+        }
+
+        const rasterInkDocTop = (hostRect.top * dpr + firstY) / dpr;
+        const drift = rasterInkDocTop - liveInkDocTop;
+        reports.push({ config, drift });
+      }
+      
+      renderReport(reports);
+      btnVerify.disabled = false;
+      status.innerText = 'Done.';
+    };
+
+    function renderReport(reports) {
+      const driftGroups = {};
+      reports.forEach(r => {
+        const key = Math.abs(r.drift) < 0.01 ? "0.00" : r.drift.toFixed(2);
+        if (!driftGroups[key]) driftGroups[key] = [];
+        driftGroups[key].push(r.config);
+      });
+      results.style.display = 'block';
+      let html = `<h3>Parity Report (${reports.length} tests)</h3>`;
+      Object.keys(driftGroups).sort((a,b) => Math.abs(parseFloat(a)) - Math.abs(parseFloat(b))).forEach(drift => {
+        const group = driftGroups[drift];
+        const isZero = drift === "0.00";
+        html += `<div style="margin-bottom: 8px;">
+          <b class="${isZero ? 'drift-zero' : 'drift-bad'}">Drift: ${drift}px (${group.length} cases)</b>
+          <div style="font-size: 10px; color: #cbd5e1; margin-left: 10px;">${group.slice(0, 10).join(', ')}${group.length > 10 ? '...' : ''}</div>
+        </div>`;
+      });
+      results.innerHTML = html;
+    }
+    window.renderReport = renderReport;
+  </script>
+</body>
+</html>
