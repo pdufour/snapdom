@@ -188,6 +188,9 @@ export async function captureDOM(element, options) {
       // body/documentElement: measure clone in-document to get true content height (Chrome clamps offset/scroll)
       // Use element's ownerDocument for iframe support (#371)
       const elDoc = state.element.ownerDocument || document
+      const rootCs = getStyle(elDoc.documentElement)
+      const rootFontSize = parseFloat(rootCs?.fontSize) || 16
+      const rootFontFamily = rootCs?.fontFamily || 'sans-serif'
       const isRoot = state.element === elDoc.body || state.element === elDoc.documentElement
       if (isRoot) {
         const docH = Math.max(
@@ -341,26 +344,16 @@ export async function captureDOM(element, options) {
       const fo = document.createElementNS(svgNS, 'foreignObject')
       const vbMinX = limitDecimals(minX)
       const vbMinY = limitDecimals(minY)
-      const vbW = limitDecimals(vbW0 + pad * 2)
-      const vbH = limitDecimals(vbH0 + pad * 2)
-
-      // #Snapping-Fix: Align SVG ViewBox origin to integer pixels to avoid browser-level snapping.
-      // Store the fractional sub-pixel shift in metadata for the drawer to handle.
-      const intX = Math.floor(vbMinX - pad)
-      const intY = Math.floor(vbMinY - pad)
-      const fracX = limitDecimals((vbMinX - pad) - intX)
-      const fracY = limitDecimals((vbMinY - pad) - intY)
-
-      fo.setAttribute('x', '0')
-      fo.setAttribute('y', '0')
-      fo.setAttribute('width', '100%')
-      fo.setAttribute('height', '100%')
+      fo.setAttribute('x', String(limitDecimals(-(vbMinX - pad))))
+      fo.setAttribute('y', String(limitDecimals(-(vbMinY - pad))))
+      fo.setAttribute('width', String(limitDecimals(w0 + pad * 2)))
+      fo.setAttribute('height', String(limitDecimals(h0 + pad * 2)))
       fo.style.overflow = 'visible'
 
       const styleTag = document.createElement('style')
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
-        '* { text-rendering: geometricPrecision !important; -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; }'
+        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
       styleTag.textContent =
         (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
       fo.appendChild(styleTag)
@@ -372,7 +365,11 @@ export async function captureDOM(element, options) {
       container.style.cssText =
         'all:initial;box-sizing:border-box;display:block;overflow:visible;margin:0;border:none;' +
         `-webkit-text-size-adjust:100%;text-size-adjust:100%;` +
-        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;`
+        `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;` +
+        `font-size:${limitDecimals(rootFontSize)}px`
+      try {
+        container.style.setProperty('font-family', rootFontFamily)
+      } catch { /* non-blocking */ }
 
       //state.clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
       container.appendChild(state.clone)
@@ -380,10 +377,11 @@ export async function captureDOM(element, options) {
 
       const serializer = new XMLSerializer()
       const foString = serializer.serializeToString(fo)
+      const vbW = limitDecimals(vbW0 + pad * 2)
+      const vbH = limitDecimals(vbH0 + pad * 2)
       const wantsSize = hasW || hasH
 
-      // Store fractional offset for precise canvas draw alignment
-      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h, fracX, fracY }
+      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h }
 
       const svgOutW = (isSafari() && wantsSize)
         ? vbW
@@ -392,9 +390,7 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const rootFontSize = parseFloat(getStyle(elDoc.documentElement)?.fontSize) || 16
-      // Use integer viewBox for stability. Content starts at intX, intY.
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${intX} ${intY} ${vbW} ${vbH}" font-size="${rootFontSize}px" style="text-rendering:geometricPrecision">`
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`

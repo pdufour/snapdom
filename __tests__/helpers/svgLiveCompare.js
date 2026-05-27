@@ -366,18 +366,151 @@ export function measureCapInk(el, root, fontBoxPre = null) {
 }
 
 /**
- * Dark-pixel cap ink band inside a canvas region (device pixels).
+ * Per-pixel ink weight 0..1 (alpha × darkness).
+ * @param {Uint8ClampedArray} data
+ * @param {number} w
+ * @param {number} row
+ * @param {number} col
+ * @param {number} lumMax
+ * @param {number} minAlpha
+ */
+function pixelInkWeight(data, w, row, col, lumMax, minAlpha) {
+  const i = (row * w + col) * 4
+  const a = data[i + 3]
+  if (a < minAlpha) return 0
+  const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+  if (lum >= lumMax) return 0
+  return (a / 255) * (1 - lum / lumMax)
+}
+
+/**
+ * Mean ink weight for one device-pixel row (horizontal slice).
+ * @param {Uint8ClampedArray} data
+ * @param {number} w
+ * @param {number} row
+ * @param {number} colStart
+ * @param {number} colEnd
+ * @param {number} lumMax
+ * @param {number} minAlpha
+ */
+function rowInkDensity(data, w, row, colStart, colEnd, lumMax, minAlpha) {
+  const n = colEnd - colStart
+  if (n <= 0) return 0
+  let sum = 0
+  for (let col = colStart; col < colEnd; col++) {
+    sum += pixelInkWeight(data, w, row, col, lumMax, minAlpha)
+  }
+  return sum / n
+}
+
+/**
+ * Subpixel row where ink profile crosses `threshold` from above (cap top).
+ * @param {number[]} profile
+ * @param {number} threshold
+ * @returns {number|null} row index in profile coords (fractional)
+ */
+export function subpixelInkEdgeFromTop(profile, threshold) {
+  for (let i = 0; i < profile.length; i++) {
+    if (profile[i] >= threshold) {
+      if (i === 0) return 0
+      const below = profile[i - 1]
+      const above = profile[i]
+      if (above <= below) return i
+      const t = (threshold - below) / (above - below)
+      return i - 1 + Math.max(0, Math.min(1, t))
+    }
+  }
+  return null
+}
+
+/**
+ * Subpixel row where ink profile crosses `threshold` from below (cap bottom).
+ * @param {number[]} profile
+ * @param {number} threshold
+ * @returns {number|null} row index in profile coords (fractional, exclusive bottom)
+ */
+export function subpixelInkEdgeFromBottom(profile, threshold) {
+  for (let i = profile.length - 1; i >= 0; i--) {
+    if (profile[i] >= threshold) {
+      if (i === profile.length - 1) return profile.length
+      const inside = profile[i]
+      const outside = profile[i + 1]
+      if (inside <= outside) return i + 1
+      const t = (threshold - outside) / (inside - outside)
+      return i + 1 - Math.max(0, Math.min(1, t))
+    }
+  }
+  return null
+}
+
+/**
+ * Cap ink band inside a canvas region (device pixels; optional subpixel row edges).
  * @param {HTMLCanvasElement} canvas
  * @param {{ x: number, y: number, w: number, h: number }} region
- * @param {{ minRowCoverage?: number, lumMax?: number }} [opts]
+ * @param {{ minRowCoverage?: number, lumMax?: number, minAlpha?: number, subpixel?: boolean, inkCoreInsetDevicePx?: number }} [opts]
  */
 export function measureCanvasTextInk(canvas, region, opts = {}) {
   const { x, y, w, h } = region
   const minRowCoverage = opts.minRowCoverage ?? 0.02
   const lumMax = opts.lumMax ?? 170
+  const minAlpha = opts.minAlpha ?? 32
+  const subpixel = opts.subpixel === true
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   if (!ctx || w <= 0 || h <= 0) return null
   const data = ctx.getImageData(x, y, w, h).data
+  const colStart = Math.floor(w * 0.15)
+  const colEnd = Math.max(colStart + 1, Math.ceil(w * 0.85))
+
+  if (subpixel) {
+    const inkCoreInsetDevicePx = opts.inkCoreInsetDevicePx ?? 0
+    const profile = new Array(h)
+    for (let row = 0; row < h; row++) {
+      profile[row] = rowInkDensity(data, w, row, colStart, colEnd, lumMax, minAlpha)
+    }
+
+    let topInt = null
+    for (let row = 0; row < h; row++) {
+      if (profile[row] >= minRowCoverage) {
+        topInt = row
+        break
+      }
+    }
+    if (topInt == null) return null
+
+    let bottomInt = topInt
+    for (let row = h - 1; row > topInt; row--) {
+      if (profile[row] >= minRowCoverage) {
+        bottomInt = row
+        break
+      }
+    }
+
+    // Cap top: first ink row, then subpixel offset into solid glyph (past outer AA).
+    let topSub = topInt + inkCoreInsetDevicePx
+
+    const botLo = Math.max(topInt, bottomInt - 3)
+    const botHi = Math.min(h, bottomInt + 2)
+    let botLocalMax = 0
+    for (let row = botLo; row < botHi; row++) {
+      if (profile[row] > botLocalMax) botLocalMax = profile[row]
+    }
+    const botSlice = profile.slice(botLo, botHi)
+    const botEdgeT = Math.max(minRowCoverage, botLocalMax * 0.42)
+    let bottomSub = subpixelInkEdgeFromBottom(botSlice, botEdgeT)
+    if (bottomSub == null) bottomSub = bottomInt + 1
+    else bottomSub += botLo
+
+    bottomSub = Math.max(topSub + 0.5, bottomSub - inkCoreInsetDevicePx)
+    if (bottomSub <= topSub) return null
+    return {
+      topPx: y + topSub,
+      bottomPx: y + bottomSub,
+      heightPx: bottomSub - topSub,
+      relTopPx: topSub,
+      relBottomPx: bottomSub,
+    }
+  }
+
   let top = null
   let bottom = null
   for (let row = 0; row < h; row++) {
@@ -385,7 +518,7 @@ export function measureCanvasTextInk(canvas, region, opts = {}) {
     for (let col = 0; col < w; col++) {
       const i = (row * w + col) * 4
       const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
-      if (data[i + 3] > 32 && lum < lumMax) dark++
+      if (data[i + 3] > minAlpha && lum < lumMax) dark++
     }
     if (dark / w >= minRowCoverage) {
       if (top === null) top = row
@@ -422,13 +555,14 @@ export function measureCanvasInkForElement(canvas, root, el, dpr = 1) {
   const band = measureCanvasTextInk(canvas, region)
   if (!band) return null
   const top = band.topPx / dpr
+  const bottom = band.bottomPx / dpr
   const borderTop = r.top - rootRect.top
   return {
     top,
-    bottom: band.bottomPx / dpr,
-    height: band.heightPx / dpr,
+    bottom,
+    height: bottom - top,
     topInBorder: top - borderTop,
-    bottomInBorder: band.bottomPx / dpr - borderTop,
+    bottomInBorder: bottom - borderTop,
   }
 }
 

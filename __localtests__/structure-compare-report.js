@@ -50,6 +50,12 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
     })
   }
 
+  /** Ink px at 2dp — matches table display, avoids float jitter warnings. */
+  const pushInkPx = (prop, live, clone) => {
+    const r = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : v)
+    pushNum(prop, r(live), r(clone))
+  }
+
   const pushStr = (prop, live, clone) => {
     rows.push({ prop, live: live ?? null, clone: clone ?? null, delta: null })
   }
@@ -75,29 +81,29 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
 
   // --- Cap / glyph ink (font metrics · actualBoundingBoxAscent) ---
   if (liveMetrics.capInkRelBorder && cloneMetrics.capInkRelBorder) {
-    pushNum(
+    pushInkPx(
       'paint.cap.vs-border.top',
       liveMetrics.capInkRelBorder.top,
       cloneMetrics.capInkRelBorder.top,
     )
-    pushNum(
+    pushInkPx(
       'paint.cap.vs-border.bottom',
       liveMetrics.capInkRelBorder.bottom,
       cloneMetrics.capInkRelBorder.bottom,
     )
-    pushNum(
+    pushInkPx(
       'paint.cap.vs-border.height',
       liveMetrics.capInkRelBorder.height,
       cloneMetrics.capInkRelBorder.height,
     )
   }
   if (liveMetrics.capInkRelBorder && canvasCapInk) {
-    pushNum(
+    pushInkPx(
       'paint.canvas.vs-border.top',
       liveMetrics.capInkRelBorder.top,
       canvasCapInk.topInBorder,
     )
-    pushNum(
+    pushInkPx(
       'paint.canvas.vs-border.height',
       liveMetrics.capInkRelBorder.height,
       canvasCapInk.height ?? null,
@@ -105,11 +111,11 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCap
   }
   // Same cap ink, root-relative (for overlay alignment)
   if (liveMetrics.capInk && cloneMetrics.capInk) {
-    pushNum('paint.cap.root.top', liveMetrics.capInk.top, cloneMetrics.capInk.top)
-    pushNum('paint.cap.root.bottom', liveMetrics.capInk.bottom, cloneMetrics.capInk.bottom)
+    pushInkPx('paint.cap.root.top', liveMetrics.capInk.top, cloneMetrics.capInk.top)
+    pushInkPx('paint.cap.root.bottom', liveMetrics.capInk.bottom, cloneMetrics.capInk.bottom)
   }
   if (liveMetrics.capInk && canvasCapInk) {
-    pushNum('paint.canvas.root.top', liveMetrics.capInk.top, canvasCapInk.top)
+    pushInkPx('paint.canvas.root.top', liveMetrics.capInk.top, canvasCapInk.top)
   }
 
   // --- Legacy alias (line box) ---
