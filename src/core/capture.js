@@ -357,7 +357,7 @@ export async function captureDOM(element, options) {
       // on the container last and clobbers inline overrides. 100% (not `none`) preserves zoom.
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
-        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;text-rendering:geometricPrecision!important;}'
+        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
       styleTag.textContent =
         (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
       fo.appendChild(styleTag)

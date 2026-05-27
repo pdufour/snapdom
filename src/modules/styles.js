@@ -212,7 +212,6 @@ function pinLineHeightPx(el, cs, snap) {
     const pinned = formatLineHeightPx(layoutLh)
     snap['line-height'] = pinned
     snap['height'] = pinned
-    snap['text-rendering'] = 'geometricPrecision'
     return
   }
 
@@ -226,12 +225,10 @@ function pinLineHeightPx(el, cs, snap) {
       const n = parseFloat(lh)
       if (Number.isFinite(n) && n > 0) {
         snap['line-height'] = formatLineHeightPx(n)
-        snap['text-rendering'] = 'geometricPrecision'
       }
     } else if (usesNormalLineHeight(cs, el)) {
       // Even if 'normal', pin the calculated value for headers to be safe
       snap['line-height'] = formatLineHeightPx(fs * 1.2)
-      snap['text-rendering'] = 'geometricPrecision'
     }
   }
 }
