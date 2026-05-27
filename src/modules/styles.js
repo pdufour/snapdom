@@ -1,14 +1,4 @@
-import {
-  getStyleKey,
-  shouldIgnoreProp,
-  resolveLineHeightPxForCapture,
-  usesNormalLineHeight,
-  measureLayoutLineBoxPx,
-  measureCapInkInBorderBox,
-  formatLineHeightPx,
-  isDebug,
-  pushDebugLine,
-} from '../utils/index.js'
+import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
 
 const snapshotCache = new WeakMap()
@@ -157,191 +147,12 @@ function styleSignature(snap) {
   __snapshotSig.set(snap, sig)
   return sig
 }
-const DEBUG_LH_TAGS = new Set(['label', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'button'])
-
-/**
- * optimizeSpeed disables antialiasing — looks jagged when SVG is rasterized to canvas.
- * @param {Record<string, string>} snap
- */
-function normalizeTextRenderingForCapture(snap) {
-  const tr = snap['text-rendering']
-  if (tr && /optimizespeed/i.test(tr)) snap['text-rendering'] = 'auto'
-}
-
-/**
- * Empty inputs show placeholder via ::placeholder; element `color` is often still
- * text black. Pin snapshot color to placeholder paint so foreignObject matches live.
- * @param {Element} el
- * @param {CSSStyleDeclaration} style
- * @param {Record<string, string>} snap
- */
-function pinInputTypography(el, style, snap) {
-  if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return
-  snap['font-weight'] = '400'
-  snap['font-style'] = 'normal'
-  if (usesNormalLineHeight(style, el)) {
-    const layout = measureLayoutLineBoxPx(style, el)
-    if (layout != null && layout > 0) {
-      snap['line-height'] = formatLineHeightPx(layout)
-    }
-  }
-}
-
-function pinPlaceholderInputColor(el, style, snap) {
-  if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return
-  if (el.value) return
-  if (!el.placeholder) return
-  try {
-    const ph = getComputedStyle(el, '::placeholder')
-    const phColor = ph.getPropertyValue('color')
-    if (!phColor || phColor === 'transparent' || phColor === 'rgba(0, 0, 0, 0)') return
-    snap.color = phColor
-    const phOpacity = ph.getPropertyValue('opacity')
-    if (phOpacity && phOpacity !== '1' && !phColor.includes('rgba')) {
-      snap.opacity = phOpacity
-    }
-    const fill = ph.getPropertyValue('-webkit-text-fill-color')
-    if (fill && fill !== 'none' && fill !== phColor) {
-      snap['-webkit-text-fill-color'] = fill
-    }
-  } catch { /* non-blocking */ }
-}
-
-function pinInputBoxSize(el, style, snap) {
-  const tag = el.tagName?.toLowerCase()
-  if (tag !== 'input' && tag !== 'textarea') return
-  if (tag === 'input') {
-    const type = (/** @type {HTMLInputElement} */ (el).type || 'text').toLowerCase()
-    if (type === 'checkbox' || type === 'radio' || type === 'hidden') return
-  }
-  if (el instanceof HTMLElement && el.style?.height) return
-  const hStr = style.getPropertyValue('height').trim()
-  const h = parseFloat(hStr)
-  if (Number.isFinite(h) && h > 0 && hStr && hStr !== 'auto') {
-    snap.height = hStr
-    snap['block-size'] = hStr
-  }
-  const wStr = style.getPropertyValue('width').trim()
-  const w = parseFloat(wStr)
-  if (Number.isFinite(w) && w > 0 && wStr && wStr !== 'auto') {
-    snap.width = wStr
-    snap['inline-size'] = wStr
-  }
-}
-
-/**
- * Glyph ink top inside the border box (Range), for line-height pin correction.
- * @param {Element} el
- */
-function measureInkTopInBorderBox(el) {
-  try {
-    const range = document.createRange()
-    range.selectNodeContents(el)
-    const tr = range.getBoundingClientRect()
-    const box = el.getBoundingClientRect()
-    if (!tr.height) return null
-    return { inkTop: tr.top - box.top, textHeight: tr.height }
-  } catch {
-    return null
-  }
-}
-
-/**
- * Pinning `normal` → layout px makes foreignObject center leading symmetrically;
- * live `normal` often places ink higher. Nudge padding-top on single-line text
- * leaves so glyph position matches (any tag — p, h2, span, etc.).
- * @param {Element} el
- * @param {CSSStyleDeclaration} style
- * @param {Record<string, string>} snap
- * @param {number} layout
- */
-const INK_PIN_EPS = 1e-6
-
-function preserveInkOffsetForPinnedLineHeight(el, style, snap, layout) {
-  if (!(el instanceof Element) || el.childElementCount > 0) return
-  const cap = measureCapInkInBorderBox(style, el)
-  if (!cap) return
-  const delta = cap.capTopInBorder - cap.foreignCapTop
-  if (Math.abs(delta) <= INK_PIN_EPS) return
-  const pt = parseFloat(style.paddingTop) || 0
-  const mt = parseFloat(style.marginTop) || 0
-  const targetPad = pt + delta
-  if (targetPad >= -INK_PIN_EPS) {
-    snap['padding-top'] = `${Math.max(0, targetPad)}px`
-    return
-  }
-  snap['padding-top'] = '0px'
-  snap['margin-top'] = `${mt + targetPad}px`
-}
-
-function pinLineHeightPx(el, style, snap, options = {}) {
-  if (!(el instanceof Element)) return
-  const tag = el.tagName?.toLowerCase()
-  if (tag === 'input' || tag === 'textarea' || tag === 'select') return
-
-  // Exactness rule: for single-line text leaves, pin line-height to the *painted* layout line box.
-  // This avoids sub-pixel drift from Typed OM / font-metric fallbacks when authored line-height is unitless.
-  const layout = measureLayoutLineBoxPx(style, el)
-  if (layout != null && layout > 0) {
-    snap['line-height'] = formatLineHeightPx(layout)
-    preserveInkOffsetForPinnedLineHeight(el, style, snap, layout)
-    if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
-      const hint = (el.textContent || '').trim().slice(0, 20)
-      pushDebugLine(options, [
-        `${tag}${hint ? ` "${hint}"` : ''}`,
-        `  lh computed: ${style.lineHeight}`,
-        `  lh getProp: ${style.getPropertyValue('line-height')}`,
-        `  → pinned layout box ${layout.toFixed(6)} (single-line leaf)`,
-        `  fs: ${style.fontSize}  el box: ${el.getBoundingClientRect().height.toFixed(3)}px`,
-      ])
-    }
-    return
-  }
-
-  // Otherwise only special-case `normal` (leave it as normal when we can't reliably pin).
-  if (usesNormalLineHeight(style, el)) {
-    delete snap['line-height']
-    if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
-      const hint = (el.textContent || '').trim().slice(0, 20)
-      pushDebugLine(options, [
-        `${tag}${hint ? ` "${hint}"` : ''}`,
-        '  → kept line-height: normal (no single-line layout box)',
-      ])
-    }
-    return
-  }
-
-  const before = snap['line-height']
-  const raw = resolveLineHeightPxForCapture(style, el)
-  const pinned = formatLineHeightPx(raw)
-  snap['line-height'] = pinned
-  if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
-    const hint = (el.textContent || '').trim().slice(0, 20)
-    const layout = measureLayoutLineBoxPx(style, el)
-    pushDebugLine(options, [
-      `${tag}${hint ? ` "${hint}"` : ''}`,
-      `  lh computed: ${style.lineHeight}`,
-      `  lh getProp: ${style.getPropertyValue('line-height')}`,
-      `  lh raw: ${raw.toFixed(6)} → pinned ${pinned}`,
-      layout != null ? `  lh layout box: ${layout.toFixed(6)} (not used for pin)` : null,
-      before && before !== pinned ? `  snap had: ${before}` : null,
-      `  fs: ${style.fontSize}  el box: ${el.getBoundingClientRect().height.toFixed(3)}px`,
-    ].filter(Boolean))
-  }
-}
-
 function getSnapshot(el, preStyle = null, options = {}) {
   const rec = snapshotCache.get(el)
   if (rec && rec.epoch === __epoch) return rec.snapshot
   const style = preStyle || getComputedStyle(el)
   const snap = snapshotComputedStyleFull(style, options)
-  pinLineHeightPx(el, style, snap, options)
-  normalizeTextRenderingForCapture(snap)
   stripHeightForWrappers(el, style, snap)
-  stripAutoDerivedHeight(el, style, snap)
-  pinInputBoxSize(el, style, snap)
-  pinInputTypography(el, style, snap)
-  pinPlaceholderInputColor(el, style, snap)
   snapshotCache.set(el, { epoch: __epoch, snapshot: snap })
   return snap
 }
@@ -449,11 +260,6 @@ export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
     persist.snapshotKeyCache.set(sig, key)
   }
   session.styleMap.set(clone, key)
-
-  if (isDebug(ctx.options) && DEBUG_LH_TAGS.has(source.tagName?.toLowerCase() || '')) {
-    const lhInKey = /line-height:[^;]+/.exec(key)?.[0] || '(missing in class key)'
-    pushDebugLine(ctx.options, [`  → class ${lhInKey}`])
-  }
 }
 /**
  * @param {Element} el
@@ -571,63 +377,4 @@ function stripHeightForWrappers(el, cs, snap) {
   // 7) Ahora sí: quitamos height y block-size del snapshot
   delete snap.height
   delete snap['block-size']
-}
-
-/** Tags whose used height should not be frozen in foreignObject (flow-sized in prod). */
-const STRIP_HEIGHT_TEXT_TAGS = new Set([
-  'label', 'span', 'p', 'a', 'button',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  // inputs/textareas: keep used height for foreignObject (clone also sets inline size)
-  'select',
-])
-
-/** Flow containers: strip height when it matches scrollHeight (auto-derived). */
-const STRIP_HEIGHT_FLOW_TAGS = new Set([
-  'div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav', 'form',
-])
-
-function hasAuthorHeight(el) {
-  return el instanceof HTMLElement && el.style && el.style.height
-}
-
-function deleteSnapshotHeights(snap) {
-  delete snap.height
-  delete snap['block-size']
-}
-
-/**
- * Drop computed heights that prod treats as auto so foreignObject can reflow.
- * @param {Element} el
- * @param {CSSStyleDeclaration} cs
- * @param {Record<string, string>} snap
- */
-function stripAutoDerivedHeight(el, cs, snap) {
-  if (!(el instanceof Element)) return
-  if (hasAuthorHeight(el)) return
-
-  const tag = el.tagName?.toLowerCase()
-  if (!tag) return
-
-  const pos = cs.position
-  if (pos === 'absolute' || pos === 'fixed' || pos === 'sticky') return
-  if (isReplaced(el)) return
-  if (cs.aspectRatio && cs.aspectRatio !== 'none' && cs.aspectRatio !== 'auto') return
-
-  if (STRIP_HEIGHT_TEXT_TAGS.has(tag) || tag === 'form') {
-    deleteSnapshotHeights(snap)
-    return
-  }
-
-  if (!STRIP_HEIGHT_FLOW_TAGS.has(tag)) return
-
-  const disp = cs.display || ''
-  if (disp.includes('flex') || disp.includes('grid')) return
-
-  const usedH = parseFloat(cs.height)
-  const TOL = 2
-  if (Number.isFinite(usedH) && el.scrollHeight > 0 && Math.abs(usedH - el.scrollHeight) > TOL) return
-
-  if (isFlexOrGridItem(el)) return
-
-  deleteSnapshotHeights(snap)
 }

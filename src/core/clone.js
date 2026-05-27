@@ -320,21 +320,11 @@ export async function deepClone(node, sessionCache, options) {
   }
   let applyInputVisual = null
   if (node instanceof HTMLTextAreaElement) {
-    const cs = window.getComputedStyle(node)
-    let wStr = cs.getPropertyValue('width').trim()
-    let hStr = cs.getPropertyValue('height').trim()
-    if (!wStr || wStr === 'auto') {
-      const { width } = getUnscaledDimensions(node)
-      const rw = width || node.getBoundingClientRect().width || 0
-      if (rw) wStr = `${rw}px`
-    }
-    if (!hStr || hStr === 'auto') {
-      const { height } = getUnscaledDimensions(node)
-      const rh = height || node.getBoundingClientRect().height || 0
-      if (rh) hStr = `${rh}px`
-    }
-    if (wStr && wStr !== 'auto') clone.style.width = wStr
-    if (hStr && hStr !== 'auto') clone.style.height = hStr
+    const { width, height } = getUnscaledDimensions(node)
+    const w = width || node.getBoundingClientRect().width || 0
+    const h = height || node.getBoundingClientRect().height || 0
+    if (w) clone.style.width = `${w}px`
+    if (h) clone.style.height = `${h}px`
   }
   if (node instanceof HTMLInputElement) {
     const type = (node.type || 'text').toLowerCase()
@@ -345,26 +335,6 @@ export async function deepClone(node, sessionCache, options) {
       applyInputVisual = applyVisual
       clone = replacement
     } else {
-      // foreignObject shrinks native text inputs without explicit box size (checkout repro).
-      if (!isCheckboxOrRadio) {
-        const cs = window.getComputedStyle(node)
-        let wStr = cs.getPropertyValue('width').trim()
-        let hStr = cs.getPropertyValue('height').trim()
-        if (!wStr || wStr === 'auto') {
-          const { width } = getUnscaledDimensions(node)
-          const rect = node.getBoundingClientRect()
-          const w = width || rect.width || 0
-          if (w) wStr = `${w}px`
-        }
-        if (!hStr || hStr === 'auto') {
-          const { height } = getUnscaledDimensions(node)
-          const rect = node.getBoundingClientRect()
-          const h = height || rect.height || 0
-          if (h) hStr = `${h}px`
-        }
-        if (wStr && wStr !== 'auto') clone.style.width = wStr
-        if (hStr && hStr !== 'auto') clone.style.height = hStr
-      }
       clone.value = node.value
       clone.setAttribute('value', node.value)
       if (node.checked !== void 0) {

@@ -161,8 +161,7 @@ export function getStyleKey(snapshot, tagName) {
     if (shouldIgnoreProp(prop)) continue
     if (skipWidth && (prop === 'width' || prop === 'min-width' || prop === 'max-width')) continue
     const def = defaults[prop]
-    const forceLh = prop === 'line-height' && value && value !== 'normal' && value !== def
-    if (value && (value !== def || forceLh)) entries.push(`${prop}:${value}`)
+    if (value && value !== def) entries.push(`${prop}:${value}`)
   }
   entries.sort()
   return entries.join(';')
