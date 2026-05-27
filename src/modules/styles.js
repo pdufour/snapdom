@@ -1,7 +1,6 @@
 import { resolveLineHeightPxForCapture, usesNormalLineHeight, formatLineHeightPx } from '../utils/preciseLineHeight.js'
 import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
-import { pushDebugLine } from '../utils/debugLog.js'
 
 const snapshotCache = new WeakMap()
 const snapshotKeyCache = new Map()
