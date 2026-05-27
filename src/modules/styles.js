@@ -1,5 +1,7 @@
+import { resolveLineHeightPxForCapture, usesNormalLineHeight, formatLineHeightPx } from '../utils/preciseLineHeight.js'
 import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
+import { pushDebugLine } from '../utils/debugLog.js'
 
 const snapshotCache = new WeakMap()
 const snapshotKeyCache = new Map()
@@ -37,7 +39,7 @@ function setupInvalidationOnce(root = document.documentElement) {
   } catch { }
 }
 
-function snapshotComputedStyleFull(style, options = {}) {
+function snapshotComputedStyleFull(el, style, options = {}) {
   const out = {}
   const vis = style.getPropertyValue('visibility')
   const excludeStyleProps = options.excludeStyleProps
@@ -53,6 +55,42 @@ function snapshotComputedStyleFull(style, options = {}) {
       val = 'none'
     }
     out[prop] = val
+  }
+
+  // #324: Pin line-height to actual layout box for text-containing elements.
+  // This prevents drift when "normal" or relative values resolve differently in SVG.
+  const pinLh = options.pinLineHeight !== false
+  if (pinLh) {
+    const isNormal = usesNormalLineHeight(style)
+    const lhVal = style.getPropertyValue('line-height')
+    const isRelative = lhVal && !lhVal.endsWith('px') && lhVal !== '0'
+
+    if (isNormal || isRelative) {
+      const px = resolveLineHeightPxForCapture(style, el)
+      if (px !== null) {
+        out['line-height'] = formatLineHeightPx(px)
+        if (options.debug) {
+          pushDebugLine(`[${el.tagName.toLowerCase()}] pinned layout box line-height: ${out['line-height']}`)
+        }
+      } else if (options.debug) {
+        pushDebugLine(`[${el.tagName.toLowerCase()}] kept line-height: ${lhVal}`)
+      }
+    }
+  }
+
+  // #315: placeholder color detection for inputs/textareas
+  if ((el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && !el.value && el.placeholder) {
+    try {
+      const phStyle = getComputedStyle(el, '::placeholder')
+      const phColor = phStyle && phStyle.color
+      if (phColor && phColor !== 'rgba(0, 0, 0, 0)' && phColor !== 'transparent') {
+        out.color = phColor
+      }
+    } catch { /* non-blocking */ }
+  }
+
+  if (options.debug) {
+    pushDebugLine(`[${el.tagName.toLowerCase()}] class line-height: ${out['line-height'] || 'n/a'}`)
   }
     // Asegurar props de decoración de texto (algunos motores no las listan en la iteración)
   const EXTRA_TEXT_DECORATION_PROPS = [
@@ -150,7 +188,7 @@ function getSnapshot(el, preStyle = null, options = {}) {
   const rec = snapshotCache.get(el)
   if (rec && rec.epoch === __epoch) return rec.snapshot
   const style = preStyle || getComputedStyle(el)
-  const snap = snapshotComputedStyleFull(style, options)
+  const snap = snapshotComputedStyleFull(el, style, options)
   stripHeightForWrappers(el, style, snap)
   snapshotCache.set(el, { epoch: __epoch, snapshot: snap })
   return snap
@@ -336,7 +374,7 @@ function stripHeightForWrappers(el, cs, snap) {
 
   // 2) Solo div/section/article/main/aside/header/footer/nav (no ol/ul/li: layout de listas)
   const tag = el.tagName && el.tagName.toLowerCase()
-  const ALLOWED_TAGS = ['div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav']
+  const ALLOWED_TAGS = ['div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav', 'span', 'label']
   if (!tag || !ALLOWED_TAGS.includes(tag)) return
 
   // 2b) Solo quitar si height parece "auto" (≈scrollHeight); si difiere, el autor lo fijó
