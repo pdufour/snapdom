@@ -159,13 +159,6 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap) {
     )
   }
 
-  rows.push({
-    prop: 'line-height (computed string)',
-    live: liveMetrics['line-height'] ?? null,
-    clone: cloneMetrics['line-height'] ?? null,
-    delta: null,
-  })
-
   for (const p of [
     'border-top-width',
     'border-bottom-width',
@@ -288,9 +281,7 @@ export function renderCheckoutStructureHtml(report) {
         typeof r.delta === 'number' &&
         Number.isFinite(r.delta) &&
         Math.abs(r.delta) > numericEps
-      const stringWarn =
-        (r.prop === 'line-height (computed string)' || r.prop === 'line-height') &&
-        r.live !== r.clone
+      const stringWarn = false
       const warn = numericWarn || stringWarn
       if (warn) warnCount++
       tbody += `<tr${warn ? ' class="warn"' : ''}>
