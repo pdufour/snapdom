@@ -1,0 +1,1128 @@
+<!doctype html>
+<!--
+Mega SVG <foreignObject> analyzer
+
+Goal:
+  Stress + analyze layout/metrics drift between:
+    - Live HTML DOM subtree
+    - The same subtree rendered inside SVG <foreignObject>
+    - Canvas TextMetrics (measureText) for text-bearing targets
+
+Usage:
+  - Open directly in browser (best when served from repo root):
+      /__localtests__/foreignobject-mega-analyzer.html
+  - Optional query params:
+      ?seed=1337&variants=18&sections=5&dpr=2&scanInk=1
+
+Exports for automation:
+  - window.__FO_ANALYZER_DONE__ (boolean)
+  - window.__FO_ANALYZER_RESULT__ (json-ish object)
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mega foreignObject analyzer</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111938;
+        --panel2: #0f1630;
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #eaf0ff;
+        --muted: rgba(234, 240, 255, 0.68);
+        --good: #49d38b;
+        --warn: #f5c163;
+        --bad: #ff6f78;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(1100px 700px at 20% 0%, #131b3e 0%, var(--bg) 55%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in oklab, #0b1020 75%, transparent);
+        backdrop-filter: blur(8px);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .topbar .spacer {
+        flex: 1 1 auto;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #18235a, #0f163b);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .pill strong {
+        color: var(--text);
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 520px 1fr;
+        min-height: calc(100vh - 56px);
+      }
+      .panel {
+        border-right: 1px solid var(--line);
+        background: linear-gradient(180deg, var(--panel), #0d1330);
+        padding: 12px;
+        overflow: auto;
+      }
+      .stage {
+        background: linear-gradient(180deg, #0a0f1f, #070a12);
+        overflow: auto;
+        position: relative;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      .hint {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 5px 10px;
+        font-size: 12px;
+        margin: 8px 0 12px;
+      }
+      .kv .key {
+        color: var(--muted);
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .report {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 6px 8px;
+        font-size: 11px;
+        vertical-align: top;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        background: color-mix(in oklab, var(--panel2) 85%, transparent);
+        text-align: left;
+        color: rgba(234, 240, 255, 0.85);
+      }
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .bad {
+        color: var(--bad);
+      }
+      .warn {
+        color: var(--warn);
+      }
+      .ok {
+        color: var(--good);
+      }
+      .stage-inner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+        align-items: start;
+      }
+      .stage-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .stage-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .stage-head strong {
+        font-size: 12px;
+      }
+      .stage-body {
+        padding: 10px 12px;
+        background: #ffffff;
+        color: #111827;
+      }
+      .svg-wrap {
+        display: grid;
+        place-items: start;
+        overflow: auto;
+        background: #ffffff;
+      }
+      svg#mega-svg {
+        display: block;
+        background: #fff;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .overlay .box {
+        position: absolute;
+        border: 1px solid rgba(34, 197, 94, 0.9);
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15);
+      }
+      .overlay .box.fo {
+        border-color: rgba(239, 68, 68, 0.9);
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.15);
+      }
+
+      /* Shared subtree styles (applied inside live + foreignObject clones). */
+      .checkout-page {
+        background: #fff;
+        color: #111;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        font-size: 16px;
+      }
+      .checkout-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: #fff;
+        border-bottom: 2px solid #eee;
+      }
+      .logo {
+        font-weight: 800;
+        color: #2563eb;
+        font-size: 18px;
+        letter-spacing: 0.01em;
+      }
+      .checkout-header nav {
+        display: flex;
+        gap: 12px;
+        font-size: 13px;
+      }
+      .checkout-header a {
+        color: #6b7280;
+        text-decoration: none;
+      }
+      .checkout-main {
+        padding: 14px;
+      }
+      .checkout-title {
+        margin: 0 0 10px;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .checkout-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .checkout-form label {
+        display: block;
+        margin: 0;
+      }
+      .field-label {
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        color: #374151;
+        margin: 0 0 6px 0;
+      }
+      .checkout-form input:not([type='checkbox']) {
+        padding: 9px 10px;
+        border-radius: 10px;
+        border: 2px solid #e5e7eb;
+        width: 100%;
+        font-size: 20px;
+        margin: 0;
+        color: #111827;
+      }
+      .checkout-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        padding: 6px 0;
+        font-size: 14px;
+        color: #111827;
+      }
+      .checkout-checkbox input {
+        margin: 0;
+        width: 18px;
+        height: 18px;
+      }
+
+      .variant-grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 3), minmax(250px, 1fr));
+        gap: 14px;
+      }
+      .variant-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      }
+      .variant-meta {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: #374151;
+        display: grid;
+        gap: 4px;
+      }
+      .variant-meta code {
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <button class="btn" id="btn-rerun">Rebuild + analyze</button>
+      <button class="btn" id="btn-toggle-overlay">Toggle overlay</button>
+      <span class="pill mono" id="status-pill"><strong>status</strong> <span id="status-text">idle</span></span>
+      <span class="spacer"></span>
+      <span class="pill mono"><strong>seed</strong> <span id="pill-seed"></span></span>
+      <span class="pill mono"><strong>variants</strong> <span id="pill-variants"></span></span>
+      <span class="pill mono"><strong>targets</strong> <span id="pill-targets"></span></span>
+    </div>
+
+    <div class="layout">
+      <aside class="panel">
+        <h1>Mega foreignObject analyzer</h1>
+        <p class="hint">
+          The stage shows the same “checkout-like” subtree rendered twice: once as live HTML, once inside an SVG
+          <code class="mono">&lt;foreignObject&gt;</code>. The table reports per-element deltas between APIs:
+          DOMRect, Range rects, Canvas TextMetrics, and computed style.
+        </p>
+        <div class="kv" id="meta"></div>
+
+        <div class="report">
+          <table>
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>variant</th>
+                <th>text</th>
+                <th>style (font/size/line-height)</th>
+                <th>live vs FO (DOMRect Δ)</th>
+                <th>live vs FO (Range Δ)</th>
+                <th>FO vs canvas (TextMetrics Δ)</th>
+                <th>ink top (optional)</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+
+        <p class="hint mono" style="margin-top: 10px">
+          Automation hooks: <code>window.__FO_ANALYZER_DONE__</code> and <code>window.__FO_ANALYZER_RESULT__</code>.
+        </p>
+      </aside>
+
+      <main class="stage">
+        <div class="stage-inner">
+          <section class="stage-card">
+            <div class="stage-head">
+              <strong>Live HTML (baseline)</strong>
+              <span class="mono" id="live-size"></span>
+            </div>
+            <div class="stage-body" id="live-host"></div>
+          </section>
+
+          <section class="stage-card">
+            <div class="stage-head">
+              <strong>SVG foreignObject</strong>
+              <span class="mono" id="svg-size"></span>
+            </div>
+            <div class="svg-wrap" id="svg-host"></div>
+          </section>
+        </div>
+        <div class="overlay" id="overlay" hidden></div>
+      </main>
+    </div>
+
+    <script>
+      ;(() => {
+        const SVG_NS = 'http://www.w3.org/2000/svg'
+        const XHTML_NS = 'http://www.w3.org/1999/xhtml'
+        const url = new URL(location.href)
+        const q = url.searchParams
+
+        const config = {
+          seed: toInt(q.get('seed'), 1337),
+          variants: clamp(toInt(q.get('variants'), 18), 1, 120),
+          sections: clamp(toInt(q.get('sections'), 4), 1, 20),
+          cols: clamp(toInt(q.get('cols'), 3), 1, 6),
+          svgWidth: clamp(toInt(q.get('svgWidth'), 1300), 700, 4000),
+          cardWidth: clamp(toInt(q.get('cardWidth'), 360), 260, 700),
+          cardPad: clamp(toInt(q.get('cardPad'), 16), 0, 60),
+          dpr: clamp(toNum(q.get('dpr'), Math.min(window.devicePixelRatio || 1, 2)), 1, 3),
+          scanInk: q.get('scanInk') === '1',
+        }
+
+        const btnRerun = document.getElementById('btn-rerun')
+        const btnToggleOverlay = document.getElementById('btn-toggle-overlay')
+        const overlay = document.getElementById('overlay')
+        const statusText = document.getElementById('status-text')
+        const rowsTbody = document.getElementById('rows')
+        const metaEl = document.getElementById('meta')
+        const liveHost = document.getElementById('live-host')
+        const svgHost = document.getElementById('svg-host')
+        const liveSize = document.getElementById('live-size')
+        const svgSize = document.getElementById('svg-size')
+        document.getElementById('pill-seed').textContent = String(config.seed)
+        document.getElementById('pill-variants').textContent = String(config.variants)
+
+        let overlayOn = false
+        btnToggleOverlay.addEventListener('click', () => {
+          overlayOn = !overlayOn
+          overlay.hidden = !overlayOn
+          if (overlayOn) renderOverlay(window.__FO_ANALYZER_RESULT__?.rows || [])
+          else overlay.innerHTML = ''
+        })
+
+        btnRerun.addEventListener('click', () => run())
+
+        run()
+
+        async function run() {
+          window.__FO_ANALYZER_DONE__ = false
+          window.__FO_ANALYZER_RESULT__ = null
+          statusText.textContent = 'building...'
+          rowsTbody.innerHTML = ''
+          metaEl.innerHTML = ''
+          overlay.innerHTML = ''
+          overlay.hidden = !overlayOn
+
+          const t0 = performance.now()
+          const rng = mulberry32(config.seed)
+          const variants = buildVariants(config.variants, rng)
+          const targets = buildTargetsSpec()
+          const targetsPerVariant = targets.reduce((sum, t) => sum + (t.perSection ? config.sections : 1), 0)
+          document.getElementById('pill-targets').textContent = String(variants.length * targetsPerVariant)
+
+          buildLive(liveHost, variants, targets, config)
+          const svg = buildSvgForeignObject(svgHost, variants, targets, config)
+
+          // Ensure web fonts (if any) settle before measurement.
+          await waitFontsReady(8000)
+          await twoRafs()
+
+          liveSize.textContent = `scroll: ${liveHost.scrollWidth}×${liveHost.scrollHeight}`
+          svgSize.textContent = `svg: ${svg.getAttribute('width')}×${svg.getAttribute('height')}`
+
+          statusText.textContent = 'measuring...'
+          const result = analyzeAll({ variants, targets, svg, config })
+          const t1 = performance.now()
+
+          renderMeta(metaEl, result, t1 - t0)
+          renderTable(rowsTbody, result.rows)
+          if (overlayOn) renderOverlay(result.rows)
+
+          window.__FO_ANALYZER_RESULT__ = result
+          window.__FO_ANALYZER_DONE__ = true
+          statusText.textContent = `done (${Math.round(t1 - t0)}ms)`
+        }
+
+        function buildTargetsSpec() {
+          // Intentionally mixed: headings, logo, labels, input, checkbox label.
+          // We measure DOMRect, Range rects, computed style, and canvas metrics where text exists.
+          return [
+            { kind: 'text', idSuffix: 'logo', label: 'logo', perSection: false, selector: '[data-role="logo"]' },
+            { kind: 'text', idSuffix: 'title', label: 'h2', perSection: false, selector: '[data-role="title"]' },
+            { kind: 'text', idSuffix: 'email-label', label: 'Email label', perSection: true, selector: '[data-role="email-label"]' },
+            { kind: 'input', idSuffix: 'email-input', label: 'Email input', perSection: true, selector: '[data-role="email-input"]' },
+            { kind: 'text', idSuffix: 'promo-label', label: 'Promo label', perSection: true, selector: '[data-role="promo-label"]' },
+            { kind: 'input', idSuffix: 'promo-input', label: 'Promo input', perSection: true, selector: '[data-role="promo-input"]' },
+            { kind: 'text', idSuffix: 'remember', label: 'Checkbox label', perSection: true, selector: '[data-role="remember-label"]' },
+          ]
+        }
+
+        function buildVariants(count, random) {
+          const fontFamilies = [
+            '-apple-system, system-ui, sans-serif',
+            'ui-sans-serif, system-ui, sans-serif',
+            'Georgia, serif',
+            '"Times New Roman", serif',
+            '"Courier New", ui-monospace, monospace',
+          ]
+          const fontWeights = [400, 500, 600, 700, 800]
+          const letterSpacings = [-0.02, -0.01, 0, 0.01, 0.02]
+          const lineHeights = [
+            { label: 'ratio-0.85', css: '0.85' },
+            { label: 'ratio-0.95', css: '0.95' },
+            { label: 'ratio-1', css: '1' },
+            { label: 'ratio-1.2', css: '1.2' },
+            { label: 'px-18', css: '18px' },
+            { label: 'px-22', css: '22px' },
+            { label: 'normal', css: 'normal' },
+          ]
+          const baselines = ['baseline', 'text-top', 'text-bottom', 'middle']
+          const fontSizeBase = [16, 18, 20, 22, 24]
+
+          const out = []
+          for (let i = 0; i < count; i += 1) {
+            const lineHeight = pick(lineHeights, random)
+            const family = pick(fontFamilies, random)
+            const weight = pick(fontWeights, random)
+            const baseline = pick(baselines, random)
+            const base = pick(fontSizeBase, random)
+            const ls = pick(letterSpacings, random)
+            const titleSize = base * (1.7 + Math.floor(random() * 5) / 10)
+            const labelSize = base * (1.2 + Math.floor(random() * 4) / 10)
+            const inputSize = base * (1.25 + Math.floor(random() * 4) / 10)
+
+            out.push({
+              idx: i,
+              name: `v${i}-${lineHeight.label}-${weight}`,
+              css: {
+                '--v-font': family,
+                '--v-weight': String(weight),
+                '--v-letter': String(ls) + 'em',
+                '--v-line': lineHeight.css,
+                '--v-baseline': baseline,
+                '--v-title': `${titleSize.toFixed(2)}px`,
+                '--v-label': `${labelSize.toFixed(2)}px`,
+                '--v-input': `${inputSize.toFixed(2)}px`,
+              },
+            })
+          }
+          return out
+        }
+
+        function buildLive(host, variants, targets, cfg) {
+          host.innerHTML = ''
+          host.style.setProperty('--cols', String(cfg.cols))
+          const grid = document.createElement('div')
+          grid.className = 'variant-grid'
+          grid.style.setProperty('--cols', String(cfg.cols))
+          host.appendChild(grid)
+
+          for (const v of variants) {
+            const card = buildVariantCard(v, targets, { prefix: 'live', sections: cfg.sections })
+            card.style.width = `${cfg.cardWidth}px`
+            grid.appendChild(card)
+          }
+        }
+
+        function buildSvgForeignObject(host, variants, targets, cfg) {
+          host.innerHTML = ''
+
+          const cols = cfg.cols
+          const cardW = cfg.cardWidth
+          const gap = 14
+          const pad = cfg.cardPad
+          const rows = Math.ceil(variants.length / cols)
+          const cardEstimatedH = 250 + cfg.sections * 42
+          const svgW = Math.max(cfg.svgWidth, pad * 2 + cols * cardW + (cols - 1) * gap)
+          const svgH = pad * 2 + rows * cardEstimatedH + (rows - 1) * gap + 60
+
+          const svg = document.createElementNS(SVG_NS, 'svg')
+          svg.id = 'mega-svg'
+          svg.setAttribute('xmlns', SVG_NS)
+          svg.setAttribute('width', String(svgW))
+          svg.setAttribute('height', String(svgH))
+          svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`)
+
+          const bg = document.createElementNS(SVG_NS, 'rect')
+          bg.setAttribute('x', '0')
+          bg.setAttribute('y', '0')
+          bg.setAttribute('width', String(svgW))
+          bg.setAttribute('height', String(svgH))
+          bg.setAttribute('fill', '#ffffff')
+          svg.appendChild(bg)
+
+          const fo = document.createElementNS(SVG_NS, 'foreignObject')
+          fo.setAttribute('x', String(pad))
+          fo.setAttribute('y', String(pad))
+          fo.setAttribute('width', String(svgW - pad * 2))
+          fo.setAttribute('height', String(svgH - pad * 2))
+          fo.setAttribute('requiredExtensions', XHTML_NS)
+
+          // HTML root inside foreignObject.
+          const foRoot = document.createElementNS(XHTML_NS, 'div')
+          foRoot.setAttribute('xmlns', XHTML_NS)
+          foRoot.style.display = 'grid'
+          foRoot.style.gridTemplateColumns = `repeat(${cols}, ${cardW}px)`
+          foRoot.style.gap = `${gap}px`
+          foRoot.style.alignItems = 'start'
+          foRoot.style.padding = '0'
+          foRoot.style.margin = '0'
+
+          for (const v of variants) {
+            const card = buildVariantCard(v, targets, { prefix: 'fo', sections: cfg.sections })
+            card.style.width = `${cardW}px`
+            foRoot.appendChild(card)
+          }
+
+          fo.appendChild(foRoot)
+          svg.appendChild(fo)
+          host.appendChild(svg)
+          return svg
+        }
+
+        function buildVariantCard(variant, targets, { prefix, sections }) {
+          const outer = document.createElement('div')
+          outer.className = 'variant-card'
+          outer.dataset.variant = variant.name
+          outer.dataset.prefix = prefix
+          for (const [k, v] of Object.entries(variant.css)) outer.style.setProperty(k, v)
+
+          const meta = document.createElement('div')
+          meta.className = 'variant-meta'
+          meta.innerHTML = `
+            <div><strong class="mono">${escapeHtml(prefix)}</strong> <span class="mono">${escapeHtml(
+              variant.name,
+            )}</span></div>
+            <div class="mono">font: var(--v-font) / weight: var(--v-weight) / line-height: var(--v-line)</div>
+            <div class="mono">baseline: var(--v-baseline) / letter: var(--v-letter)</div>
+          `
+          outer.appendChild(meta)
+
+          const page = document.createElement('div')
+          page.className = 'checkout-page'
+          page.style.fontFamily = 'var(--v-font)'
+          page.style.fontWeight = 'var(--v-weight)'
+          page.style.letterSpacing = 'var(--v-letter)'
+          page.style.lineHeight = 'var(--v-line)'
+          page.style.verticalAlign = 'var(--v-baseline)'
+
+          const header = document.createElement('header')
+          header.className = 'checkout-header'
+          header.innerHTML = `
+            <span class="logo" data-role="logo" id="${escapeAttr(`${prefix}-${variant.idx}-0-logo`)}">ShopDemoFO</span>
+            <nav>
+              <a href="#" onclick="return false">Home</a>
+              <a href="#" onclick="return false">Products</a>
+            </nav>
+          `
+          page.appendChild(header)
+
+          const main = document.createElement('main')
+          main.className = 'checkout-main'
+          main.innerHTML = `<h2 class="checkout-title" data-role="title" id="${escapeAttr(
+            `${prefix}-${variant.idx}-0-title`,
+          )}" style="font-size:var(--v-title)">Checkout</h2>`
+
+          const form = document.createElement('form')
+          form.className = 'checkout-form'
+          form.setAttribute('onsubmit', 'return false')
+
+          // Repeated “sections” allow stressing varying baselines/line-heights multiple times per variant.
+          for (let s = 0; s < sections; s += 1) {
+            const group = document.createElement('div')
+            group.style.padding = '8px 10px'
+            group.style.border = '1px solid #eef2f7'
+            group.style.borderRadius = '12px'
+            group.style.background = '#ffffff'
+
+            const rememberId = `${prefix}-${variant.idx}-${s}-remember`
+
+            group.innerHTML = `
+              <label data-id="${prefix}-${variant.idx}-${s}-email-label">
+                <span class="field-label" data-role="email-label" id="${escapeAttr(
+                  `${prefix}-${variant.idx}-${s}-email-label`,
+                )}" style="font-size:var(--v-label)">Email Address</span>
+                <input data-role="email-input" id="${escapeAttr(
+                  `${prefix}-${variant.idx}-${s}-email-input`,
+                )}" type="email" placeholder="you@example.com" style="font-size:var(--v-input)" />
+              </label>
+              <label class="checkout-checkbox" style="margin-top: 8px" data-id="${prefix}-${variant.idx}-${s}-remember">
+                <input id="${escapeAttr(rememberId)}" type="checkbox" />
+                <span data-role="remember-label" id="${escapeAttr(
+                  `${prefix}-${variant.idx}-${s}-remember`,
+                )}">Remember my details</span>
+              </label>
+              <label style="margin-top: 8px" data-id="${prefix}-${variant.idx}-${s}-promo-label">
+                <span class="field-label" data-role="promo-label" id="${escapeAttr(
+                  `${prefix}-${variant.idx}-${s}-promo-label`,
+                )}" style="font-size:var(--v-label)">Promo Code</span>
+                <input data-role="promo-input" id="${escapeAttr(
+                  `${prefix}-${variant.idx}-${s}-promo-input`,
+                )}" type="text" placeholder="SAVE10" style="font-size:var(--v-input)" />
+              </label>
+            `
+            form.appendChild(group)
+          }
+
+          main.appendChild(form)
+          page.appendChild(main)
+          outer.appendChild(page)
+
+          // Note: all measured elements have explicit IDs assigned above (logo/title + per-section ids).
+
+          return outer
+        }
+
+        function analyzeAll({ variants, targets, svg, config: cfg }) {
+          const measureCanvas = document.createElement('canvas')
+          measureCanvas.width = 16
+          measureCanvas.height = 16
+          const ctx = measureCanvas.getContext('2d', { willReadFrequently: true })
+
+          /** @type {Array<any>} */
+          const rows = []
+          let missing = 0
+
+          const stageRect = document.querySelector('.stage')?.getBoundingClientRect()
+          const svgRect = svg.getBoundingClientRect()
+
+          for (const v of variants) {
+            const variantId = v.idx
+            for (const t of targets) {
+              const sectionCount = t.perSection ? cfg.sections : 1
+              for (let s = 0; s < sectionCount; s += 1) {
+                const idLive = `live-${variantId}-${s}-${t.idSuffix}`
+                const idFo = `fo-${variantId}-${s}-${t.idSuffix}`
+                const elLive = document.getElementById(idLive)
+                const elFo = document.getElementById(idFo)
+                if (!elLive || !elFo) {
+                  missing += 1
+                  continue
+                }
+
+                const live = collectElementMetrics(elLive, ctx, { scanInk: cfg.scanInk, dpr: cfg.dpr })
+                const fo = collectElementMetrics(elFo, ctx, { scanInk: cfg.scanInk, dpr: cfg.dpr })
+
+                const domDelta = deltaRect(live.rect, fo.rect)
+                const rangeDelta = deltaRect(live.rangeRect, fo.rangeRect)
+
+                const canvasDelta = t.kind === 'text' ? deltaTextMetrics(fo.canvas, fo.text) : null
+
+                const row = {
+                  id: t.idSuffix,
+                  kind: t.kind,
+                  variant: v.name,
+                  variantIdx: v.idx,
+                  section: s,
+                  idLive,
+                  idFo,
+                  text: fo.text,
+                  live,
+                  fo,
+                  deltas: {
+                    liveVsFo_dom: domDelta,
+                    liveVsFo_range: rangeDelta,
+                    foVsCanvas: canvasDelta,
+                  },
+                  overlay: overlayData(stageRect, svgRect, live.rect, fo.rect),
+                }
+                rows.push(row)
+              }
+            }
+          }
+
+          // Some browsers report fractional rects; keep raw floats but provide a convenience summary.
+          const summary = summarize(rows)
+
+          return {
+            config: cfg,
+            measuredCount: rows.length,
+            missingCount: missing,
+            summary,
+            rows,
+            timestamp: new Date().toISOString(),
+          }
+        }
+
+        function collectElementMetrics(el, canvasCtx, { scanInk, dpr }) {
+          const cs = getComputedStyle(el)
+          const rect = toRect(el.getBoundingClientRect())
+          const rangeRect = safeRangeRect(el)
+
+          const text = (el.value != null ? String(el.value || '') : el.textContent || '').trim()
+          const font = cssFontShorthand(cs)
+          const canvas = canvasCtx ? measureCanvasText(canvasCtx, font, text) : null
+          const ink = scanInk && canvasCtx && text ? scanInkTop(canvasCtx, font, text, dpr) : null
+
+          return {
+            tag: el.tagName.toLowerCase(),
+            rect,
+            rangeRect,
+            text,
+            style: {
+              fontFamily: cs.fontFamily,
+              fontSize: cs.fontSize,
+              fontWeight: cs.fontWeight,
+              fontStyle: cs.fontStyle,
+              lineHeight: cs.lineHeight,
+              letterSpacing: cs.letterSpacing,
+              verticalAlign: cs.verticalAlign,
+              whiteSpace: cs.whiteSpace,
+            },
+            canvas,
+            ink,
+          }
+        }
+
+        function cssFontShorthand(cs) {
+          // Keep deterministic and compatible with CanvasRenderingContext2D.font parsing.
+          // font-variant and stretch are omitted for simplicity.
+          const style = cs.fontStyle || 'normal'
+          const weight = cs.fontWeight || '400'
+          const size = cs.fontSize || '16px'
+          const family = cs.fontFamily || 'sans-serif'
+          return `${style} ${weight} ${size} ${family}`
+        }
+
+        function measureCanvasText(ctx, font, text) {
+          try {
+            ctx.font = font
+            const m = ctx.measureText(text)
+            return {
+              font,
+              width: toFinite(m.width),
+              actualBoundingBoxAscent: toFinite(m.actualBoundingBoxAscent),
+              actualBoundingBoxDescent: toFinite(m.actualBoundingBoxDescent),
+              actualBoundingBoxLeft: toFinite(m.actualBoundingBoxLeft),
+              actualBoundingBoxRight: toFinite(m.actualBoundingBoxRight),
+              // Not always supported, but keep present (0 if missing).
+              fontBoundingBoxAscent: toFinite(m.fontBoundingBoxAscent),
+              fontBoundingBoxDescent: toFinite(m.fontBoundingBoxDescent),
+              emHeightAscent: toFinite(m.emHeightAscent),
+              emHeightDescent: toFinite(m.emHeightDescent),
+              alphabeticBaseline: toFinite(m.alphabeticBaseline),
+              hangingBaseline: toFinite(m.hangingBaseline),
+              ideographicBaseline: toFinite(m.ideographicBaseline),
+            }
+          } catch {
+            return null
+          }
+        }
+
+        function scanInkTop(ctx, font, text, dpr) {
+          // Draw text to an offscreen canvas and scan for the first row with non-transparent pixels.
+          // This is only an approximation, but it’s useful to spot large “cap ink top” drift across
+          // font/line-height configs in a deterministic way.
+          const width = 600
+          const height = 120
+          const canvas = document.createElement('canvas')
+          canvas.width = Math.round(width * dpr)
+          canvas.height = Math.round(height * dpr)
+          const c = canvas.getContext('2d', { willReadFrequently: true })
+          if (!c) return null
+
+          c.setTransform(dpr, 0, 0, dpr, 0, 0)
+          c.clearRect(0, 0, width, height)
+          c.font = font
+          c.fillStyle = '#000'
+          c.textBaseline = 'alphabetic'
+          const x = 10
+          const y = 70
+          c.fillText(text, x, y)
+
+          const img = c.getImageData(0, 0, Math.round(width * dpr), Math.round(height * dpr))
+          const data = img.data
+          const w = img.width
+          const h = img.height
+          let top = null
+          scan: for (let yy = 0; yy < h; yy += 1) {
+            const row = yy * w * 4
+            for (let xx = 0; xx < w; xx += 1) {
+              const a = data[row + xx * 4 + 3]
+              if (a > 0) {
+                top = yy / dpr
+                break scan
+              }
+            }
+          }
+          return top == null ? null : { topPx: top, baselineY: y }
+        }
+
+        function safeRangeRect(el) {
+          try {
+            const range = document.createRange()
+            // If it's an input, Range doesn't help; fall back to DOMRect.
+            if (el instanceof HTMLInputElement) return toRect(el.getBoundingClientRect())
+            range.selectNodeContents(el)
+            return toRect(range.getBoundingClientRect())
+          } catch {
+            return toRect(el.getBoundingClientRect())
+          }
+        }
+
+        function toRect(r) {
+          return {
+            x: toFinite(r.x),
+            y: toFinite(r.y),
+            width: toFinite(r.width),
+            height: toFinite(r.height),
+            top: toFinite(r.top),
+            left: toFinite(r.left),
+            right: toFinite(r.right),
+            bottom: toFinite(r.bottom),
+          }
+        }
+
+        function deltaRect(a, b) {
+          return {
+            dx: b.x - a.x,
+            dy: b.y - a.y,
+            dw: b.width - a.width,
+            dh: b.height - a.height,
+            dTop: b.top - a.top,
+            dBottom: b.bottom - a.bottom,
+            dLeft: b.left - a.left,
+            dRight: b.right - a.right,
+          }
+        }
+
+        function deltaTextMetrics(canvasMetrics, text) {
+          // Delta from "canvas predicted" to the DOM Range box is not well-defined; instead we report:
+          // - width delta (canvas width vs DOM range width)
+          // - ascent/descent values directly (useful to relate to DOM baseline-ish alignment)
+          if (!canvasMetrics) return null
+          return {
+            text: text || '',
+            canvasWidth: canvasMetrics.width,
+            canvasAscent: canvasMetrics.actualBoundingBoxAscent,
+            canvasDescent: canvasMetrics.actualBoundingBoxDescent,
+            canvasLeft: canvasMetrics.actualBoundingBoxLeft,
+            canvasRight: canvasMetrics.actualBoundingBoxRight,
+          }
+        }
+
+        function summarize(rows) {
+          const out = {
+            absDomTopP95: percentileAbs(rows.map((r) => r.deltas.liveVsFo_dom.dTop), 0.95),
+            absDomLeftP95: percentileAbs(rows.map((r) => r.deltas.liveVsFo_dom.dLeft), 0.95),
+            absDomHeightP95: percentileAbs(rows.map((r) => r.deltas.liveVsFo_dom.dh), 0.95),
+            absRangeTopP95: percentileAbs(rows.map((r) => r.deltas.liveVsFo_range.dTop), 0.95),
+            absRangeHeightP95: percentileAbs(rows.map((r) => r.deltas.liveVsFo_range.dh), 0.95),
+          }
+          return out
+        }
+
+        function percentileAbs(values, p) {
+          const nums = values.map((v) => Math.abs(v)).filter(Number.isFinite).sort((a, b) => a - b)
+          if (!nums.length) return 0
+          const idx = Math.min(nums.length - 1, Math.max(0, Math.floor(nums.length * p)))
+          return nums[idx]
+        }
+
+        function renderMeta(target, result, totalMs) {
+          const rows = [
+            ['measured', String(result.measuredCount)],
+            ['missing', String(result.missingCount)],
+            ['sections', String(result.config.sections)],
+            ['cols', String(result.config.cols)],
+            ['scanInk', result.config.scanInk ? 'on' : 'off'],
+            ['dpr', String(result.config.dpr)],
+            ['abs DOM top p95', fmt(result.summary.absDomTopP95)],
+            ['abs DOM left p95', fmt(result.summary.absDomLeftP95)],
+            ['abs Range top p95', fmt(result.summary.absRangeTopP95)],
+            ['abs Range h p95', fmt(result.summary.absRangeHeightP95)],
+            ['total', `${Math.round(totalMs)}ms`],
+          ]
+          target.innerHTML = rows
+            .map(([k, v]) => `<div class="key">${escapeHtml(k)}</div><div class="mono">${escapeHtml(v)}</div>`)
+            .join('')
+        }
+
+        function renderTable(tbody, rows) {
+          tbody.innerHTML = rows.map(renderRow).join('')
+        }
+
+        function renderRow(r) {
+          const dom = r.deltas.liveVsFo_dom
+          const range = r.deltas.liveVsFo_range
+          const fo = r.fo
+          const style = fo.style
+          const ink = r.fo.ink
+          const driftClass = (abs(dom.dTop) > 1 || abs(range.dTop) > 1) ? 'bad' : abs(dom.dTop) > 0.25 ? 'warn' : 'ok'
+
+          const textShort = (r.text || '').slice(0, 70)
+
+          const canvas = r.deltas.foVsCanvas
+          const canvasHtml = canvas
+            ? `<div class="mono">w=${fmt(canvas.canvasWidth)} a=${fmt(canvas.canvasAscent)} d=${fmt(canvas.canvasDescent)}</div>`
+            : `<span class="mono" style="color: rgba(0,0,0,0.45)">—</span>`
+
+          const inkHtml = ink
+            ? `<div class="mono">top=${fmt(ink.topPx)} (baselineY=${fmt(ink.baselineY)})</div>`
+            : `<span class="mono" style="color: rgba(0,0,0,0.45)">—</span>`
+
+          return `
+            <tr data-row-id="${escapeAttr(r.idFo)}">
+              <td class="mono">${escapeHtml(r.id)}<div style="color:rgba(255,255,255,0.55)">s${r.section}</div></td>
+              <td class="mono">${escapeHtml(r.variant)}</td>
+              <td class="mono">${escapeHtml(textShort || '(empty)')}</td>
+              <td class="mono">
+                <div>${escapeHtml(style.fontFamily)}</div>
+                <div>size=${escapeHtml(style.fontSize)} weight=${escapeHtml(style.fontWeight)}</div>
+                <div>lh=${escapeHtml(style.lineHeight)} ls=${escapeHtml(style.letterSpacing)}</div>
+              </td>
+              <td class="mono ${driftClass}">
+                <div>Δtop=${fmt(dom.dTop)} Δleft=${fmt(dom.dLeft)}</div>
+                <div>Δw=${fmt(dom.dw)} Δh=${fmt(dom.dh)}</div>
+              </td>
+              <td class="mono ${driftClass}">
+                <div>Δtop=${fmt(range.dTop)} Δleft=${fmt(range.dLeft)}</div>
+                <div>Δw=${fmt(range.dw)} Δh=${fmt(range.dh)}</div>
+              </td>
+              <td>${canvasHtml}</td>
+              <td>${inkHtml}</td>
+            </tr>
+          `
+        }
+
+        function renderOverlay(rows) {
+          overlay.innerHTML = ''
+          for (const r of rows) {
+            if (!r.overlay) continue
+            const live = r.overlay.live
+            const fo = r.overlay.fo
+            if (live) overlay.appendChild(makeBox(live, false))
+            if (fo) overlay.appendChild(makeBox(fo, true))
+          }
+        }
+
+        function overlayData(stageRect, svgRect, liveRect, foRect) {
+          if (!stageRect || !svgRect) return null
+          const live = stageRelativeBox(stageRect, liveRect)
+          const fo = stageRelativeBox(stageRect, foRect)
+          return { live, fo }
+        }
+
+        function stageRelativeBox(stageRect, rect) {
+          const x = rect.left - stageRect.left + document.querySelector('.stage')?.scrollLeft
+          const y = rect.top - stageRect.top + document.querySelector('.stage')?.scrollTop
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+          return { x, y, w: rect.width, h: rect.height }
+        }
+
+        function makeBox(b, isFo) {
+          const d = document.createElement('div')
+          d.className = 'box' + (isFo ? ' fo' : '')
+          d.style.left = `${b.x}px`
+          d.style.top = `${b.y}px`
+          d.style.width = `${b.w}px`
+          d.style.height = `${b.h}px`
+          return d
+        }
+
+        async function waitFontsReady(timeoutMs) {
+          if (!document.fonts || !document.fonts.ready) return
+          let done = false
+          const t = setTimeout(() => {
+            done = true
+          }, timeoutMs)
+          try {
+            await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, timeoutMs))])
+          } finally {
+            clearTimeout(t)
+          }
+          if (!done) return
+        }
+
+        function twoRafs() {
+          return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        }
+
+        function mulberry32(seed) {
+          let t = seed >>> 0
+          return () => {
+            t += 0x6d2b79f5
+            let x = Math.imul(t ^ (t >>> 15), 1 | t)
+            x ^= x + Math.imul(x ^ (x >>> 7), 61 | x)
+            return ((x ^ (x >>> 14)) >>> 0) / 4294967296
+          }
+        }
+
+        function pick(arr, random) {
+          return arr[Math.floor(random() * arr.length)]
+        }
+
+        function toInt(value, fallback) {
+          const n = Number.parseInt(value || '', 10)
+          return Number.isFinite(n) ? n : fallback
+        }
+
+        function toNum(value, fallback) {
+          const n = Number(value)
+          return Number.isFinite(n) ? n : fallback
+        }
+
+        function clamp(v, min, max) {
+          return Math.max(min, Math.min(max, v))
+        }
+
+        function toFinite(value) {
+          return Number.isFinite(value) ? value : 0
+        }
+
+        function abs(x) {
+          return Math.abs(Number(x) || 0)
+        }
+
+        function fmt(value) {
+          if (!Number.isFinite(value)) return '0'
+          const v = value
+          return Math.abs(v) >= 100 ? v.toFixed(1) : Math.abs(v) >= 10 ? v.toFixed(2) : v.toFixed(3)
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;')
+        }
+
+        function escapeAttr(value) {
+          return escapeHtml(value).replaceAll('`', '&#96;')
+        }
+      })()
+    </script>
+  </body>
+</html>

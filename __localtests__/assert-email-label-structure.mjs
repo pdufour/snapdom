@@ -107,75 +107,73 @@ function formatWarns(warns) {
 async function main() {
   const { server, port } = await startStaticServer()
   const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage({ viewport: { width: 1300, height: 900 } })
 
   try {
-    await page.goto(`http://127.0.0.1:${port}/__localtests__/checkout-example.html`, {
-      waitUntil: 'load',
-    })
+    const TARGET_DPRS = [1, 2]
+    // We run multiple times because raster + font readiness can be nondeterministic if
+    // anything in the pipeline accidentally depends on timing.
+    const RUNS_PER_DPR = 5
+    for (const deviceScaleFactor of TARGET_DPRS) {
+      for (let run = 1; run <= RUNS_PER_DPR; run += 1) {
+        const page = await browser.newPage({
+          viewport: { width: 1300, height: 900 },
+          deviceScaleFactor,
+        })
+        try {
+          await page.goto(`http://127.0.0.1:${port}/__localtests__/checkout-example.html`, {
+            waitUntil: 'load',
+          })
 
-    await page.locator('#btn-capture').click()
-    await page.waitForSelector('#structure-host .structure-report', { timeout: 60_000 })
+          await page.locator('#btn-capture').click()
+          await page.waitForSelector('#structure-host .structure-report', { timeout: 60_000 })
 
-    const summary =
-      (await page.locator('#structure-host .structure-summary').first().textContent())?.trim() ||
-      ''
+          const summary =
+            (await page.locator('#structure-host .structure-summary').first().textContent())?.trim() ||
+            ''
 
-    const allWarns = await collectStructureWarns(page)
-    const paintDrift = allWarns.filter((w) => isPaintDriftMetric(w.metric))
-    const emailPaint = paintDrift.filter((w) => w.section === EMAIL_SECTION)
-    const otherPaint = paintDrift.filter((w) => w.section !== EMAIL_SECTION)
+          const allWarns = await collectStructureWarns(page)
+          const paintDrift = allWarns.filter((w) => isPaintDriftMetric(w.metric))
+          const emailPaint = paintDrift.filter((w) => w.section === EMAIL_SECTION)
+          const otherPaint = paintDrift.filter((w) => w.section !== EMAIL_SECTION)
 
-    if (summary) {
-      // eslint-disable-next-line no-console
-      console.log(`Summary: ${summary.split('\n')[0]}`)
-    }
+          if (summary) {
+            // eslint-disable-next-line no-console
+            console.log(`dpr=${deviceScaleFactor} run=${run} Summary: ${summary.split('\n')[0]}`)
+          }
 
-    if (emailPaint.length) {
-      // eslint-disable-next-line no-console
-      console.log(`\nEmail paint drift (${emailPaint.length}):${formatWarns(emailPaint)}`)
-    } else if (paintDrift.length) {
-      // eslint-disable-next-line no-console
-      console.log(`\nNo Email paint drift (${paintDrift.length} elsewhere):${formatWarns(paintDrift)}`)
-    } else {
-      // eslint-disable-next-line no-console
-      console.log('\nNo paint drift — paint.cap.* and paint.canvas.* match on Email label.')
-    }
+          if (emailPaint.length) {
+            // eslint-disable-next-line no-console
+            console.log(`\ndpr=${deviceScaleFactor} Email paint drift (${emailPaint.length}):${formatWarns(emailPaint)}`)
+          } else if (paintDrift.length) {
+            // eslint-disable-next-line no-console
+            console.log(`\ndpr=${deviceScaleFactor} No Email paint drift (${paintDrift.length} elsewhere):${formatWarns(paintDrift)}`)
+          } else {
+            // eslint-disable-next-line no-console
+            console.log(`\ndpr=${deviceScaleFactor} No paint drift — paint.cap.* and paint.canvas.* match on Email label.`)
+          }
 
-    const infoRows = await page.locator('#structure-host tr.info').evaluateAll((trs) =>
-      trs.map((tr) => {
-        const section =
-          tr.closest('.structure-section')?.querySelector('h3')?.textContent?.trim() || '?'
-        const tds = [...tr.querySelectorAll('td')].map((td) => (td.textContent || '').trim())
-        return { section, metric: tds[0] || '', live: tds[1] || '', clone: tds[2] || '' }
-      }),
-    )
-    if (infoRows.length) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `\nInfo only (${infoRows.length}, not paint drift):` +
-          infoRows.map((r) => `\n  [${r.section}] ${r.metric}: ${r.live} → ${r.clone}`).join(''),
-      )
-    }
+          if (otherPaint.length) {
+            // eslint-disable-next-line no-console
+            console.log(
+              `\ndpr=${deviceScaleFactor} Note: ${otherPaint.length} paint drift row(s) outside Email (not gated):` +
+                formatWarns(otherPaint),
+            )
+          }
 
-    if (otherPaint.length) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `\nNote: ${otherPaint.length} paint drift row(s) outside Email (not gated):` +
-          formatWarns(otherPaint),
-      )
-    }
-
-    if (emailPaint.length) {
-      throw new Error(
-        `"${EMAIL_SECTION}" paint drift (${emailPaint.length}):` + formatWarns(emailPaint),
-      )
+          if (emailPaint.length) {
+            throw new Error(
+              `dpr=${deviceScaleFactor} "${EMAIL_SECTION}" paint drift (${emailPaint.length}):` + formatWarns(emailPaint),
+            )
+          }
+        } finally {
+          await page.close().catch(() => {})
+        }
+      }
     }
 
     // eslint-disable-next-line no-console
-    console.log(`OK — "${EMAIL_SECTION}" cap ink matches (check paint.canvas.vs-border.top).`)
+    console.log(`OK — "${EMAIL_SECTION}" cap ink matches at dpr 1 and 2.`)
   } finally {
-    await page.close().catch(() => {})
     await browser.close().catch(() => {})
     await new Promise((resolve) => server.close(resolve))
   }

@@ -9,19 +9,18 @@
  * @param {Element} el
  * @returns {number|null}
  */
- export function resolveLineHeightPxForCapture(style, el) {
+export function resolveLineHeightPxForCapture(style, el) {
   if (!(el instanceof Element) || el.childElementCount > 0) return null
   const text = (el.textContent || '').trim()
   if (!text) return null
 
-  // Author "normal" still has a used px value in computed style; prefer it over
-  // getBoundingClientRect height which can round down and skew FO/canvas text paint.
-  if (usesNormalLineHeight(style)) {
-    const lhUsed = style.lineHeight
-    if (lhUsed && lhUsed !== 'normal') {
-      const px = parseFloat(lhUsed)
-      if (Number.isFinite(px) && px > 0) return px
-    }
+  // Prefer the computed used value. Browsers expose `style.lineHeight` as a px string
+  // even when the author specified a unitless ratio (including values < 1).
+  // This is the most stable representation to pin into the SVG foreignObject.
+  const lhUsed = style.lineHeight
+  if (lhUsed && lhUsed !== 'normal') {
+    const px = parseFloat(lhUsed)
+    if (Number.isFinite(px) && px > 0) return px
   }
 
   const rect = el.getBoundingClientRect()
@@ -35,21 +34,23 @@
   if (h <= 0) return null
 
   // If scrollHeight matches or is very close, it's likely a single line
-  // We allow a small epsilon for sub-pixel layout
-  if (el.scrollHeight > h + 1.5) return null
+  // We allow a small slack because scrollHeight/clientHeight are integer-ish and
+  // can diverge slightly under fractional layout or when line-height < 1.
+  const SINGLE_LINE_SCROLL_SLACK_PX = 2
+  if (el.scrollHeight > h + SINGLE_LINE_SCROLL_SLACK_PX) return null
 
   return h
- }
+}
 
  /** Alias for {@link resolveLineHeightPxForCapture} used by tests. */
- export const measureLayoutLineBoxPx = resolveLineHeightPxForCapture
+export const measureLayoutLineBoxPx = resolveLineHeightPxForCapture
 
  /**
  * Returns true if the element's computed line-height is "normal" or behaves like it.
  * @param {CSSStyleDeclaration} style
  * @returns {boolean}
  */
- export function usesNormalLineHeight(style) {
+export function usesNormalLineHeight(style) {
   const lh = style.lineHeight
   if (lh === 'normal') return true
 
@@ -58,7 +59,7 @@
   if (raw === 'normal') return true
 
   return false
- }
+}
 /**
  * Formats a pixel value for use in CSS line-height.
  * @param {number} px

@@ -22,6 +22,18 @@ describe('resolveLineHeightPx', () => {
     expect(formatLineHeightPx(px)).toMatch(/^\d+(\.\d+)?px$/)
   })
 
+  it('pins unitless line-height ratios below 1', () => {
+    const el = document.createElement('span')
+    el.style.cssText = 'display:block;font-size:40px;line-height:0.8'
+    el.textContent = 'x'
+    document.body.appendChild(el)
+    const cs = getComputedStyle(el)
+    const px = resolveLineHeightPxForCapture(cs, el)
+    document.body.removeChild(el)
+    expect(px).toBeGreaterThan(30)
+    expect(px).toBeLessThan(34)
+  })
+
   it('formatLineHeightPx keeps up to 6 decimal places', () => {
     expect(formatLineHeightPx(56.5)).toBe('56.5px')
     expect(formatLineHeightPx(56.4765625)).toBe('56.476563px')
