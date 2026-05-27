@@ -4,13 +4,15 @@ README (local harness): Massive SVG text/baseline stress test
 
 Usage:
   - Open directly in browser, or serve repo root and visit:
-      /__localtests__/svg-massive-text-metrics.html?count=1000&seed=1337
+      /__localtests__/svg-massive-text-metrics.html?repeat=8
   - Optional JSON dump script:
-      node __localtests__/run-svg-massive-text-metrics.mjs --count=1000 --output=__localtests__/svg-massive-text-metrics.summary.json
+      node __localtests__/run-svg-massive-text-metrics.mjs --repeat=8 --output=__localtests__/svg-massive-text-metrics.summary.json
 
 Query params:
-  - count (number, default 1000): number of generated text cases
-  - seed (number, default 1337): deterministic RNG seed for reproducible case mix
+  - repeat (number, default 8): repeat deterministic suites (for 1000+ case scale)
+  - count (number, default 0): optional hard cap; 0 means use all repeated deterministic cases
+  - fuzz (0|1, default 0): enable random/fuzz case generation mode
+  - seed (number, default 1337): RNG seed used only when fuzz=1
   - width (number, default 2400): SVG width in CSS pixels
   - rowHeight (number, default 28): vertical spacing per case row
   - visibleRows (number, default 120): number of rows shown in results table
@@ -169,6 +171,7 @@ Metric notes:
             <table>
               <thead>
                 <tr>
+                  <th>scope</th>
                   <th>metric</th>
                   <th>min</th>
                   <th>max</th>
@@ -177,6 +180,25 @@ Metric notes:
                 </tr>
               </thead>
               <tbody id="summary-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Suite Summary</h2>
+          <div class="stats">
+            <table>
+              <thead>
+                <tr>
+                  <th>suite</th>
+                  <th>rows</th>
+                  <th>outliers</th>
+                  <th>mean |baseline drift|</th>
+                  <th>mean |width drift|</th>
+                  <th>max |anchor drift|</th>
+                </tr>
+              </thead>
+              <tbody id="suite-body"></tbody>
             </table>
           </div>
         </section>
@@ -209,6 +231,9 @@ Metric notes:
               <thead>
                 <tr>
                   <th data-key="idx">#</th>
+                  <th data-key="suiteLabel">suite</th>
+                  <th data-key="caseId">id</th>
+                  <th data-key="caseLabel">label</th>
                   <th data-key="fontSize">size</th>
                   <th data-key="fontWeight">weight</th>
                   <th data-key="dominantBaseline">baseline</th>
@@ -232,20 +257,15 @@ Metric notes:
 
     <script>
       ;(() => {
-        // Histogram edges for absolute drift buckets (CSS px).
-        // Rationale: edges match common UI perceptual thresholds (quarter/half/full pixels)
-        // and double thereafter for quick triage of severe drift.
-        const DRIFT_BUCKET_EDGES_ABS_PX = [0.25, 0.5, 1, 2, 4, 8]
+        const DRIFT_BUCKETS = [0.25, 0.5, 1, 2, 4, 8]
         const SVG_NS = 'http://www.w3.org/2000/svg'
         const url = new URL(location.href)
         const query = url.searchParams
 
-        // Small offscreen canvas for `measureText` only.
-        // Rationale: text metrics do not depend on canvas size; keep it tiny to reduce memory.
-        const MEASURE_CTX_CANVAS_SIDE_PX = 16
-
         const config = {
-          count: clamp(toInt(query.get('count'), 1000), 1, 20000),
+          repeat: clamp(toInt(query.get('repeat'), 8), 1, 200),
+          count: clamp(toInt(query.get('count'), 0), 0, 50000),
+          fuzz: query.get('fuzz') === '1',
           seed: toInt(query.get('seed'), 1337),
           width: clamp(toInt(query.get('width'), 2400), 800, 5000),
           rowHeight: clamp(toInt(query.get('rowHeight'), 28), 16, 80),
@@ -253,64 +273,51 @@ Metric notes:
           sortBy: query.get('sortBy') || 'driftBaselineVsCanvas',
           sortDir: query.get('sortDir') === 'asc' ? 'asc' : 'desc',
           outlierSigma: clamp(toNum(query.get('outlierSigma'), 2.5), 0.5, 8),
-          // DOMRect reads are relatively expensive; allow disabling when focusing on drift math.
-          // Use 1/0 to keep query string concise.
-          collectDomRects: query.get('collectDomRects') !== '0',
         }
 
         const ctx = makeCanvasContext()
         const stage = document.getElementById('stage')
         const summaryBody = document.getElementById('summary-body')
+        const suiteBody = document.getElementById('suite-body')
         const bucketBody = document.getElementById('bucket-body')
         const rowsBody = document.getElementById('rows-body')
         const statusEl = document.getElementById('status')
         const metaEl = document.getElementById('meta')
         const timingEl = document.getElementById('timing')
 
-        const rng = mulberry32(config.seed)
-        const cases = generateCases(config.count, rng)
-        const tRender0 = performance.now()
-        renderStage(stage, cases, config)
-        const tRender1 = performance.now()
+        const generated = generateAllCases(config)
+        renderStage(stage, generated.cases, generated.suites, config)
 
         requestAnimationFrame(() => {
           const t0 = performance.now()
-          const measured = measureCases(cases, ctx, stage, config)
-          const tMeasure = performance.now()
+          const measured = measureCases(generated.cases, ctx, stage)
           const stats = computeStats(measured)
-          const tStats = performance.now()
           const buckets = computeDriftBuckets(measured)
-          const tBuckets = performance.now()
           const outlierSet = detectOutliers(measured, stats, config.outlierSigma)
-          const tOutliers = performance.now()
           const sorted = sortRows(measured, config.sortBy, config.sortDir)
           const renderRows = sorted.slice(0, config.visibleRows)
-          const tSort = performance.now()
-          const tReport0 = performance.now()
+          const elapsed = performance.now() - t0
 
-          renderMeta(metaEl, config, measured, outlierSet.size)
-          renderSummary(summaryBody, stats)
+          renderMeta(metaEl, config, measured, outlierSet.size, generated)
+          renderSummary(summaryBody, stats, 'overall')
+          renderSuiteSummary(suiteBody, measured, outlierSet)
           renderBuckets(bucketBody, buckets)
           renderCases(rowsBody, renderRows, outlierSet)
           wireSortHeaders(measured, outlierSet, config)
-          const tReport1 = performance.now()
 
           statusEl.innerHTML = [
             '<span class="pill ok">done</span> ',
-            `${measured.length} cases measured in one SVG.`,
+            `${measured.length} deterministic cases measured in one SVG.`,
           ].join('')
-          timingEl.textContent =
-            `render ${(tRender1 - tRender0).toFixed(1)}ms | ` +
-            `measure ${(tMeasure - t0).toFixed(1)}ms | ` +
-            `stats ${(tStats - tMeasure).toFixed(1)}ms | ` +
-            `buckets ${(tBuckets - tStats).toFixed(1)}ms | ` +
-            `outliers ${(tOutliers - tBuckets).toFixed(1)}ms | ` +
-            `sort ${(tSort - tOutliers).toFixed(1)}ms | ` +
-            `report ${(tReport1 - tReport0).toFixed(1)}ms | ` +
-            `total ${(tReport1 - t0).toFixed(1)}ms`
+          timingEl.textContent = `measure+report ${elapsed.toFixed(1)}ms`
 
           const payload = {
             config,
+            suiteBlueprints: generated.suites.map((s) => ({
+              suiteId: s.suiteId,
+              suiteLabel: s.suiteLabel,
+              caseCount: s.cases.length,
+            })),
             measuredCount: measured.length,
             stats,
             buckets,
@@ -352,23 +359,65 @@ Metric notes:
 
         function makeCanvasContext() {
           const canvas = document.createElement('canvas')
-          canvas.width = MEASURE_CTX_CANVAS_SIDE_PX
-          canvas.height = MEASURE_CTX_CANVAS_SIDE_PX
+          canvas.width = 16
+          canvas.height = 16
           return canvas.getContext('2d')
         }
 
-        function generateCases(count, random) {
-          const fontFamilies = [
-            'Arial, sans-serif',
-            'Helvetica, Arial, sans-serif',
-            '"Times New Roman", serif',
-            'Georgia, serif',
-            '"Courier New", monospace',
-            '"Trebuchet MS", sans-serif',
-            '"Gill Sans", sans-serif',
-          ]
-          const anchors = ['start', 'middle', 'end']
-          const dominantBaselines = [
+        function generateAllCases(cfg) {
+          if (cfg.fuzz) {
+            const fuzzCount = cfg.count > 0 ? cfg.count : 1000
+            const rng = mulberry32(cfg.seed)
+            return {
+              suites: [{ suiteId: 'fuzz', suiteLabel: 'Fuzz Mode', cases: [] }],
+              cases: generateFuzzCases(fuzzCount, rng),
+            }
+          }
+
+          const suites = suiteBlueprints()
+          const out = []
+          let idx = 0
+          for (let repeatIndex = 0; repeatIndex < cfg.repeat; repeatIndex += 1) {
+            for (const suite of suites) {
+              for (const baseCase of suite.cases) {
+                const c = {
+                  ...baseCase,
+                  idx,
+                  suiteId: suite.suiteId,
+                  suiteLabel: suite.suiteLabel,
+                  repeatIndex,
+                  suiteBlockId: `${suite.suiteId}-r${repeatIndex + 1}`,
+                  caseId: `${suite.suiteId.toUpperCase()}-R${repeatIndex + 1}-${baseCase.caseKey}`,
+                  caseLabel: baseCase.caseLabel,
+                  text: `${baseCase.text} [${suite.suiteId} r${repeatIndex + 1}]`,
+                }
+                out.push(c)
+                idx += 1
+                if (cfg.count > 0 && out.length >= cfg.count) {
+                  return { suites, cases: out }
+                }
+              }
+            }
+          }
+          return { suites, cases: out }
+        }
+
+        function suiteBlueprints() {
+          const common = {
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: 500,
+            fontSize: 24,
+            letterSpacing: 0,
+            lineHeight: 1.2,
+            textAnchor: 'start',
+            dominantBaseline: 'alphabetic',
+            alignmentBaseline: 'baseline',
+          }
+          const tallText = 'Latin: Hj|qp gy ,.;:!? [] {} /'
+          const suites = []
+
+          const baselineDominant = [
             'alphabetic',
             'text-before-edge',
             'middle',
@@ -376,50 +425,184 @@ Metric notes:
             'hanging',
             'ideographic',
           ]
+          const baselineAlign = ['baseline', 'middle', 'hanging', 'alphabetic']
+          const baselineCases = []
+          for (const d of baselineDominant) {
+            for (const a of baselineAlign) {
+              baselineCases.push({
+                ...common,
+                dominantBaseline: d,
+                alignmentBaseline: a,
+                text: tallText,
+                caseKey: `DB-${slug(d)}__AB-${slug(a)}`,
+                caseLabel: `dominant=${d}, alignment=${a}`,
+              })
+            }
+          }
+          suites.push({
+            suiteId: 'baseline-matrix',
+            suiteLabel: 'Baseline Alignment Matrix',
+            cases: baselineCases,
+          })
+
+          const sizeLadder = [10, 12, 14, 16, 20, 24, 28, 32, 36, 40]
+          const weightLadder = [300, 400, 500, 600, 700, 800, 900]
+          const ladderCases = []
+          for (const s of sizeLadder) {
+            for (const w of weightLadder) {
+              ladderCases.push({
+                ...common,
+                fontSize: s,
+                fontWeight: w,
+                text: 'SizeWeight Ladder Ajqy 0123',
+                caseKey: `SZ-${s}__WT-${w}`,
+                caseLabel: `size=${s}px, weight=${w}`,
+              })
+            }
+          }
+          suites.push({
+            suiteId: 'size-weight-ladder',
+            suiteLabel: 'Font Size/Weight Ladder',
+            cases: ladderCases,
+          })
+
+          const lineHeightCases = [0.7, 0.85, 1, 1.15, 1.35, 1.6, 2, 2.4].map((lh) => ({
+            ...common,
+            fontSize: 22,
+            lineHeight: lh,
+            text: 'LineHeight stress Ajqy',
+            multilineSuffix: `line2 lh=${lh}`,
+            caseKey: `LH-${slug(String(lh))}`,
+            caseLabel: `line-height=${lh} (multi-line)`,
+            forceMultiline: true,
+          }))
+          suites.push({
+            suiteId: 'line-height-stress',
+            suiteLabel: 'Line-Height Stress',
+            cases: lineHeightCases,
+          })
+
+          const spacingCases = [-2, -1, -0.5, 0, 0.5, 1, 2, 3].map((spacing) => ({
+            ...common,
+            fontSize: 24,
+            letterSpacing: spacing,
+            text: 'Letter spacing: AVWA ToTy gjpqy',
+            caseKey: `LS-${slug(String(spacing))}`,
+            caseLabel: `letter-spacing=${spacing}px`,
+          }))
+          suites.push({
+            suiteId: 'letter-spacing-extremes',
+            suiteLabel: 'Letter-Spacing Extremes',
+            cases: spacingCases,
+          })
+
+          const anchorCases = ['start', 'middle', 'end'].map((anchor) => ({
+            ...common,
+            fontSize: 24,
+            textAnchor: anchor,
+            text: 'Anchor reference start|middle|end Ajqy',
+            caseKey: `ANCHOR-${anchor.toUpperCase()}`,
+            caseLabel: `text-anchor=${anchor}`,
+          }))
+          suites.push({
+            suiteId: 'anchor-alignment',
+            suiteLabel: 'Anchor Alignment',
+            cases: anchorCases,
+          })
+
+          const mixed = [
+            'Email_Label(42) -- Hjqpy, AVWA!!',
+            'Tall/desc: bdfhklt | desc: gjpqy',
+            'Punct mix: ()[]{}<>-_=+/*|;:,.!?',
+            'Path-like: /Inbox/Email_Label_42',
+            'Token mix: ffi fj Tj yq | CAPS x-height',
+          ]
+          const mixedCases = mixed.map((text, i) => ({
+            ...common,
+            fontSize: 23,
+            text,
+            caseKey: `MIX-${i + 1}`,
+            caseLabel: `mixed-set-${i + 1}`,
+          }))
+          suites.push({
+            suiteId: 'mixed-script-glyph',
+            suiteLabel: 'Mixed Script / Glyph Set',
+            cases: mixedCases,
+          })
+          return suites
+        }
+
+        function generateFuzzCases(count, random) {
+          const fontFamilies = [
+            'Arial, sans-serif',
+            'Helvetica, Arial, sans-serif',
+            '"Times New Roman", serif',
+            'Georgia, serif',
+            '"Courier New", monospace',
+          ]
+          const anchors = ['start', 'middle', 'end']
+          const dominantBaselines = ['alphabetic', 'text-before-edge', 'middle', 'central', 'hanging']
           const alignmentBaselines = ['baseline', 'middle', 'hanging', 'alphabetic']
-          const fontStyles = ['normal', 'italic']
           const weights = [300, 400, 500, 600, 700, 800]
           const letterSpacings = [-0.5, 0, 0.25, 0.5, 1]
           const lineHeights = [0.95, 1, 1.1, 1.2, 1.35, 1.5, 1.8]
-          const sampleTokens = [
-            'Hamburgefons',
-            'AVWA ToTy',
-            'gjpqy fl',
-            'CAP-height',
-            'Email_Label_42',
-            'A|xj',
-            'Baseline Test',
-            'ffi Tj',
-          ]
+          const tokens = ['Hamburgefons', 'AVWA ToTy', 'gjpqy fl', 'Email_Label_42', 'A|xj']
 
-          const output = []
+          const out = []
           for (let i = 0; i < count; i += 1) {
             const fontSize = 10 + Math.floor(random() * 34)
-            const lineHeight = pick(lineHeights, random)
-            const token = pick(sampleTokens, random)
-            const text =
-              i % 5 === 0
-                ? `${token} #${i} | ${String.fromCharCode(65 + (i % 26))}${i % 10} gqy`
-                : `${token} #${i}`
-            output.push({
+            out.push({
               idx: i,
-              text,
+              suiteId: 'fuzz',
+              suiteLabel: 'Fuzz Mode',
+              repeatIndex: 0,
+              suiteBlockId: 'fuzz-r1',
+              caseId: `FUZZ-${i + 1}`,
+              caseLabel: 'randomized-style case',
+              text: `${pick(tokens, random)} #${i}`,
               fontFamily: pick(fontFamilies, random),
-              fontStyle: pick(fontStyles, random),
+              fontStyle: 'normal',
               fontWeight: pick(weights, random),
               fontSize,
-              lineHeight,
+              lineHeight: pick(lineHeights, random),
               letterSpacing: pick(letterSpacings, random),
               textAnchor: pick(anchors, random),
               dominantBaseline: pick(dominantBaselines, random),
               alignmentBaseline: pick(alignmentBaselines, random),
             })
           }
-          return output
+          return out
         }
 
-        function renderStage(svg, cases, cfg) {
-          const height = Math.max(300, cfg.rowHeight * (cases.length + 2))
+        function slug(value) {
+          return String(value).replaceAll('.', '_').replaceAll('-', 'neg').replaceAll(/[^a-zA-Z0-9_]/g, '')
+        }
+
+        function renderStage(svg, cases, suites, cfg) {
+          const xStart = 180
+          const xSpan = cfg.width - xStart - 120
+          let cursorY = 28
+          const blockHeaderH = 24
+          const blockGap = 14
+
+          const suiteOrder = suites.map((s) => s.suiteId)
+          const blocks = groupBy(cases, (c) => c.suiteBlockId)
+          const blockRows = []
+          for (const suiteId of suiteOrder) {
+            const suiteBlocks = Object.keys(blocks)
+              .filter((k) => k.startsWith(`${suiteId}-`))
+              .sort((a, b) => a.localeCompare(b))
+            for (const blockId of suiteBlocks) {
+              const rows = blocks[blockId]
+              const title = `${rows[0].suiteLabel} (repeat ${rows[0].repeatIndex + 1})`
+              blockRows.push({ blockId, title, rows })
+            }
+          }
+
+          const height = Math.max(
+            300,
+            blockRows.reduce((acc, b) => acc + blockHeaderH + b.rows.length * cfg.rowHeight + blockGap, 0) + 20,
+          )
           svg.setAttribute('width', String(cfg.width))
           svg.setAttribute('height', String(height))
           svg.setAttribute('viewBox', `0 0 ${cfg.width} ${height}`)
@@ -429,74 +612,107 @@ Metric notes:
           const style = document.createElementNS(SVG_NS, 'style')
           style.textContent = `
             .axis-line { stroke: #e5e7eb; stroke-width: 0.6; opacity: 0.55; shape-rendering: crispEdges; }
+            .suite-header { fill: #111827; font-size: 13px; font-weight: 700; font-family: Arial, sans-serif; }
+            .suite-sep { stroke: #6b7280; stroke-width: 1; opacity: 0.6; }
+            .suite-bg-a { fill: #f8fafc; }
+            .suite-bg-b { fill: #f1f5f9; }
+            .case-label { fill: #475569; font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
             .case-text { fill: #111827; }
-            .case-box { fill: none; stroke: #16a34a; stroke-width: 0.6; opacity: 0.35; }
           `
           defs.appendChild(style)
           svg.appendChild(defs)
 
-          const xStart = 120
-          const xSpan = cfg.width - xStart - 100
+          for (let b = 0; b < blockRows.length; b += 1) {
+            const block = blockRows[b]
+            const blockTop = cursorY
+            const blockHeight = blockHeaderH + block.rows.length * cfg.rowHeight
+            const bg = document.createElementNS(SVG_NS, 'rect')
+            bg.setAttribute('x', '0')
+            bg.setAttribute('y', String(blockTop - 18))
+            bg.setAttribute('width', String(cfg.width))
+            bg.setAttribute('height', String(blockHeight + 4))
+            bg.setAttribute('class', b % 2 === 0 ? 'suite-bg-a' : 'suite-bg-b')
+            svg.appendChild(bg)
 
-          for (let i = 0; i < cases.length; i += 1) {
-            const c = cases[i]
-            const y = cfg.rowHeight * (i + 1)
-            const x = xStart + (xSpan * ((i % 17) / 16))
+            const header = document.createElementNS(SVG_NS, 'text')
+            header.setAttribute('class', 'suite-header')
+            header.setAttribute('x', '16')
+            header.setAttribute('y', String(blockTop))
+            header.textContent = block.title
+            svg.appendChild(header)
 
-            const axis = document.createElementNS(SVG_NS, 'line')
-            axis.setAttribute('class', 'axis-line')
-            axis.setAttribute('x1', '0')
-            axis.setAttribute('x2', String(cfg.width))
-            axis.setAttribute('y1', String(y))
-            axis.setAttribute('y2', String(y))
-            svg.appendChild(axis)
+            const sep = document.createElementNS(SVG_NS, 'line')
+            sep.setAttribute('class', 'suite-sep')
+            sep.setAttribute('x1', '0')
+            sep.setAttribute('x2', String(cfg.width))
+            sep.setAttribute('y1', String(blockTop + 6))
+            sep.setAttribute('y2', String(blockTop + 6))
+            svg.appendChild(sep)
 
-            const text = document.createElementNS(SVG_NS, 'text')
-            text.setAttribute('class', 'case-text')
-            text.setAttribute('data-case-id', String(c.idx))
-            text.setAttribute('x', String(x))
-            text.setAttribute('y', String(y))
-            text.setAttribute('font-family', c.fontFamily)
-            text.setAttribute('font-style', c.fontStyle)
-            text.setAttribute('font-weight', String(c.fontWeight))
-            text.setAttribute('font-size', String(c.fontSize))
-            text.setAttribute('letter-spacing', String(c.letterSpacing))
-            text.setAttribute('text-anchor', c.textAnchor)
-            text.setAttribute('dominant-baseline', c.dominantBaseline)
-            text.setAttribute('alignment-baseline', c.alignmentBaseline)
+            for (let i = 0; i < block.rows.length; i += 1) {
+              const c = block.rows[i]
+              const y = blockTop + blockHeaderH + i * cfg.rowHeight
+              const x = xStart + (xSpan * ((c.idx % 13) / 12))
 
-            if (c.idx % 11 === 0) {
-              const tspan1 = document.createElementNS(SVG_NS, 'tspan')
-              tspan1.textContent = c.text
-              tspan1.setAttribute('x', String(x))
-              const tspan2 = document.createElementNS(SVG_NS, 'tspan')
-              tspan2.textContent = ` line2/${c.idx % 9}`
-              tspan2.setAttribute('x', String(x))
-              tspan2.setAttribute('dy', String(c.fontSize * c.lineHeight))
-              text.appendChild(tspan1)
-              text.appendChild(tspan2)
-            } else {
-              text.textContent = c.text
+              const axis = document.createElementNS(SVG_NS, 'line')
+              axis.setAttribute('class', 'axis-line')
+              axis.setAttribute('x1', '0')
+              axis.setAttribute('x2', String(cfg.width))
+              axis.setAttribute('y1', String(y))
+              axis.setAttribute('y2', String(y))
+              svg.appendChild(axis)
+
+              const label = document.createElementNS(SVG_NS, 'text')
+              label.setAttribute('class', 'case-label')
+              label.setAttribute('x', '8')
+              label.setAttribute('y', String(y - 2))
+              label.textContent = c.caseId
+              svg.appendChild(label)
+
+              const text = document.createElementNS(SVG_NS, 'text')
+              text.setAttribute('class', 'case-text')
+              text.setAttribute('data-case-id', String(c.idx))
+              text.setAttribute('x', String(x))
+              text.setAttribute('y', String(y))
+              text.setAttribute('font-family', c.fontFamily)
+              text.setAttribute('font-style', c.fontStyle)
+              text.setAttribute('font-weight', String(c.fontWeight))
+              text.setAttribute('font-size', String(c.fontSize))
+              text.setAttribute('letter-spacing', String(c.letterSpacing))
+              text.setAttribute('text-anchor', c.textAnchor)
+              text.setAttribute('dominant-baseline', c.dominantBaseline)
+              text.setAttribute('alignment-baseline', c.alignmentBaseline)
+
+              if (c.forceMultiline) {
+                const tspan1 = document.createElementNS(SVG_NS, 'tspan')
+                tspan1.textContent = c.text
+                tspan1.setAttribute('x', String(x))
+                const tspan2 = document.createElementNS(SVG_NS, 'tspan')
+                tspan2.textContent = c.multilineSuffix || 'line2'
+                tspan2.setAttribute('x', String(x))
+                tspan2.setAttribute('dy', String(c.fontSize * c.lineHeight))
+                text.appendChild(tspan1)
+                text.appendChild(tspan2)
+              } else {
+                text.textContent = c.text
+              }
+              svg.appendChild(text)
             }
-
-            svg.appendChild(text)
+            cursorY += blockHeight + blockGap
           }
         }
 
-        function measureCases(cases, canvasCtx, svg, cfg) {
-          // Avoid repeated querySelector() inside the hot loop.
-          // Render order matches case order, so we can index into the NodeList.
-          const els = svg.querySelectorAll('text[data-case-id]')
+        function measureCases(cases, canvasCtx, svg) {
           const out = []
           for (let i = 0; i < cases.length; i += 1) {
             const c = cases[i]
-            const el = els[i]
+            const el = svg.querySelector(`text[data-case-id="${c.idx}"]`)
             if (!el) continue
 
             const x = Number(el.getAttribute('x')) || 0
             const y = Number(el.getAttribute('y')) || 0
             const bbox = safeBBox(el)
-            const rect = cfg.collectDomRects ? el.getBoundingClientRect() : { width: 0, height: 0 }
+            const rect = el.getBoundingClientRect()
             const rangeRect = safeRangeRect(el)
             const lengthSvg = safeNum(() => el.getComputedTextLength())
             const textForCanvas = el.textContent || c.text
@@ -659,12 +875,12 @@ Metric notes:
           ]
           const map = {}
           for (const key of driftKeys) {
-            const counts = new Array(DRIFT_BUCKET_EDGES_ABS_PX.length + 1).fill(0)
+            const counts = new Array(DRIFT_BUCKETS.length + 1).fill(0)
             for (const row of rows) {
               const abs = Math.abs(row[key])
               let placed = false
-              for (let i = 0; i < DRIFT_BUCKET_EDGES_ABS_PX.length; i += 1) {
-                if (abs <= DRIFT_BUCKET_EDGES_ABS_PX[i]) {
+              for (let i = 0; i < DRIFT_BUCKETS.length; i += 1) {
+                if (abs <= DRIFT_BUCKETS[i]) {
                   counts[i] += 1
                   placed = true
                   break
@@ -714,11 +930,13 @@ Metric notes:
           return typeof value === 'number' ? value : Number(value) || 0
         }
 
-        function renderMeta(target, cfg, measured, outlierCount) {
+        function renderMeta(target, cfg, measured, outlierCount, generated) {
           const rows = [
-            ['count', String(cfg.count)],
-            ['seed', String(cfg.seed)],
-            ['svg size', `${cfg.width} x ${cfg.rowHeight * (cfg.count + 2)}`],
+            ['mode', cfg.fuzz ? 'fuzz (random)' : 'deterministic suites'],
+            ['repeat', String(cfg.repeat)],
+            ['count cap', String(cfg.count)],
+            ['seed', cfg.fuzz ? String(cfg.seed) : 'n/a'],
+            ['suite blueprints', String(generated.suites.length)],
             ['sort', `${cfg.sortBy} (${cfg.sortDir})`],
             ['outlier sigma', String(cfg.outlierSigma)],
             ['outliers', String(outlierCount)],
@@ -729,18 +947,44 @@ Metric notes:
             .join('')
         }
 
-        function renderSummary(tbody, stats) {
+        function renderSummary(tbody, stats, scopeLabel, append = false) {
           const keys = Object.keys(stats)
-          tbody.innerHTML = keys
+          const html = keys
             .map((k) => {
               const s = stats[k]
               return `
                 <tr>
+                  <td class="mono">${escapeHtml(scopeLabel)}</td>
                   <td class="mono">${escapeHtml(k)}</td>
                   <td class="mono">${fmt(s.min)}</td>
                   <td class="mono">${fmt(s.max)}</td>
                   <td class="mono">${fmt(s.mean)}</td>
                   <td class="mono">${fmt(s.stddev)}</td>
+                </tr>
+              `
+            })
+            .join('')
+          tbody.innerHTML = append ? `${tbody.innerHTML}${html}` : html
+        }
+
+        function renderSuiteSummary(tbody, rows, outlierIds) {
+          const grouped = groupBy(rows, (r) => r.suiteLabel)
+          const names = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+          tbody.innerHTML = names
+            .map((name) => {
+              const suiteRows = grouped[name]
+              const outliers = suiteRows.filter((r) => outlierIds.has(r.idx)).length
+              const meanBaseline = meanAbs(suiteRows.map((r) => r.driftBaselineVsCanvas))
+              const meanWidth = meanAbs(suiteRows.map((r) => r.driftWidthSvgVsCanvas))
+              const maxAnchor = maxAbs(suiteRows.map((r) => r.driftAnchorVsCanvas))
+              return `
+                <tr>
+                  <td>${escapeHtml(name)}</td>
+                  <td class="mono">${suiteRows.length}</td>
+                  <td class="mono">${outliers}</td>
+                  <td class="mono">${fmt(meanBaseline)}</td>
+                  <td class="mono">${fmt(meanWidth)}</td>
+                  <td class="mono">${fmt(maxAnchor)}</td>
                 </tr>
               `
             })
@@ -775,6 +1019,9 @@ Metric notes:
               return `
                 <tr class="${outlier}">
                   <td class="mono">${r.idx}</td>
+                  <td>${escapeHtml(r.suiteLabel)}</td>
+                  <td class="mono">${escapeHtml(r.caseId)}</td>
+                  <td>${escapeHtml(r.caseLabel)}</td>
                   <td class="mono">${r.fontSize}</td>
                   <td class="mono">${r.fontWeight}</td>
                   <td class="mono">${escapeHtml(r.dominantBaseline)}</td>
@@ -817,6 +1064,32 @@ Metric notes:
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;')
+        }
+
+        function groupBy(rows, getKey) {
+          const out = {}
+          for (const row of rows) {
+            const key = getKey(row)
+            if (!out[key]) out[key] = []
+            out[key].push(row)
+          }
+          return out
+        }
+
+        function meanAbs(values) {
+          if (!values.length) return 0
+          let sum = 0
+          for (const v of values) sum += Math.abs(v)
+          return sum / values.length
+        }
+
+        function maxAbs(values) {
+          let max = 0
+          for (const v of values) {
+            const abs = Math.abs(v)
+            if (abs > max) max = abs
+          }
+          return max
         }
       })()
     </script>

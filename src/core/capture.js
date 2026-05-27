@@ -183,13 +183,6 @@ export async function captureDOM(element, options) {
     idle(() => {
       const csEl = getStyle(state.element)
 
-      // Capture can optionally record subpixel viewBox residuals for canvas rasterization.
-      // Rationale: when the SVG viewBox origin is snapped to the device pixel grid, any
-      // remaining fractional offset should be applied exactly once at draw time.
-      // This avoids ad-hoc epsilons and improves determinism across DPRs.
-      const captureDpr = Number.isFinite(state.options?.dpr) ? Math.max(1, state.options.dpr) : 1
-      const deviceGridStepCssPx = 1 / captureDpr
-
       const envelope = captureLayoutEnvelopePx(state.element, csEl)
       let w0 = envelope.width
       let h0 = envelope.height
@@ -243,12 +236,10 @@ export async function captureDOM(element, options) {
       // === NEW: recompute height using the kept-children span (no offscreen) ===
       if (state.options?.excludeMode === 'remove') {
         const hEst = estimateKeptHeight(state.element, state.options) // border+padding+contentSpan
-        // Safety: never exceed the original, and add one device pixel worth of slack to avoid
-        // clipping due to downstream integer rounding in SVG/canvas.
-        const HEIGHT_SLACK_DEVICE_PX = 1
-        const heightSlackCssPx = HEIGHT_SLACK_DEVICE_PX * deviceGridStepCssPx
+        // Safety: nunca mayor al original, y con un epsilon para evitar recortes por redondeo
+        const EPS = 1 // px
         if (Number.isFinite(hEst) && hEst > 0) {
-          h0 = Math.max(1, Math.min(h0, limitDecimals(hEst + heightSlackCssPx)))
+          h0 = Math.max(1, Math.min(h0, limitDecimals(hEst + EPS)))
         }
         // En ancho casi nunca conviene ajustar; si lo necesitás, podés hacer análogo con estimateKeptWidth(...)
       }
@@ -347,11 +338,8 @@ export async function captureDOM(element, options) {
 
       const svgNS = 'http://www.w3.org/2000/svg'
       // Safari workaround: pad only when root has bbox-affecting transforms (avoids edge clipping)
-      // Pad is expressed in CSS px. Use whole-device-pixel units to avoid fractional bleed that
-      // can land text on half pixels when rasterized.
-      const PAD_DEVICE_PX = 1
-      const basePad = (isSafari() && hasTFBBox(state.element)) ? PAD_DEVICE_PX : 0
-      const extraPad = !outerTransforms ? PAD_DEVICE_PX : 0
+      const basePad = (isSafari() && hasTFBBox(state.element)) ? 1 : 0
+      const extraPad = !outerTransforms ? 1 : 0
       const pad = limitDecimals(basePad + extraPad)
 
       const fo = document.createElementNS(svgNS, 'foreignObject')
@@ -360,28 +348,11 @@ export async function captureDOM(element, options) {
       const vbW = limitDecimals(vbW0 + pad * 2)
       const vbH = limitDecimals(vbH0 + pad * 2)
 
-      // Stable snap: align viewBox origin down to whole CSS pixels.
-      // Rationale: the SVG viewBox is expressed in CSS pixels; snapping to integers avoids
-      // introducing fractional viewBox origins that can quantize differently across engines.
-      // Residual subpixel offset (from layout/bbox math) is applied once during canvas draw.
-      const VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX = 1
-      const vbOriginX = vbMinX - pad
-      const vbOriginY = vbMinY - pad
-      let snappedX =
-        Math.floor(vbOriginX / VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX) * VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX
-      let snappedY =
-        Math.floor(vbOriginY / VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX) * VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX
-
-      // Guard against floating error turning a <1 residual into exactly 1.000000 after rounding.
-      const SNAP_EPS = 1e-6
-      let fracXRaw = vbOriginX - snappedX
-      let fracYRaw = vbOriginY - snappedY
-      if (fracXRaw < 0) fracXRaw = 0
-      if (fracYRaw < 0) fracYRaw = 0
-      if (fracXRaw > VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX - SNAP_EPS) { snappedX += VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX; fracXRaw = 0 }
-      if (fracYRaw > VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX - SNAP_EPS) { snappedY += VIEWBOX_ORIGIN_SNAP_UNIT_CSS_PX; fracYRaw = 0 }
-      const fracX = limitDecimals(fracXRaw)
-      const fracY = limitDecimals(fracYRaw)
+      // Align viewBox origin to integer pixels; store sub-pixel shift for canvas draw.
+      const intX = Math.floor(vbMinX - pad)
+      const intY = Math.floor(vbMinY - pad)
+      const fracX = limitDecimals((vbMinX - pad) - intX)
+      const fracY = limitDecimals((vbMinY - pad) - intY)
 
       fo.setAttribute('x', '0')
       fo.setAttribute('y', '0')
@@ -402,7 +373,7 @@ export async function captureDOM(element, options) {
       container.setAttribute('lang', elDoc.documentElement.lang || 'en')
       container.style.cssText =
         'all:initial;box-sizing:border-box;display:block;overflow:visible;margin:0;border:none;' +
-        '-webkit-text-size-adjust:100%;text-size-adjust:100%;' +
+        `-webkit-text-size-adjust:100%;text-size-adjust:100%;` +
         `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;` +
         `font-size:${limitDecimals(rootFontSize)}px`
       try {
@@ -417,18 +388,7 @@ export async function captureDOM(element, options) {
       const foString = serializer.serializeToString(fo)
       const wantsSize = hasW || hasH
 
-      options.meta = {
-        w0,
-        h0,
-        vbW,
-        vbH,
-        targetW: w,
-        targetH: h,
-        fracX,
-        fracY,
-        dpr: captureDpr,
-        deviceGridStepCssPx,
-      }
+      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h, fracX, fracY }
 
       const svgOutW = (isSafari() && wantsSize)
         ? vbW
@@ -437,7 +397,7 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${snappedX} ${snappedY} ${vbW} ${vbH}" font-size="${rootFontSize}px">`
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${intX} ${intY} ${vbW} ${vbH}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`
