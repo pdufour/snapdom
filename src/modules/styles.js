@@ -152,38 +152,9 @@ function getSnapshot(el, preStyle = null, options = {}) {
   if (rec && rec.epoch === __epoch) return rec.snapshot
   const style = preStyle || getComputedStyle(el)
   const snap = snapshotComputedStyleFull(style, options)
-
   stripHeightForWrappers(el, style, snap)
-
-  // #315: pin empty input color to placeholder color for exact visual match
-  pinInputPlaceholderColor(el, style, snap)
-
   snapshotCache.set(el, { epoch: __epoch, snapshot: snap })
   return snap
-}
-
-/**
- * Ensures empty inputs use the placeholder color as their primary color.
- * @param {Element} el
- * @param {CSSStyleDeclaration} cs
- * @param {Record<string, any>} snap
- */
-function pinInputPlaceholderColor(el, cs, snap) {
-  if (
-    (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
-    !el.value &&
-    el.placeholder
-  ) {
-    try {
-      const phStyle = window.getComputedStyle(el, '::placeholder')
-      const phColor = phStyle && phStyle.color
-      if (phColor && phColor !== 'rgba(0, 0, 0, 0)') {
-        snap.color = phColor
-      }
-    } catch {
-      /* non-blocking */
-    }
-  }
 }
 
 function _resolveCtx(sessionOrCtx, opts) {
@@ -364,9 +335,9 @@ function stripHeightForWrappers(el, cs, snap) {
   // 1) Respeta height inline del autor
   if (el instanceof HTMLElement && el.style && el.style.height) return
 
-  // 2) Solo div/section/article/main/aside/header/footer/nav + label/span
+  // 2) Solo div/section/article/main/aside/header/footer/nav (no ol/ul/li: layout de listas)
   const tag = el.tagName && el.tagName.toLowerCase()
-  const ALLOWED_TAGS = ['div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav', 'label', 'span']
+  const ALLOWED_TAGS = ['div', 'section', 'article', 'main', 'aside', 'header', 'footer', 'nav']
   if (!tag || !ALLOWED_TAGS.includes(tag)) return
 
   // 2b) Solo quitar si height parece "auto" (≈scrollHeight); si difiere, el autor lo fijó

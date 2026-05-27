@@ -25,9 +25,9 @@ const CHECKOUT_CSS = `
   .checkout-header a { color:#666;text-decoration:none; }
   .checkout-main { padding:30px;flex:1; }
   .checkout-form { display:flex;flex-direction:column; }
-  .checkout-form label { display:block;font-size:48px;font-weight:700;color:#444;margin:0 0 25px 0;font-kerning:none;text-rendering:optimizespeed; }
+  .checkout-form label { display:block;font-size:48px;font-weight:700;color:#444;margin:0 0 25px 0; }
   .checkout-form label span { display:block;margin-bottom:10px; }
-  .checkout-form input:not([type="checkbox"]) { padding:12px 16px;border-radius:8px;border:2px solid #ddd;width:100%;font-size:50px;margin:0;box-sizing:border-box;font-kerning:none;text-rendering:optimizespeed; }
+  .checkout-form input:not([type="checkbox"]) { padding:12px 16px;border-radius:8px;border:2px solid #ddd;width:100%;font-size:50px;margin:0;box-sizing:border-box; }
   .checkout-checkbox { display:flex;align-items:center;gap:12px;font-weight:600;padding:10px 0;font-size:22px; }
   .checkout-checkbox input { margin:0;width:24px;height:24px; }
 `
@@ -56,7 +56,7 @@ function mountCheckoutFixture({ stageHeight } = {}) {
       <nav><a href="#">Home</a><a href="#">Products</a></nav>
     </header>
     <main class="checkout-main">
-      <h2 style="margin:0 0 20px;font-size:80px;font-weight:700;line-height:1.2;font-kerning:none;text-rendering:optimizespeed">Checkout</h2>
+      <h2 style="margin:0 0 20px;font-size:80px;font-weight:700;line-height:1.2">Checkout</h2>
       <form class="checkout-form">
         <label><span>Email Address</span><input type="email" placeholder="you@example.com"></label>
         <label class="checkout-checkbox"><input type="checkbox">Remember my details</label>
