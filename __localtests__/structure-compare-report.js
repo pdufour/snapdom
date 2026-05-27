@@ -1,7 +1,29 @@
-import { compareCheckoutStructure } from '../__tests__/helpers/svgLiveCompare.js'
+import { compareCheckoutStructure, LENGTH_EQ_EPS } from '../__tests__/helpers/svgLiveCompare.js'
 
-/** Live DOM vs SVG clone metric tolerance (CSS px). */
-const SVG_METRIC_TOL_PX = 0.5
+/** Report metadata: numeric rows use {@link LENGTH_EQ_EPS} float-safe equality (no px slack budget). */
+const STRUCTURE_EXACT_TOLERANCE = 0
+
+/**
+ * Readable names for Canvas `TextMetrics`-derived snapshot fields ({@see measureFontBoxPx}).
+ * @type {[snapshotKey: string, label: string][]}
+ */
+const CANVAS_FONT_METRIC_ROWS = [
+  ['fontBoundingBoxAscent', 'Ascent (font bounding box)'],
+  ['fontBoundingBoxDescent', 'Descent (font bounding box)'],
+  ['actualBoundingBoxAscent', 'Ascent (glyph / ink bbox)'],
+  ['actualBoundingBoxDescent', 'Descent (glyph / ink bbox)'],
+  ['ascent', 'Ascent chosen for line-height model'],
+  ['descent', 'Descent chosen for line-height model'],
+  ['height', 'Font em-height (ascent + descent used)'],
+  ['alphabeticBaseline', 'Baseline · alphabetic'],
+  ['emHeightAscent', 'em-height ascent'],
+  ['emHeightDescent', 'em-height descent'],
+  ['hangingBaseline', 'Baseline · hanging'],
+  ['ideographicBaseline', 'Baseline · ideographic'],
+  ['actualBoundingBoxLeft', 'Glyph bbox · left overshoot'],
+  ['actualBoundingBoxRight', 'Glyph bbox · right overshoot'],
+  ['advanceWidth', 'Advance width (sample glyphs)'],
+]
 
 /**
  * @param {object|null} liveMetrics
@@ -23,23 +45,145 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap) {
     })
   }
 
+  const pushStr = (prop, live, clone) => {
+    rows.push({ prop, live: live ?? null, clone: clone ?? null, delta: null })
+  }
+
+  // --- Layout boxes (capture root coords) ---
   pushNum('box.top', liveMetrics.box.top, cloneMetrics.box.top)
   pushNum('box.bottom', liveMetrics.box.bottom, cloneMetrics.box.bottom)
-  if (liveMetrics.fontInk && cloneMetrics.fontInk) {
-    pushNum('font.top', liveMetrics.fontInk.top, cloneMetrics.fontInk.top)
-    pushNum('font.bottom', liveMetrics.fontInk.bottom, cloneMetrics.fontInk.bottom)
-    pushNum('half-leading', liveMetrics.fontInk.halfLeading, cloneMetrics.fontInk.halfLeading)
+  pushNum('box.height', liveMetrics.box.height, cloneMetrics.box.height)
+
+  // --- Painted glyphs: Range rects vs element border-box top ---
+  if (liveMetrics.inkRelBorder && cloneMetrics.inkRelBorder) {
+    pushNum(
+      'paint.range.vs-border.top',
+      liveMetrics.inkRelBorder.top,
+      cloneMetrics.inkRelBorder.top,
+    )
+    pushNum(
+      'paint.range.vs-border.bottom',
+      liveMetrics.inkRelBorder.bottom,
+      cloneMetrics.inkRelBorder.bottom,
+    )
+    pushNum(
+      'paint.range.vs-border.height',
+      liveMetrics.inkRelBorder.height,
+      cloneMetrics.inkRelBorder.height,
+    )
   }
+  // Same ink, root-relative (for overlay alignment)
   if (liveMetrics.ink && cloneMetrics.ink) {
-    pushNum('range.ink.top', liveMetrics.ink.top, cloneMetrics.ink.top)
-    pushNum('range.ink.bottom', liveMetrics.ink.bottom, cloneMetrics.ink.bottom)
+    pushNum('paint.range.root.top', liveMetrics.ink.top, cloneMetrics.ink.top)
+    pushNum('paint.range.root.bottom', liveMetrics.ink.bottom, cloneMetrics.ink.bottom)
   }
+
+  // --- Canvas measureText · full font metrics (ascent/descent/baselines/advance) ---
+  if (liveMetrics.fontBox && cloneMetrics.fontBox) {
+    pushStr(
+      'canvas.sample (measureText)',
+      String(liveMetrics.fontBox.sample),
+      String(cloneMetrics.fontBox.sample),
+    )
+    const lf = /** @type {Record<string, number|string>} */ (liveMetrics.fontBox)
+    const cf = /** @type {Record<string, number|string>} */ (cloneMetrics.fontBox)
+    for (const [key, label] of CANVAS_FONT_METRIC_ROWS) {
+      const lv = lf[key]
+      const cv = cf[key]
+      if (typeof lv === 'number' && typeof cv === 'number') {
+        pushNum(`font-metrics · ${label}`, lv, cv)
+      }
+    }
+    pushStr(
+      'advance width · full-line label (trunc)',
+      liveMetrics.canvasAdvanceLabel ?? null,
+      cloneMetrics.canvasAdvanceLabel ?? null,
+    )
+    if (
+      typeof liveMetrics.advanceWidthFull === 'number' ||
+      typeof cloneMetrics.advanceWidthFull === 'number'
+    ) {
+      pushNum(
+        'advance width · full line',
+        typeof liveMetrics.advanceWidthFull === 'number'
+          ? liveMetrics.advanceWidthFull
+          : null,
+        typeof cloneMetrics.advanceWidthFull === 'number'
+          ? cloneMetrics.advanceWidthFull
+          : null,
+      )
+    }
+  }
+
+  // --- Half-leading line model + baseline heuristic ---
+  if (liveMetrics.fontInk && cloneMetrics.fontInk) {
+    pushNum(
+      'model.line-height.px',
+      liveMetrics.fontInk.lineHeightPx,
+      cloneMetrics.fontInk.lineHeightPx,
+    )
+    pushNum(
+      'model.half-leading',
+      liveMetrics.fontInk.halfLeading,
+      cloneMetrics.fontInk.halfLeading,
+    )
+    pushNum(
+      'model.glyph-top.root',
+      liveMetrics.fontInk.top,
+      cloneMetrics.fontInk.top,
+    )
+    pushNum(
+      'model.glyph-bottom.root',
+      liveMetrics.fontInk.bottom,
+      cloneMetrics.fontInk.bottom,
+    )
+    pushNum(
+      'model.top-in-border',
+      liveMetrics.fontInk.topInBox,
+      cloneMetrics.fontInk.topInBox,
+    )
+    pushNum(
+      'model.baseline~.vs-border',
+      liveMetrics.fontInk.baselineApproxFromBorderTop,
+      cloneMetrics.fontInk.baselineApproxFromBorderTop,
+    )
+    pushNum(
+      'model.baseline~.root',
+      liveMetrics.fontInk.baselineApproxRoot,
+      cloneMetrics.fontInk.baselineApproxRoot,
+    )
+    pushNum(
+      'model.content-top.root',
+      liveMetrics.fontInk.contentTop,
+      cloneMetrics.fontInk.contentTop,
+    )
+  }
+
   rows.push({
-    prop: 'line-height',
+    prop: 'line-height (computed string)',
     live: liveMetrics['line-height'] ?? null,
     clone: cloneMetrics['line-height'] ?? null,
     delta: null,
   })
+
+  for (const p of [
+    'border-top-width',
+    'border-bottom-width',
+    'padding-top',
+    'padding-bottom',
+    'margin-top',
+    'margin-bottom',
+    'font-size',
+    'font-weight',
+    'font-style',
+    'text-rendering',
+    'letter-spacing',
+    'font-family',
+    'font-kerning',
+  ]) {
+    pushStr(p, liveMetrics[p] ?? null, cloneMetrics[p] ?? null)
+  }
+
   if (siblingGap) {
     pushNum('span-input', siblingGap.live, siblingGap.clone)
   }
@@ -90,13 +234,13 @@ function buildInputStructureRows(liveMetrics, cloneMetrics, usedHeight) {
  */
 export function buildCheckoutStructureReport(root, svgMarkup) {
   if (!svgMarkup) {
-    return { sections: [], tolerance: SVG_METRIC_TOL_PX }
+    return { sections: [], tolerance: STRUCTURE_EXACT_TOLERANCE }
   }
 
   const { sections: raw, tolerance } = compareCheckoutStructure(
     root,
     svgMarkup,
-    SVG_METRIC_TOL_PX,
+    STRUCTURE_EXACT_TOLERANCE,
   )
 
   const sections = raw.map((sec) => ({
@@ -122,6 +266,7 @@ export function buildSvgStructureReport(root, svgMarkup) {
  */
 export function renderCheckoutStructureHtml(report) {
   const { sections, tolerance } = report
+  const numericEps = tolerance <= 0 ? LENGTH_EQ_EPS : tolerance
   const fmtVal = (v) => {
     if (v == null) return '—'
     if (typeof v === 'number') return Number(v).toFixed(2)
@@ -139,8 +284,13 @@ export function renderCheckoutStructureHtml(report) {
   for (const sec of sections) {
     let tbody = ''
     for (const r of sec.rows) {
-      const numericWarn = typeof r.delta === 'number' && Math.abs(r.delta) > tolerance
-      const stringWarn = r.prop === 'line-height' && r.live !== r.clone
+      const numericWarn =
+        typeof r.delta === 'number' &&
+        Number.isFinite(r.delta) &&
+        Math.abs(r.delta) > numericEps
+      const stringWarn =
+        (r.prop === 'line-height (computed string)' || r.prop === 'line-height') &&
+        r.live !== r.clone
       const warn = numericWarn || stringWarn
       if (warn) warnCount++
       tbody += `<tr${warn ? ' class="warn"' : ''}>
@@ -168,13 +318,13 @@ export function renderCheckoutStructureHtml(report) {
     sections.length === 0
       ? ''
       : warnCount === 0
-        ? '<p class="structure-summary is-ok">All sections match within tolerance.</p>'
-        : `<p class="structure-summary is-warn">${warnCount} metric${warnCount === 1 ? '' : 's'} outside ±${tolerance}px tolerance.</p>`
+        ? '<p class="structure-summary is-ok">All numeric metrics match exactly (IEEE float jitter only, ε = 10⁻⁶ px).</p>'
+        : `<p class="structure-summary is-warn">${warnCount} metric${warnCount === 1 ? '' : 's'} differ beyond float-safe equality.</p>`
 
   return `
   <div class="structure-report">
     <h2>Live DOM vs SVG clone (structure)</h2>
-    <p class="structure-summary">Positions use <strong>font.top</strong> (half-leading + canvas font box), not layout box alone. <strong>range.ink.*</strong> = Range client rects.</p>
+    <p class="structure-summary"><strong>paint.range.*</strong> = Range client rects. <strong>font-metrics · …</strong> = Canvas <code>measureText</code> (ascent, descent, baselines, glyph bbox, advance). <strong>model.*</strong> = half-leading alignment. <strong>advance width · full line</strong> = layout width of the full label text.</p>
     ${summary}
     ${body}
   </div>`
@@ -187,7 +337,7 @@ export function renderSvgStructureHtml(report) {
       ? report
       : {
           sections: [{ title: 'Email Address (label)', rows: report.rows ?? [] }],
-          tolerance: report.tolerance ?? SVG_METRIC_TOL_PX,
+          tolerance: report.tolerance ?? STRUCTURE_EXACT_TOLERANCE,
         },
   )
 }

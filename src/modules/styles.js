@@ -214,20 +214,22 @@ function pinInputBoxSize(el, style, snap) {
     if (type === 'checkbox' || type === 'radio' || type === 'hidden') return
   }
   if (el instanceof HTMLElement && el.style?.height) return
-  const h = parseFloat(style.height)
-  if (Number.isFinite(h) && h > 0) {
-    snap.height = `${h}px`
-    snap['block-size'] = `${h}px`
+  const hStr = style.getPropertyValue('height').trim()
+  const h = parseFloat(hStr)
+  if (Number.isFinite(h) && h > 0 && hStr && hStr !== 'auto') {
+    snap.height = hStr
+    snap['block-size'] = hStr
   }
-  const w = parseFloat(style.width)
-  if (Number.isFinite(w) && w > 0) {
-    snap.width = `${w}px`
-    snap['inline-size'] = `${w}px`
+  const wStr = style.getPropertyValue('width').trim()
+  const w = parseFloat(wStr)
+  if (Number.isFinite(w) && w > 0 && wStr && wStr !== 'auto') {
+    snap.width = wStr
+    snap['inline-size'] = wStr
   }
 }
 
 /**
- * Where text ink sits inside the element border box (live DOM).
+ * Glyph ink top inside the border box (Range), for line-height pin correction.
  * @param {Element} el
  */
 function measureInkTopInBorderBox(el) {
@@ -244,24 +246,32 @@ function measureInkTopInBorderBox(el) {
 }
 
 /**
- * After pinning `line-height` to the layout box, nudge padding-top so glyph ink
- * matches live (FO centers leading; live `normal` is often asymmetric). Only for
- * leaf label text — never on `label` itself or we double-stack with the inner span.
+ * Pinning `normal` → layout px makes foreignObject center leading symmetrically;
+ * live `normal` often places ink higher. Nudge padding-top on single-line text
+ * leaves so glyph position matches (any tag — p, h2, span, etc.).
  * @param {Element} el
  * @param {CSSStyleDeclaration} style
  * @param {Record<string, string>} snap
  * @param {number} layout
  */
+const INK_PIN_EPS = 1e-6
+
 function preserveInkOffsetForPinnedLineHeight(el, style, snap, layout) {
-  const tag = el.tagName?.toLowerCase()
-  if (tag !== 'span' || el.parentElement?.tagName !== 'LABEL') return
+  if (!(el instanceof Element) || el.childElementCount > 0) return
   const ink = measureInkTopInBorderBox(el)
   if (!ink) return
   const halfLeading = Math.max(0, (layout - ink.textHeight) / 2)
   const delta = ink.inkTop - halfLeading
-  if (Math.abs(delta) < 0.25) return
+  if (Math.abs(delta) <= INK_PIN_EPS) return
   const pt = parseFloat(style.paddingTop) || 0
-  snap['padding-top'] = `${Math.max(0, pt + delta)}px`
+  const mt = parseFloat(style.marginTop) || 0
+  const targetPad = pt + delta
+  if (targetPad >= -INK_PIN_EPS) {
+    snap['padding-top'] = `${Math.max(0, targetPad)}px`
+    return
+  }
+  snap['padding-top'] = '0px'
+  snap['margin-top'] = `${mt + targetPad}px`
 }
 
 function pinLineHeightPx(el, style, snap, options = {}) {
@@ -276,15 +286,13 @@ function pinLineHeightPx(el, style, snap, options = {}) {
       preserveInkOffsetForPinnedLineHeight(el, style, snap, layout)
       if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
         const hint = (el.textContent || '').trim().slice(0, 20)
-        const ink = measureInkTopInBorderBox(el)
         pushDebugLine(options, [
           `${tag}${hint ? ` "${hint}"` : ''}`,
           `  lh computed: ${style.lineHeight}`,
           `  lh getProp: ${style.getPropertyValue('line-height')}`,
           `  → pinned layout box ${layout.toFixed(6)} (was normal)`,
-          ink ? `  ink top in box: ${ink.inkTop.toFixed(3)}px  padding-top: ${snap['padding-top'] || style.paddingTop}` : null,
           `  fs: ${style.fontSize}  el box: ${el.getBoundingClientRect().height.toFixed(3)}px`,
-        ].filter(Boolean))
+        ])
       }
     } else {
       delete snap['line-height']

@@ -88,7 +88,7 @@
     .ink-guide-live { border-top: 2px solid #22c55e; }
     .ink-guide-cap { border-top: 2px solid #ef4444; opacity: 0; }
     body[data-show-cap="true"] .ink-guide-cap { opacity: 1; }
-    body[data-show-cap="true"] .ink-guide-live { opacity: 0; }
+    body[data-show-cap="true"] .ink-guide-live { opacity: 1; }
     body.pixel-diff-busy #cap-layer { opacity: 0 !important; pointer-events: none !important; }
     /* Hide debug overlays in any SnapDOM raster (they caused a red line in old tab screenshots). */
     body.capture-quiet .guide,
@@ -182,8 +182,8 @@
         <div class="stage-inner" id="stage-inner">
         <div class="stage-flash-label" id="stage-flash-label" aria-live="polite"></div>
         <div class="guide" id="guide-line"></div>
-        <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Live: top of Email Address ink"></div>
-        <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Capture: top of Email Address ink"></div>
+    <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Green: live DOM Range ink top"></div>
+    <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Red: SVG clone Range ink top (same ruler as structure table)"></div>
 
         <div class="layer" id="live-layer">
           <div id="capture-target" class="checkout-page">
@@ -226,9 +226,8 @@
     } from './checkout-export-utils.js';
     import {
       renderCheckoutStructureReport,
-      measureCanvasTextInk,
     } from './structure-compare-report.js';
-    import { measureTextInk, measureFontMetricInk } from '../__tests__/helpers/svgLiveCompare.js';
+    import { measureTextInk, measureSvgCloneTextInk } from '../__tests__/helpers/svgLiveCompare.js';
 
     const body = document.body;
     const target = document.getElementById('capture-target');
@@ -314,38 +313,35 @@
       btnToggle.disabled = !lastCapCanvas;
       btnToggle.textContent = wantCap ? 'Show Live' : 'Show Canvas';
       syncCapOverlay();
-      if (wantCap) updateEmailInkGuides();
+      updateEmailInkGuides();
+    }
+
+    function findTextLeaf(root, text) {
+      const want = text.trim();
+      for (const el of root.querySelectorAll('*')) {
+        if (el.childElementCount > 0) continue;
+        if ((el.textContent || '').trim() === want) return el;
+      }
+      return null;
     }
 
     function updateEmailInkGuides() {
-      const span = [...target.querySelectorAll('label span')].find(
-        (s) => (s.textContent || '').trim() === 'Email Address',
-      );
+      const emailEl = findTextLeaf(target, 'Email Address');
       const liveGuide = document.getElementById('ink-guide-live');
       const capGuide = document.getElementById('ink-guide-cap');
-      if (!span || !liveGuide || !capGuide) return;
+      if (!emailEl || !liveGuide || !capGuide) return;
 
-      const rootRect = target.getBoundingClientRect();
-      const ink = measureFontMetricInk(span, target) ?? measureTextInk(span, target);
-      if (ink) liveGuide.style.top = `${ink.top}px`;
+      const liveInk = measureTextInk(emailEl, target);
+      if (liveInk) liveGuide.style.top = `${liveInk.top}px`;
 
-      const canvas = capContent.querySelector('canvas');
-      if (!canvas) {
+      if (!lastSvgMarkup) {
         capGuide.style.display = 'none';
         return;
       }
       capGuide.style.display = '';
-      const dpr = captureDpr();
-      const spanRect = span.getBoundingClientRect();
-      const reg = {
-        x: Math.max(0, Math.floor((spanRect.left - rootRect.left) * dpr)),
-        y: Math.max(0, Math.floor((spanRect.top - rootRect.top) * dpr)),
-        w: Math.max(1, Math.ceil(spanRect.width * dpr)),
-        h: Math.max(1, Math.ceil(spanRect.height * dpr)),
-      };
-      const capInk = measureCanvasTextInk(canvas, reg, { glyph: true });
-      capGuide.style.top = capInk
-        ? `${(reg.y + capInk.relTopPx) / dpr}px`
+      const cloneInk = measureSvgCloneTextInk(target, lastSvgMarkup, emailEl);
+      capGuide.style.top = cloneInk
+        ? `${cloneInk.top}px`
         : liveGuide.style.top;
     }
 

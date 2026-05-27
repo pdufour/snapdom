@@ -1,5 +1,22 @@
 import { resolveLineHeightPx } from '../../src/utils/preciseLineHeight.js'
 
+/**
+ * Numeric length equality for geometry from browser APIs (`tolPx` 0).
+ * Filters only IEEE float jitter — not an intentional pixel slack budget.
+ */
+export const LENGTH_EQ_EPS = 1e-6
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @param {number} [tolPx] Pass `> 0` only for deliberate regression slack; default exact.
+ */
+export function lengthsDifferByTol(a, b, tolPx = 0) {
+  const d = Math.abs(a - b)
+  if (tolPx > 0) return d > tolPx
+  return d > LENGTH_EQ_EPS
+}
+
 /** @typedef {{ path: string, tag: string, prop: string, live: string, clone: string, snapClass: string|null, snapCss: string }} StyleDiff */
 /** @typedef {{ path: string, tag: string, live: DOMRect, clone: DOMRect, deltaTop: number, deltaLeft: number, deltaHeight: number, deltaWidth: number }} LayoutDiff */
 /** @typedef {{ path: string, tag: string, prop: string, live: number|string, clone: number|string, delta: number }} MetricDiff */
@@ -220,10 +237,10 @@ function mountSvgClone(svgStr) {
  * Layout box comparison (positions relative to capture root).
  * @param {Element} liveRoot
  * @param {string} svgStr
- * @param {number} [tolPx]
+ * @param {number} [tolPx] Exact when 0 ({@link LENGTH_EQ_EPS}); use &gt;0 only for loose checks.
  * @returns {{ layoutDiffs: LayoutDiff[], cloneRoot: Element|null }}
  */
-export function compareLayoutToSvg(liveRoot, svgStr, tolPx = 2) {
+export function compareLayoutToSvg(liveRoot, svgStr, tolPx = 0) {
   const { iframe, cloneRoot } = mountSvgClone(svgStr)
   const layoutDiffs = []
 
@@ -243,10 +260,10 @@ export function compareLayoutToSvg(liveRoot, svgStr, tolPx = 2) {
       deltaWidth: cr.width - lr.width,
     }
     if (
-      Math.abs(row.deltaTop) > tolPx ||
-      Math.abs(row.deltaLeft) > tolPx ||
-      Math.abs(row.deltaHeight) > tolPx ||
-      Math.abs(row.deltaWidth) > tolPx
+      lengthsDifferByTol(row.deltaTop, 0, tolPx) ||
+      lengthsDifferByTol(row.deltaLeft, 0, tolPx) ||
+      lengthsDifferByTol(row.deltaHeight, 0, tolPx) ||
+      lengthsDifferByTol(row.deltaWidth, 0, tolPx)
     ) {
       layoutDiffs.push(row)
     }
@@ -285,11 +302,80 @@ export function measureTextInk(el, root) {
   }
 }
 
+function findTextLeaf(root, text) {
+  const want = text.trim()
+  for (const el of root.querySelectorAll('*')) {
+    if (el.childElementCount > 0) continue
+    if ((el.textContent || '').trim() === want) return el
+  }
+  return null
+}
+
+function resolveCloneElement(liveRoot, cloneRoot, liveEl) {
+  if (!liveEl || !cloneRoot || !liveRoot.contains(liveEl)) return null
+  /** @type {{ tag: string, idx: number }[]} */
+  const path = []
+  let n = liveEl
+  while (n && n !== liveRoot) {
+    const parent = n.parentElement
+    if (!parent) return null
+    const sibs = elementKids(parent).filter((c) => c.tagName === n.tagName)
+    const idx = sibs.indexOf(n)
+    if (idx < 0) return null
+    path.unshift({ tag: n.tagName.toLowerCase(), idx })
+    n = parent
+  }
+  let cur = cloneRoot
+  for (const { tag, idx } of path) {
+    const kids = elementKids(cur).filter((c) => c.tagName.toLowerCase() === tag)
+    cur = kids[idx]
+    if (!cur) return null
+  }
+  return cur
+}
+
+function findLiveCloneByText(liveRoot, cloneRoot, text) {
+  const liveEl = findTextLeaf(liveRoot, text)
+  const cloneEl =
+    liveEl && cloneRoot ? resolveCloneElement(liveRoot, cloneRoot, liveEl) : null
+  return { live: liveEl, clone: cloneEl }
+}
+
 /**
- * Canvas font bounding box for element's computed font.
- * @param {CSSStyleDeclaration} cs
+ * Range ink for the SVG-clone counterpart of a live element (matched by DOM path).
+ * @param {Element} liveRoot
+ * @param {string} svgStr
+ * @param {Element} liveEl
  */
-export function measureFontBoxPx(cs) {
+export function measureSvgCloneTextInk(liveRoot, svgStr, liveEl) {
+  const { iframe, cloneRoot } = mountSvgClone(svgStr)
+  let ink = null
+  if (liveEl && cloneRoot) {
+    const cloneEl = resolveCloneElement(liveRoot, cloneRoot, liveEl)
+    if (cloneEl) ink = measureTextInk(cloneEl, cloneRoot)
+  }
+  iframe.remove()
+  return ink
+}
+
+/**
+ * Probe string for Canvas `measureText` (ascender + descender in one glyph pair).
+ * @param {Element} el
+ */
+function canvasGlyphSample(el) {
+  const t = (el.textContent || '').trim()
+  if (!t) return 'Mg'
+  if (t.length === 1) return `${t}${t}`
+  return t[0] + t[t.length - 1]
+}
+
+/**
+ * Canvas `TextMetrics`: font bbox vs ink bbox (Mg or element-derived sample).
+ * @param {CSSStyleDeclaration} cs
+ * @param {string} [sample]
+ * @returns {Record<string, number|string>|null}
+ */
+export function measureFontBoxPx(cs, sample = 'Mg') {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
@@ -298,11 +384,70 @@ export function measureFontBoxPx(cs) {
   const style = cs.fontStyle || 'normal'
   const family = cs.fontFamily || 'sans-serif'
   ctx.font = `${style} ${weight} ${fs}px ${family}`
-  const m = ctx.measureText('Mg')
-  const a = m.fontBoundingBoxAscent ?? m.actualBoundingBoxAscent
-  const d = m.fontBoundingBoxDescent ?? m.actualBoundingBoxDescent
-  if (typeof a !== 'number' || typeof d !== 'number') return null
-  return { ascent: a, descent: d, height: a + d }
+  const m = ctx.measureText(sample)
+  const fbA = m.fontBoundingBoxAscent
+  const fbD = m.fontBoundingBoxDescent
+  const abA = m.actualBoundingBoxAscent
+  const abD = m.actualBoundingBoxDescent
+  let ascent = typeof fbA === 'number' ? fbA : abA
+  let descent = typeof fbD === 'number' ? fbD : abD
+  if (typeof ascent !== 'number' || typeof descent !== 'number') return null
+
+  /** @type {Record<string, number|string>} */
+  const out = {
+    ascent,
+    descent,
+    height: ascent + descent,
+    sample,
+    advanceWidth:
+      typeof m.width === 'number' && Number.isFinite(m.width) ? m.width : null,
+  }
+
+  const extraNumericKeys = [
+    'alphabeticBaseline',
+    'emHeightAscent',
+    'emHeightDescent',
+    'fontBoundingBoxAscent',
+    'fontBoundingBoxDescent',
+    'hangingBaseline',
+    'ideographicBaseline',
+    'actualBoundingBoxAscent',
+    'actualBoundingBoxDescent',
+    'actualBoundingBoxLeft',
+    'actualBoundingBoxRight',
+  ]
+  for (const key of extraNumericKeys) {
+    try {
+      const v = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (m))[key]
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        out[key] = v
+      }
+    } catch {
+      /* engine may omit */
+    }
+  }
+
+  return out
+}
+
+/**
+ * `measureText(text).width` for layout comparison (advance).
+ * @param {CSSStyleDeclaration} cs
+ * @param {string} text
+ * @returns {number|null}
+ */
+export function measureCanvasAdvanceWidth(cs, text) {
+  if (!text) return null
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const fs = parseFloat(cs.fontSize) || 16
+  const weight = cs.fontWeight || '400'
+  const style = cs.fontStyle || 'normal'
+  const family = cs.fontFamily || 'sans-serif'
+  ctx.font = `${style} ${weight} ${fs}px ${family}`
+  const w = ctx.measureText(text).width
+  return Number.isFinite(w) ? w : null
 }
 
 /**
@@ -310,11 +455,12 @@ export function measureFontBoxPx(cs) {
  * More stable than Range ink when line-height is pinned or fonts differ slightly.
  * @param {Element} el
  * @param {Element} root
+ * @param {ReturnType<typeof measureFontBoxPx>|null} [fontBoxPre] optional (avoids duplicate measureText)
  */
-export function measureFontMetricInk(el, root) {
+export function measureFontMetricInk(el, root, fontBoxPre = null) {
   const cs = getComputedStyle(el)
   const box = relRect(el, root)
-  const fontBox = measureFontBoxPx(cs)
+  const fontBox = fontBoxPre ?? measureFontBoxPx(cs, canvasGlyphSample(el))
   if (!fontBox) return null
 
   const borderTop = parseFloat(cs.borderTopWidth) || 0
@@ -324,6 +470,9 @@ export function measureFontMetricInk(el, root) {
   const contentTop = box.top + borderTop + paddingTop
   const top = contentTop + halfLeading
   const bottom = top + fontBox.height
+  /** Distance from baseline up/down (canvas fontBBox); baseline ≈ top of line + half-leading + ascent. */
+  const baselineApproxFromBorderTop = borderTop + paddingTop + halfLeading + fontBox.ascent
+  const baselineApproxRoot = box.top + baselineApproxFromBorderTop
 
   return {
     top,
@@ -333,6 +482,10 @@ export function measureFontMetricInk(el, root) {
     lineHeightPx,
     contentTop,
     topInBox: borderTop + paddingTop + halfLeading,
+    baselineApproxRoot,
+    baselineApproxFromBorderTop,
+    borders: { borderTop },
+    paddings: { paddingTop },
     fontBox,
   }
 }
@@ -345,17 +498,35 @@ export function collectTextFlowMetrics(el, root) {
   const cs = getComputedStyle(el)
   const box = relRect(el, root)
   const ink = measureTextInk(el, root)
-  const fontInk = measureFontMetricInk(el, root)
-  const fontBox = measureFontBoxPx(cs)
+  const fontBox = measureFontBoxPx(cs, canvasGlyphSample(el))
+  const fontInk = measureFontMetricInk(el, root, fontBox)
+  const inkRelBorder =
+    ink && Number.isFinite(box.top)
+      ? {
+          top: ink.top - box.top,
+          bottom: ink.bottom - box.top,
+          height: ink.height,
+        }
+      : null
+  const fullLine = ((el.textContent || '').trim() || '').slice(0, 500)
+  const advanceWidthFull =
+    fullLine.length > 0 ? measureCanvasAdvanceWidth(cs, fullLine) : null
+
   const out = {
     path: nodePath(el, root),
     tag: el.tagName.toLowerCase(),
     box,
     ink,
+    inkRelBorder,
     fontInk,
     fontBox,
+    advanceWidthFull,
+    canvasAdvanceLabel: fullLine.length > 64 ? `${fullLine.slice(0, 64)}…` : fullLine,
   }
   for (const p of SPACING_PROPS) {
+    out[p] = cs.getPropertyValue(p).trim()
+  }
+  for (const p of ['border-top-width', 'border-bottom-width']) {
     out[p] = cs.getPropertyValue(p).trim()
   }
   for (const p of [
@@ -389,7 +560,7 @@ export function siblingVisualGap(above, below) {
  * @param {(live: Element, clone: Document) => { liveEl: Element, cloneEl: Element }|null} picker
  * @param {number} [tolPx]
  */
-export function compareTextMetricsToSvg(liveRoot, svgStr, picker, tolPx = 1.5) {
+export function compareTextMetricsToSvg(liveRoot, svgStr, picker, tolPx = 0) {
   const { iframe, idoc, cloneRoot } = mountSvgClone(svgStr)
   const picked = picker(liveRoot, idoc)
   const metricDiffs = /** @type {MetricDiff[]} */ ([])
@@ -416,7 +587,7 @@ export function compareTextMetricsToSvg(liveRoot, svgStr, picker, tolPx = 1.5) {
   for (const [prop, live, clone] of numericKeys) {
     if (live == null || clone == null) continue
     const delta = clone - live
-    if (Math.abs(delta) > tolPx) {
+    if (lengthsDifferByTol(clone, live, tolPx)) {
       metricDiffs.push({
         path: liveM.path,
         tag: liveM.tag,
@@ -454,15 +625,14 @@ export function compareTextMetricsToSvg(liveRoot, svgStr, picker, tolPx = 1.5) {
 export function compareEmailFieldMetrics(
   liveRoot,
   svgStr,
-  spanText = 'Email Address',
-  tolPx = 1.5,
+  labelText = 'Email Address',
+  tolPx = 0,
 ) {
   const { iframe, cloneRoot } = mountSvgClone(svgStr)
-  const liveSpan = [...liveRoot.querySelectorAll('span')].find(
-    (s) => (s.textContent || '').trim() === spanText,
-  )
-  const cSpan = [...(cloneRoot?.querySelectorAll('span') || [])].find(
-    (s) => (s.textContent || '').trim() === spanText,
+  const { live: liveEl, clone: cloneEl } = findLiveCloneByText(
+    liveRoot,
+    cloneRoot,
+    labelText,
   )
 
   const metricDiffs = /** @type {MetricDiff[]} */ ([])
@@ -471,9 +641,9 @@ export function compareEmailFieldMetrics(
 
   let spanInputGap = null
 
-  if (liveSpan && cSpan) {
-    liveMetrics = collectTextFlowMetrics(liveSpan, liveRoot)
-    cloneMetrics = collectTextFlowMetrics(cSpan, cloneRoot)
+  if (liveEl && cloneEl) {
+    liveMetrics = collectTextFlowMetrics(liveEl, liveRoot)
+    cloneMetrics = collectTextFlowMetrics(cloneEl, cloneRoot)
 
     const numericKeys = [
       ['box.top', liveMetrics.box.top, cloneMetrics.box.top],
@@ -484,10 +654,10 @@ export function compareEmailFieldMetrics(
     for (const [prop, live, clone] of numericKeys) {
       if (live == null || clone == null) continue
       const delta = clone - live
-      if (Math.abs(delta) > tolPx) {
+      if (lengthsDifferByTol(clone, live, tolPx)) {
         metricDiffs.push({
           path: liveMetrics.path,
-          tag: 'span',
+          tag: liveEl.tagName.toLowerCase(),
           prop,
           live,
           clone,
@@ -496,21 +666,27 @@ export function compareEmailFieldMetrics(
       }
     }
     const boxInkAligned =
-      Math.abs(liveMetrics.box.top - cloneMetrics.box.top) <= tolPx &&
-      Math.abs(liveMetrics.box.bottom - cloneMetrics.box.bottom) <= tolPx &&
-      Math.abs((liveMetrics.ink?.top ?? 0) - (cloneMetrics.ink?.top ?? 0)) <= tolPx &&
-      Math.abs((liveMetrics.ink?.bottom ?? 0) - (cloneMetrics.ink?.bottom ?? 0)) <= tolPx
+      !lengthsDifferByTol(liveMetrics.box.top, cloneMetrics.box.top, tolPx) &&
+      !lengthsDifferByTol(liveMetrics.box.bottom, cloneMetrics.box.bottom, tolPx) &&
+      !lengthsDifferByTol(liveMetrics.ink?.top ?? 0, cloneMetrics.ink?.top ?? 0, tolPx) &&
+      !lengthsDifferByTol(liveMetrics.ink?.bottom ?? 0, cloneMetrics.ink?.bottom ?? 0, tolPx)
 
     for (const p of SPACING_PROPS) {
       if (p === 'line-height' && boxInkAligned) {
         const cloneLh = parseFloat(cloneMetrics[p])
         const inkH = liveMetrics.ink?.height
-        if (Number.isFinite(cloneLh) && inkH && Math.abs(cloneLh - inkH) <= tolPx) continue
+        if (
+          Number.isFinite(cloneLh) &&
+          inkH &&
+          !lengthsDifferByTol(cloneLh, inkH, tolPx)
+        ) {
+          continue
+        }
       }
       if (liveMetrics[p] !== cloneMetrics[p]) {
         metricDiffs.push({
           path: liveMetrics.path,
-          tag: 'span',
+          tag: liveEl.tagName.toLowerCase(),
           prop: p,
           live: liveMetrics[p],
           clone: cloneMetrics[p],
@@ -519,14 +695,14 @@ export function compareEmailFieldMetrics(
       }
     }
 
-    const liveInput = liveSpan.parentElement?.querySelector('input:not([type=checkbox])')
-    const cloneInput = cSpan.parentElement?.querySelector('input:not([type=checkbox])')
+    const liveInput = liveEl.parentElement?.querySelector('input:not([type=checkbox])')
+    const cloneInput = cloneEl.parentElement?.querySelector('input:not([type=checkbox])')
     if (liveInput && cloneInput) {
-      const liveGap = siblingVisualGap(liveSpan, liveInput)
-      const cloneGap = siblingVisualGap(cSpan, cloneInput)
+      const liveGap = siblingVisualGap(liveEl, liveInput)
+      const cloneGap = siblingVisualGap(cloneEl, cloneInput)
       const delta = cloneGap - liveGap
       spanInputGap = { live: liveGap, clone: cloneGap, delta }
-      if (Math.abs(delta) > tolPx) {
+      if (lengthsDifferByTol(cloneGap, liveGap, tolPx)) {
         metricDiffs.push({
           path: `${liveMetrics.path} → input`,
           tag: 'gap',
@@ -549,7 +725,7 @@ export function compareEmailFieldMetrics(
  * @param {string} svgStr
  * @param {number} [tolPx]
  */
-export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0.5) {
+export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0) {
   const { iframe, cloneRoot } = mountSvgClone(svgStr)
   /** @type {{ title: string, kind: 'text'|'input', liveMetrics: object, cloneMetrics: object, siblingGap?: { live: number, clone: number }|null, usedHeight?: { live: string, clone: string }|null }[]} */
   const sections = []
@@ -587,20 +763,12 @@ export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0.5) {
     sections.push({ title, kind, liveEl, liveMetrics, cloneMetrics, siblingGap, usedHeight })
   }
 
-  const findSpan = (text) => {
-    const live = [...liveRoot.querySelectorAll('span')].find(
-      (s) => (s.textContent || '').trim() === text,
-    )
-    const clone = [...(cloneRoot?.querySelectorAll('span') || [])].find(
-      (s) => (s.textContent || '').trim() === text,
-    )
-    return { live, clone }
-  }
+  const findLabel = (text) => findLiveCloneByText(liveRoot, cloneRoot, text)
 
   addSection('Logo', liveRoot.querySelector('.logo'), cloneRoot?.querySelector('.logo'))
   addSection('Checkout (h2)', liveRoot.querySelector('h2'), cloneRoot?.querySelector('h2'))
 
-  const email = findSpan('Email Address')
+  const email = findLabel('Email Address')
   addSection('Email Address (label)', email.live, email.clone, { gapToInput: true })
   addSection(
     'Email input',
@@ -615,7 +783,7 @@ export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0.5) {
     cloneRoot?.querySelector('.checkout-checkbox'),
   )
 
-  const promo = findSpan('Promo Code')
+  const promo = findLabel('Promo Code')
   addSection('Promo Code (label)', promo.live, promo.clone, { gapToInput: true })
 
   const liveInputs = [...liveRoot.querySelectorAll('input:not([type=checkbox])')]

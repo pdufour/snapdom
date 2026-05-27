@@ -8,6 +8,7 @@ import {
   parseClassRules,
   sampleCanvasRegion,
   measureTextInk,
+  LENGTH_EQ_EPS,
 } from './helpers/svgLiveCompare.js'
 import {
   usesNormalLineHeight,
@@ -29,9 +30,6 @@ const CHECKOUT_CSS = `
   .checkout-checkbox { display:flex;align-items:center;gap:12px;font-weight:600;padding:10px 0;font-size:22px; }
   .checkout-checkbox input { margin:0;width:24px;height:24px; }
 `
-
-const METRIC_TOL_PX = 1.5
-const LAYOUT_TOL_PX = 2
 
 function mountCheckoutFixture({ stageHeight } = {}) {
   let style = document.getElementById('checkout-compare-style')
@@ -101,7 +99,7 @@ describe('checkout SVG vs live alignment', () => {
     expect(cls).toBeTruthy()
     const lh = classMap.get(cls)?.['line-height']
     expect(lh).toMatch(/^\d+(\.\d+)?px$/)
-    expect(parseFloat(lh)).toBeCloseTo(layout, 0)
+    expect(Math.abs(parseFloat(lh) - (layout ?? 0))).toBeLessThanOrEqual(LENGTH_EQ_EPS)
   })
 
   it('matches text ink, margins, and span→input gap for Email Address', async () => {
@@ -110,7 +108,6 @@ describe('checkout SVG vs live alignment', () => {
       root,
       svg,
       'Email Address',
-      METRIC_TOL_PX,
     )
 
     expect(liveMetrics).toBeTruthy()
@@ -120,9 +117,9 @@ describe('checkout SVG vs live alignment', () => {
     expect(metricDiffs, JSON.stringify({ metricDiffs, liveMetrics, cloneMetrics }, null, 2)).toEqual([])
   })
 
-  it('matches layout boxes for Email field within tolerance', async () => {
+  it('matches layout boxes for Email field exactly', async () => {
     const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
-    const { layoutDiffs } = compareLayoutToSvg(root, svg, LAYOUT_TOL_PX)
+    const { layoutDiffs } = compareLayoutToSvg(root, svg)
     const emailDiffs = layoutDiffs.filter((d) => d.path.includes('Email Address'))
     expect(emailDiffs, JSON.stringify(emailDiffs, null, 2)).toEqual([])
   })
@@ -139,7 +136,7 @@ describe('checkout SVG vs live alignment', () => {
     ;({ wrap, root } = mountCheckoutFixture({ stageHeight: 600 }))
 
     const svg = svgFromDataUrl(await snapdom.toRaw(root, { embedFonts: true }))
-    const { metricDiffs } = compareEmailFieldMetrics(root, svg, 'Email Address', METRIC_TOL_PX)
+    const { metricDiffs } = compareEmailFieldMetrics(root, svg, 'Email Address')
     expect(metricDiffs, JSON.stringify(metricDiffs, null, 2)).toEqual([])
   })
 
