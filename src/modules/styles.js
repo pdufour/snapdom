@@ -88,7 +88,6 @@ function snapshotComputedStyleFull(style, options = {}) {
     const EXTRA_FONT_PROPS = [
       'font-feature-settings',
       'font-variation-settings',
-      'font-kerning',
       'font-variant',
       'font-variant-ligatures',
       'font-optical-sizing',
