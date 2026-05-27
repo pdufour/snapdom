@@ -161,6 +161,7 @@
       border: 1px solid #e5e5e5; padding: 4px 8px; text-align: left;
     }
     .structure-table tr.warn td { background: #fff3f3; color: #b71c1c; }
+    .structure-table tr.info td { color: #666; font-style: italic; }
   </style>
 </head>
 <body>
@@ -227,7 +228,7 @@
     import {
       renderCheckoutStructureReport,
     } from './structure-compare-report.js';
-    import { measureTextInk, measureSvgCloneTextInk } from '../__tests__/helpers/svgLiveCompare.js';
+    import { measureTextInk, measureSvgCloneTextInk, measureCapInk, measureCanvasInkForElement } from '../__tests__/helpers/svgLiveCompare.js';
 
     const body = document.body;
     const target = document.getElementById('capture-target');
@@ -246,6 +247,7 @@
         document.getElementById('structure-host'),
         target,
         lastSvgMarkup,
+        { canvas: lastCapCanvas, dpr: captureDpr() },
       );
     }
 
@@ -331,7 +333,7 @@
       const capGuide = document.getElementById('ink-guide-cap');
       if (!emailEl || !liveGuide || !capGuide) return;
 
-      const liveInk = measureTextInk(emailEl, target);
+      const liveInk = measureCapInk(emailEl, target);
       if (liveInk) liveGuide.style.top = `${liveInk.top}px`;
 
       if (!lastSvgMarkup) {
@@ -339,9 +341,12 @@
         return;
       }
       capGuide.style.display = '';
-      const cloneInk = measureSvgCloneTextInk(target, lastSvgMarkup, emailEl);
-      capGuide.style.top = cloneInk
-        ? `${cloneInk.top}px`
+      const canvas = capContent.querySelector('canvas');
+      const capInk = canvas
+        ? measureCanvasInkForElement(canvas, target, emailEl, captureDpr())
+        : measureSvgCloneTextInk(target, lastSvgMarkup, emailEl);
+      capGuide.style.top = capInk
+        ? `${capInk.top}px`
         : liveGuide.style.top;
     }
 

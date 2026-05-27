@@ -283,7 +283,133 @@ export function compareLayoutToSvg(liveRoot, svgStr, tolPx = 0) {
 }
 
 /**
- * Ink bounds of text inside an element (Range client rects).
+ * Cap/glyph ink top from font metrics (actualBoundingBoxAscent), not the line box.
+ * @param {Element} el
+ * @param {Element} root
+ * @param {ReturnType<typeof measureFontBoxPx>|null} [fontBoxPre]
+ */
+export function measureCapInk(el, root, fontBoxPre = null) {
+  const cs = getComputedStyle(el)
+  const box = relRect(el, root)
+  const fontBox = fontBoxPre ?? measureFontBoxPx(cs, canvasGlyphSample(el))
+  if (!fontBox || !Number.isFinite(box.top)) return null
+
+  const borderTop = parseFloat(cs.borderTopWidth) || 0
+  const paddingTop = parseFloat(cs.paddingTop) || 0
+  let lineHeightPx = resolveLineHeightPx(cs, el)
+  const layoutLh = measureLayoutLineBoxPx(cs, el)
+  if (layoutLh != null && layoutLh > 0) {
+    lineHeightPx = layoutLh
+  }
+  const halfLeading = Math.max(0, (lineHeightPx - fontBox.height) / 2)
+  const baselineFromBorderTop = borderTop + paddingTop + halfLeading + fontBox.ascent
+  const actualAscent =
+    typeof fontBox.actualBoundingBoxAscent === 'number'
+      ? fontBox.actualBoundingBoxAscent
+      : fontBox.ascent
+  const actualDescent =
+    typeof fontBox.actualBoundingBoxDescent === 'number'
+      ? fontBox.actualBoundingBoxDescent
+      : fontBox.descent
+  const topInBorder = baselineFromBorderTop - actualAscent
+  const bottomInBorder = baselineFromBorderTop + actualDescent
+
+  return {
+    top: box.top + topInBorder,
+    bottom: box.top + bottomInBorder,
+    height: actualAscent + actualDescent,
+    topInBorder,
+    bottomInBorder,
+    halfLeading,
+    baselineFromBorderTop,
+  }
+}
+
+/**
+ * Dark-pixel cap ink band inside a canvas region (device pixels).
+ * @param {HTMLCanvasElement} canvas
+ * @param {{ x: number, y: number, w: number, h: number }} region
+ * @param {{ minRowCoverage?: number, lumMax?: number }} [opts]
+ */
+export function measureCanvasTextInk(canvas, region, opts = {}) {
+  const { x, y, w, h } = region
+  const minRowCoverage = opts.minRowCoverage ?? 0.02
+  const lumMax = opts.lumMax ?? 170
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx || w <= 0 || h <= 0) return null
+  const data = ctx.getImageData(x, y, w, h).data
+  let top = null
+  let bottom = null
+  for (let row = 0; row < h; row++) {
+    let dark = 0
+    for (let col = 0; col < w; col++) {
+      const i = (row * w + col) * 4
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+      if (data[i + 3] > 32 && lum < lumMax) dark++
+    }
+    if (dark / w >= minRowCoverage) {
+      if (top === null) top = row
+      bottom = row
+    }
+  }
+  if (top === null) return null
+  return {
+    topPx: y + top,
+    bottomPx: y + bottom + 1,
+    heightPx: bottom - top + 1,
+    relTopPx: top,
+    relBottomPx: bottom + 1,
+  }
+}
+
+/**
+ * Canvas raster cap ink for an element (CSS px, relative to root / border box).
+ * @param {HTMLCanvasElement} canvas
+ * @param {Element} root
+ * @param {Element} el
+ * @param {number} [dpr]
+ */
+export function measureCanvasInkForElement(canvas, root, el, dpr = 1) {
+  const rootRect = root.getBoundingClientRect()
+  const r = el.getBoundingClientRect()
+  const inset = Math.min(16, Math.max(4, r.width * 0.05))
+  const region = {
+    x: Math.max(0, Math.round((r.left - rootRect.left + inset) * dpr)),
+    y: Math.max(0, Math.round((r.top - rootRect.top) * dpr)),
+    w: Math.max(1, Math.round((r.width - inset * 2) * dpr)),
+    h: Math.max(1, Math.round(r.height * dpr)),
+  }
+  const band = measureCanvasTextInk(canvas, region)
+  if (!band) return null
+  const top = band.topPx / dpr
+  const borderTop = r.top - rootRect.top
+  return {
+    top,
+    bottom: band.bottomPx / dpr,
+    height: band.heightPx / dpr,
+    topInBorder: top - borderTop,
+    bottomInBorder: band.bottomPx / dpr - borderTop,
+  }
+}
+
+/**
+ * Live cap ink (font metrics) vs canvas raster cap ink.
+ * @param {Element} liveRoot
+ * @param {HTMLCanvasElement} canvas
+ * @param {Element} el
+ * @param {number} [dpr]
+ */
+export function compareLiveCanvasCapInk(liveRoot, canvas, el, dpr = 1) {
+  const live = measureCapInk(el, liveRoot)
+  const raster = measureCanvasInkForElement(canvas, liveRoot, el, dpr)
+  const deltaTopInBorder =
+    live && raster ? raster.topInBorder - live.topInBorder : null
+  const deltaTopRoot = live && raster ? raster.top - live.top : null
+  return { live, canvas: raster, deltaTopInBorder, deltaTopRoot }
+}
+
+/**
+ * Line-box bounds from Range client rects (not cap/glyph ink — see {@link measureCapInk}).
  * @param {Element} el
  * @param {Element} root
  */
@@ -470,12 +596,10 @@ export function measureFontMetricInk(el, root, fontBoxPre = null) {
   const borderTop = parseFloat(cs.borderTopWidth) || 0
   const paddingTop = parseFloat(cs.paddingTop) || 0
   let lineHeightPx = resolveLineHeightPx(cs, el)
-  /** Match {@link pinLineHeightPx}: `normal` is pinned using painted layout box, not typed-OM / font fallback. */
-  if (usesNormalLineHeight(cs, el)) {
-    const layoutLh = measureLayoutLineBoxPx(cs, el)
-    if (layoutLh != null && layoutLh > 0) {
-      lineHeightPx = layoutLh
-    }
+  /** Match {@link pinLineHeightPx}: single-line leaves use painted layout box height. */
+  const layoutLh = measureLayoutLineBoxPx(cs, el)
+  if (layoutLh != null && layoutLh > 0) {
+    lineHeightPx = layoutLh
   }
   const halfLeading = Math.max(0, (lineHeightPx - fontBox.height) / 2)
   const contentTop = box.top + borderTop + paddingTop
@@ -511,6 +635,7 @@ export function collectTextFlowMetrics(el, root) {
   const ink = measureTextInk(el, root)
   const fontBox = measureFontBoxPx(cs, canvasGlyphSample(el))
   const fontInk = measureFontMetricInk(el, root, fontBox)
+  const capInk = measureCapInk(el, root, fontBox)
   const inkRelBorder =
     ink && Number.isFinite(box.top)
       ? {
@@ -519,6 +644,13 @@ export function collectTextFlowMetrics(el, root) {
           height: ink.height,
         }
       : null
+  const capInkRelBorder = capInk
+    ? {
+        top: capInk.topInBorder,
+        bottom: capInk.bottomInBorder,
+        height: capInk.height,
+      }
+    : null
   const fullLine = ((el.textContent || '').trim() || '').slice(0, 500)
   const advanceWidthFull =
     fullLine.length > 0 ? measureCanvasAdvanceWidth(cs, fullLine) : null
@@ -529,6 +661,8 @@ export function collectTextFlowMetrics(el, root) {
     box,
     ink,
     inkRelBorder,
+    capInk,
+    capInkRelBorder,
     fontInk,
     fontBox,
     advanceWidthFull,
@@ -659,8 +793,8 @@ export function compareEmailFieldMetrics(
     const numericKeys = [
       ['box.top', liveMetrics.box.top, cloneMetrics.box.top],
       ['box.bottom', liveMetrics.box.bottom, cloneMetrics.box.bottom],
-      ['ink.top', liveMetrics.ink?.top, cloneMetrics.ink?.top],
-      ['ink.bottom', liveMetrics.ink?.bottom, cloneMetrics.ink?.bottom],
+      ['cap.top', liveMetrics.capInk?.top, cloneMetrics.capInk?.top],
+      ['cap.topInBorder', liveMetrics.capInk?.topInBorder, cloneMetrics.capInk?.topInBorder],
     ]
     for (const [prop, live, clone] of numericKeys) {
       if (live == null || clone == null) continue
@@ -679,8 +813,11 @@ export function compareEmailFieldMetrics(
     const boxInkAligned =
       !lengthsDifferByTol(liveMetrics.box.top, cloneMetrics.box.top, tolPx) &&
       !lengthsDifferByTol(liveMetrics.box.bottom, cloneMetrics.box.bottom, tolPx) &&
-      !lengthsDifferByTol(liveMetrics.ink?.top ?? 0, cloneMetrics.ink?.top ?? 0, tolPx) &&
-      !lengthsDifferByTol(liveMetrics.ink?.bottom ?? 0, cloneMetrics.ink?.bottom ?? 0, tolPx)
+      !lengthsDifferByTol(
+        liveMetrics.capInk?.topInBorder ?? 0,
+        cloneMetrics.capInk?.topInBorder ?? 0,
+        tolPx,
+      )
 
     for (const p of SPACING_PROPS) {
       if (p === 'line-height' && boxInkAligned) {

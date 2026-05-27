@@ -5,9 +5,10 @@ import {
   compareLiveToSvg,
   compareLayoutToSvg,
   compareEmailFieldMetrics,
+  compareLiveCanvasCapInk,
   parseClassRules,
   sampleCanvasRegion,
-  measureTextInk,
+  measureCapInk,
   LENGTH_EQ_EPS,
 } from './helpers/svgLiveCompare.js'
 import {
@@ -140,19 +141,36 @@ describe('checkout SVG vs live alignment', () => {
     expect(metricDiffs, JSON.stringify(metricDiffs, null, 2)).toEqual([])
   })
 
+  it('matches Email cap ink on canvas raster', async () => {
+    const span = root.querySelector('label span')
+    const canvas = await snapdom.toCanvas(root, { embedFonts: true, dpr: 1, scale: 1 })
+    const { deltaTopInBorder, live, canvas: raster } = compareLiveCanvasCapInk(
+      root,
+      canvas,
+      span,
+      1,
+    )
+    expect(live).toBeTruthy()
+    expect(raster).toBeTruthy()
+    expect(
+      deltaTopInBorder,
+      JSON.stringify({ deltaTopInBorder, live, raster }, null, 2),
+    ).toBeLessThanOrEqual(LENGTH_EQ_EPS)
+  })
+
   it('canvas raster includes Email Address ink band at live metrics', async () => {
     const span = root.querySelector('label span')
-    const ink = measureTextInk(span, root)
-    expect(ink).toBeTruthy()
+    const cap = measureCapInk(span, root)
+    expect(cap).toBeTruthy()
 
     const canvas = await snapdom.toCanvas(root, { embedFonts: true, dpr: 1, scale: 1 })
     const spanRect = span.getBoundingClientRect()
     const rootRect = root.getBoundingClientRect()
     const region = {
       x: Math.max(0, Math.floor(spanRect.left - rootRect.left)),
-      y: Math.max(0, Math.floor(ink.top - 1)),
+      y: Math.max(0, Math.floor(cap.top - 1)),
       w: Math.ceil(spanRect.width),
-      h: Math.ceil(ink.height + 2),
+      h: Math.ceil(cap.height + 2),
     }
     const sample = sampleCanvasRegion(canvas, region)
     expect(sample.total).toBeGreaterThan(50)

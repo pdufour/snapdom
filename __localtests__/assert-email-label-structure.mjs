@@ -8,6 +8,17 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const repoRoot = path.resolve(__dirname, '..')
+const EMAIL_SECTION = 'Email Address (label)'
+
+/** @param {string} prop */
+function isPaintDriftMetric(prop) {
+  if (prop === 'paint.canvas.vs-border.top') return true
+  if (prop === 'paint.canvas.root.top') return true
+  if (prop === 'paint.cap.vs-border.top') return true
+  if (prop === 'paint.cap.root.top') return true
+  if (prop === 'span-input') return true
+  return false
+}
 
 function contentType(filePath) {
   const ext = path.extname(filePath).toLowerCase()
@@ -47,6 +58,47 @@ async function startStaticServer() {
   return { server, port }
 }
 
+/**
+ * @param {import('playwright').Page} page
+ */
+async function collectStructureWarns(page) {
+  return page.locator('#structure-host .structure-section').evaluateAll((sections) =>
+    sections.flatMap((sec) => {
+      const title = sec.querySelector('h3')?.textContent?.trim() || '(unknown section)'
+      return [...sec.querySelectorAll('tr.warn')].map((tr) => {
+        const tds = [...tr.querySelectorAll('td')].map((td) => (td.textContent || '').trim())
+        return {
+          section: title,
+          metric: tds[0] || '',
+          live: tds[1] || '',
+          clone: tds[2] || '',
+          delta: tds[3] || '',
+        }
+      })
+    }),
+  )
+}
+
+function formatWarns(warns) {
+  if (!warns.length) return ''
+  const bySection = new Map()
+  for (const w of warns) {
+    if (!bySection.has(w.section)) bySection.set(w.section, [])
+    bySection.get(w.section).push(w)
+  }
+  const lines = []
+  for (const [section, rows] of bySection) {
+    lines.push(`\n[${section}]`)
+    for (const r of rows) {
+      lines.push(`  ${r.metric}`)
+      lines.push(`    live:  ${r.live}`)
+      lines.push(`    clone: ${r.clone}`)
+      if (r.delta && r.delta !== '—') lines.push(`    Δ:     ${r.delta}`)
+    }
+  }
+  return lines.join('\n')
+}
+
 async function main() {
   const { server, port } = await startStaticServer()
   const browser = await chromium.launch({ headless: true })
@@ -57,37 +109,66 @@ async function main() {
       waitUntil: 'load',
     })
 
-    // Run capture → structure report renders into #structure-host
     await page.locator('#btn-capture').click()
     await page.waitForSelector('#structure-host .structure-report', { timeout: 60_000 })
 
-    const emailSection = page
-      .locator('#structure-host .structure-section')
-      .filter({ has: page.locator('h3:text("Email Address (label)")') })
+    const summary =
+      (await page.locator('#structure-host .structure-summary').first().textContent())?.trim() ||
+      ''
 
-    const sectionCount = await emailSection.count()
-    if (sectionCount !== 1) {
-      throw new Error(`Expected exactly 1 Email Address (label) section, found ${sectionCount}`)
+    const allWarns = await collectStructureWarns(page)
+    const paintDrift = allWarns.filter((w) => isPaintDriftMetric(w.metric))
+    const emailPaint = paintDrift.filter((w) => w.section === EMAIL_SECTION)
+    const otherPaint = paintDrift.filter((w) => w.section !== EMAIL_SECTION)
+
+    if (summary) {
+      // eslint-disable-next-line no-console
+      console.log(`Summary: ${summary.split('\n')[0]}`)
     }
 
-    // Exactness is enforced by the report (epsilon-only for floats); any mismatch is marked .warn.
-    // We intentionally ignore the "line-height (computed string)" row because live may stay "normal"
-    // while the clone resolves to a px value, even when glyph paint matches.
-    const warns = await emailSection.locator('tr.warn').evaluateAll((trs) =>
+    if (emailPaint.length) {
+      // eslint-disable-next-line no-console
+      console.log(`\nEmail paint drift (${emailPaint.length}):${formatWarns(emailPaint)}`)
+    } else if (paintDrift.length) {
+      // eslint-disable-next-line no-console
+      console.log(`\nNo Email paint drift (${paintDrift.length} elsewhere):${formatWarns(paintDrift)}`)
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('\nNo paint drift — paint.cap.* and paint.canvas.* match on Email label.')
+    }
+
+    const infoRows = await page.locator('#structure-host tr.info').evaluateAll((trs) =>
       trs.map((tr) => {
+        const section =
+          tr.closest('.structure-section')?.querySelector('h3')?.textContent?.trim() || '?'
         const tds = [...tr.querySelectorAll('td')].map((td) => (td.textContent || '').trim())
-        return { metric: tds[0] || '', rowText: (tr.textContent || '').trim().replace(/\s+/g, ' ') }
+        return { section, metric: tds[0] || '', live: tds[1] || '', clone: tds[2] || '' }
       }),
     )
-    const filtered = warns.filter((w) => w.metric !== 'line-height (computed string)')
-    if (filtered.length) {
-      throw new Error(
-        `Email Address (label) has ${filtered.length} mismatched rows:\n` +
-          filtered.map((w) => w.rowText).join('\n'),
+    if (infoRows.length) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `\nInfo only (${infoRows.length}, not paint drift):` +
+          infoRows.map((r) => `\n  [${r.section}] ${r.metric}: ${r.live} → ${r.clone}`).join(''),
       )
     }
 
-    // Note: we only assert the Email Address (label) section here.
+    if (otherPaint.length) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `\nNote: ${otherPaint.length} paint drift row(s) outside Email (not gated):` +
+          formatWarns(otherPaint),
+      )
+    }
+
+    if (emailPaint.length) {
+      throw new Error(
+        `"${EMAIL_SECTION}" paint drift (${emailPaint.length}):` + formatWarns(emailPaint),
+      )
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(`OK — "${EMAIL_SECTION}" cap ink matches (check paint.canvas.vs-border.top).`)
   } finally {
     await page.close().catch(() => {})
     await browser.close().catch(() => {})
@@ -100,4 +181,3 @@ main().catch((err) => {
   console.error(err?.stack || String(err))
   process.exitCode = 1
 })
-

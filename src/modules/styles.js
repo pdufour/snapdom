@@ -4,6 +4,7 @@ import {
   resolveLineHeightPxForCapture,
   usesNormalLineHeight,
   measureLayoutLineBoxPx,
+  measureCapInkInBorderBox,
   formatLineHeightPx,
   isDebug,
   pushDebugLine,
@@ -258,10 +259,9 @@ const INK_PIN_EPS = 1e-6
 
 function preserveInkOffsetForPinnedLineHeight(el, style, snap, layout) {
   if (!(el instanceof Element) || el.childElementCount > 0) return
-  const ink = measureInkTopInBorderBox(el)
-  if (!ink) return
-  const halfLeading = Math.max(0, (layout - ink.textHeight) / 2)
-  const delta = ink.inkTop - halfLeading
+  const cap = measureCapInkInBorderBox(style, el)
+  if (!cap) return
+  const delta = cap.capTopInBorder - cap.foreignCapTop
   if (Math.abs(delta) <= INK_PIN_EPS) return
   const pt = parseFloat(style.paddingTop) || 0
   const mt = parseFloat(style.marginTop) || 0
@@ -279,30 +279,34 @@ function pinLineHeightPx(el, style, snap, options = {}) {
   const tag = el.tagName?.toLowerCase()
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return
 
+  // Exactness rule: for single-line text leaves, pin line-height to the *painted* layout line box.
+  // This avoids sub-pixel drift from Typed OM / font-metric fallbacks when authored line-height is unitless.
+  const layout = measureLayoutLineBoxPx(style, el)
+  if (layout != null && layout > 0) {
+    snap['line-height'] = formatLineHeightPx(layout)
+    preserveInkOffsetForPinnedLineHeight(el, style, snap, layout)
+    if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
+      const hint = (el.textContent || '').trim().slice(0, 20)
+      pushDebugLine(options, [
+        `${tag}${hint ? ` "${hint}"` : ''}`,
+        `  lh computed: ${style.lineHeight}`,
+        `  lh getProp: ${style.getPropertyValue('line-height')}`,
+        `  → pinned layout box ${layout.toFixed(6)} (single-line leaf)`,
+        `  fs: ${style.fontSize}  el box: ${el.getBoundingClientRect().height.toFixed(3)}px`,
+      ])
+    }
+    return
+  }
+
+  // Otherwise only special-case `normal` (leave it as normal when we can't reliably pin).
   if (usesNormalLineHeight(style, el)) {
-    const layout = measureLayoutLineBoxPx(style, el)
-    if (layout != null && layout > 0) {
-      snap['line-height'] = formatLineHeightPx(layout)
-      preserveInkOffsetForPinnedLineHeight(el, style, snap, layout)
-      if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
-        const hint = (el.textContent || '').trim().slice(0, 20)
-        pushDebugLine(options, [
-          `${tag}${hint ? ` "${hint}"` : ''}`,
-          `  lh computed: ${style.lineHeight}`,
-          `  lh getProp: ${style.getPropertyValue('line-height')}`,
-          `  → pinned layout box ${layout.toFixed(6)} (was normal)`,
-          `  fs: ${style.fontSize}  el box: ${el.getBoundingClientRect().height.toFixed(3)}px`,
-        ])
-      }
-    } else {
-      delete snap['line-height']
-      if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
-        const hint = (el.textContent || '').trim().slice(0, 20)
-        pushDebugLine(options, [
-          `${tag}${hint ? ` "${hint}"` : ''}`,
-          '  → kept line-height: normal (no single-line layout box)',
-        ])
-      }
+    delete snap['line-height']
+    if (isDebug(options) && DEBUG_LH_TAGS.has(tag)) {
+      const hint = (el.textContent || '').trim().slice(0, 20)
+      pushDebugLine(options, [
+        `${tag}${hint ? ` "${hint}"` : ''}`,
+        '  → kept line-height: normal (no single-line layout box)',
+      ])
     }
     return
   }

@@ -66,6 +66,7 @@ export {
   resolveLineHeightPxForCapture,
   usesNormalLineHeight,
   measureLayoutLineBoxPx,
+  measureCapInkInBorderBox,
   formatLineHeightPx,
 } from './preciseLineHeight.js'
 export function safeEncodeURI(url) {

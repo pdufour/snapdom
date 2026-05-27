@@ -233,6 +233,56 @@ export function resolveLineHeightPxForCapture(style, el = null) {
 export const LINE_HEIGHT_PX_PRECISION = 6
 
 /**
+ * Cap/glyph ink top inside the border box (actualBoundingBoxAscent model).
+ * @param {CSSStyleDeclaration} style
+ * @param {Element} el
+ * @returns {{ capTopInBorder: number, capHeight: number, halfLeading: number, foreignCapTop: number }|null}
+ */
+export function measureCapInkInBorderBox(style, el) {
+  if (!(el instanceof Element)) return null
+  const ctx = getMeasureCtx()
+  if (!ctx) return null
+
+  const text = (el.textContent || '').trim()
+  const sample = text.length >= 2 ? text[0] + text[text.length - 1] : text || 'Mg'
+  const fs = parseFloat(style.fontSize) || 16
+  const weight = style.fontWeight || '400'
+  const fontStyle = style.fontStyle || 'normal'
+  const family = style.fontFamily || 'sans-serif'
+  ctx.font = `${fontStyle} ${weight} ${fs}px ${family}`
+  const m = ctx.measureText(sample)
+
+  const fbA = m.fontBoundingBoxAscent
+  const fbD = m.fontBoundingBoxDescent
+  const abA = m.actualBoundingBoxAscent
+  const abD = m.actualBoundingBoxDescent
+  const ascent = typeof fbA === 'number' ? fbA : abA
+  const descent = typeof fbD === 'number' ? fbD : abD
+  if (typeof ascent !== 'number' || typeof descent !== 'number') return null
+  const actualAscent = typeof abA === 'number' ? abA : ascent
+  const actualDescent = typeof abD === 'number' ? abD : descent
+  const fontHeight = ascent + descent
+
+  const borderTop = parseFloat(style.borderTopWidth) || 0
+  const paddingTop = parseFloat(style.paddingTop) || 0
+  let lineHeightPx = resolveLineHeightPx(style, el)
+  const layout = measureLayoutLineBoxPx(style, el)
+  if (layout != null && layout > 0) lineHeightPx = layout
+
+  const halfLeading = Math.max(0, (lineHeightPx - fontHeight) / 2)
+  const baselineFromBorder = borderTop + paddingTop + halfLeading + ascent
+  const capTopInBorder = baselineFromBorder - actualAscent
+  const foreignCapTop = halfLeading + (ascent - actualAscent)
+
+  return {
+    capTopInBorder,
+    capHeight: actualAscent + actualDescent,
+    halfLeading,
+    foreignCapTop,
+  }
+}
+
+/**
  * @param {number} px
  * @returns {string}
  */

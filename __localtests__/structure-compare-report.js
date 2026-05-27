@@ -1,4 +1,8 @@
-import { compareCheckoutStructure, LENGTH_EQ_EPS } from '../__tests__/helpers/svgLiveCompare.js'
+import {
+  compareCheckoutStructure,
+  LENGTH_EQ_EPS,
+  measureCanvasInkForElement,
+} from '../__tests__/helpers/svgLiveCompare.js'
 
 /** Report metadata: numeric rows use {@link LENGTH_EQ_EPS} float-safe equality (no px slack budget). */
 const STRUCTURE_EXACT_TOLERANCE = 0
@@ -29,8 +33,9 @@ const CANVAS_FONT_METRIC_ROWS = [
  * @param {object|null} liveMetrics
  * @param {object|null} cloneMetrics
  * @param {{ live: number, clone: number }|null|undefined} siblingGap
+ * @param {{ topInBorder: number, bottomInBorder?: number, height?: number }|null|undefined} canvasCapInk
  */
-function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap) {
+function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap, canvasCapInk = null) {
   if (!liveMetrics || !cloneMetrics) return []
 
   /** @type {{ prop: string, live: string|number|null, clone: string|number|null, delta: number|null }[]} */
@@ -54,28 +59,69 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap) {
   pushNum('box.bottom', liveMetrics.box.bottom, cloneMetrics.box.bottom)
   pushNum('box.height', liveMetrics.box.height, cloneMetrics.box.height)
 
-  // --- Painted glyphs: Range rects vs element border-box top ---
+  // --- Line box from Range (informational — often equals line-height box, not cap ink) ---
+  if (liveMetrics.inkRelBorder && cloneMetrics.inkRelBorder) {
+    pushNum(
+      'paint.line-box.vs-border.top',
+      liveMetrics.inkRelBorder.top,
+      cloneMetrics.inkRelBorder.top,
+    )
+    pushNum(
+      'paint.line-box.vs-border.height',
+      liveMetrics.inkRelBorder.height,
+      cloneMetrics.inkRelBorder.height,
+    )
+  }
+
+  // --- Cap / glyph ink (font metrics · actualBoundingBoxAscent) ---
+  if (liveMetrics.capInkRelBorder && cloneMetrics.capInkRelBorder) {
+    pushNum(
+      'paint.cap.vs-border.top',
+      liveMetrics.capInkRelBorder.top,
+      cloneMetrics.capInkRelBorder.top,
+    )
+    pushNum(
+      'paint.cap.vs-border.bottom',
+      liveMetrics.capInkRelBorder.bottom,
+      cloneMetrics.capInkRelBorder.bottom,
+    )
+    pushNum(
+      'paint.cap.vs-border.height',
+      liveMetrics.capInkRelBorder.height,
+      cloneMetrics.capInkRelBorder.height,
+    )
+  }
+  if (liveMetrics.capInkRelBorder && canvasCapInk) {
+    pushNum(
+      'paint.canvas.vs-border.top',
+      liveMetrics.capInkRelBorder.top,
+      canvasCapInk.topInBorder,
+    )
+    pushNum(
+      'paint.canvas.vs-border.height',
+      liveMetrics.capInkRelBorder.height,
+      canvasCapInk.height ?? null,
+    )
+  }
+  // Same cap ink, root-relative (for overlay alignment)
+  if (liveMetrics.capInk && cloneMetrics.capInk) {
+    pushNum('paint.cap.root.top', liveMetrics.capInk.top, cloneMetrics.capInk.top)
+    pushNum('paint.cap.root.bottom', liveMetrics.capInk.bottom, cloneMetrics.capInk.bottom)
+  }
+  if (liveMetrics.capInk && canvasCapInk) {
+    pushNum('paint.canvas.root.top', liveMetrics.capInk.top, canvasCapInk.top)
+  }
+
+  // --- Legacy alias (line box) ---
   if (liveMetrics.inkRelBorder && cloneMetrics.inkRelBorder) {
     pushNum(
       'paint.range.vs-border.top',
       liveMetrics.inkRelBorder.top,
       cloneMetrics.inkRelBorder.top,
     )
-    pushNum(
-      'paint.range.vs-border.bottom',
-      liveMetrics.inkRelBorder.bottom,
-      cloneMetrics.inkRelBorder.bottom,
-    )
-    pushNum(
-      'paint.range.vs-border.height',
-      liveMetrics.inkRelBorder.height,
-      cloneMetrics.inkRelBorder.height,
-    )
   }
-  // Same ink, root-relative (for overlay alignment)
   if (liveMetrics.ink && cloneMetrics.ink) {
     pushNum('paint.range.root.top', liveMetrics.ink.top, cloneMetrics.ink.top)
-    pushNum('paint.range.root.bottom', liveMetrics.ink.bottom, cloneMetrics.ink.bottom)
   }
 
   // --- Canvas measureText · full font metrics (ascent/descent/baselines/advance) ---
@@ -159,6 +205,15 @@ function buildTextStructureRows(liveMetrics, cloneMetrics, siblingGap) {
     )
   }
 
+  // Keep the raw computed line-height string visible: it catches “normal vs px” drift even
+  // when other derived metrics look close.
+  rows.push({
+    prop: 'line-height (computed string)',
+    live: liveMetrics['line-height'] ?? null,
+    clone: cloneMetrics['line-height'] ?? null,
+    delta: null,
+  })
+
   for (const p of [
     'border-top-width',
     'border-bottom-width',
@@ -224,25 +279,38 @@ function buildInputStructureRows(liveMetrics, cloneMetrics, usedHeight) {
 /**
  * @param {Element} root
  * @param {string|null} svgMarkup
+ * @param {{ canvas?: HTMLCanvasElement|null, dpr?: number }} [opts]
  */
-export function buildCheckoutStructureReport(root, svgMarkup) {
+export function buildCheckoutStructureReport(root, svgMarkup, opts = {}) {
   if (!svgMarkup) {
     return { sections: [], tolerance: STRUCTURE_EXACT_TOLERANCE }
   }
 
+  const { canvas = null, dpr = 1 } = opts
   const { sections: raw, tolerance } = compareCheckoutStructure(
     root,
     svgMarkup,
     STRUCTURE_EXACT_TOLERANCE,
   )
 
-  const sections = raw.map((sec) => ({
-    title: sec.title,
-    rows:
-      sec.kind === 'input'
-        ? buildInputStructureRows(sec.liveMetrics, sec.cloneMetrics, sec.usedHeight)
-        : buildTextStructureRows(sec.liveMetrics, sec.cloneMetrics, sec.siblingGap),
-  }))
+  const sections = raw.map((sec) => {
+    let canvasCapInk = null
+    if (canvas && sec.kind === 'text' && sec.liveEl) {
+      canvasCapInk = measureCanvasInkForElement(canvas, root, sec.liveEl, dpr)
+    }
+    return {
+      title: sec.title,
+      rows:
+        sec.kind === 'input'
+          ? buildInputStructureRows(sec.liveMetrics, sec.cloneMetrics, sec.usedHeight)
+          : buildTextStructureRows(
+              sec.liveMetrics,
+              sec.cloneMetrics,
+              sec.siblingGap,
+              canvasCapInk,
+            ),
+    }
+  })
 
   return { sections, tolerance }
 }
@@ -252,6 +320,25 @@ export function buildSvgStructureReport(root, svgMarkup) {
   const report = buildCheckoutStructureReport(root, svgMarkup)
   const email = report.sections.find((s) => s.title.includes('Email Address'))
   return { rows: email?.rows ?? [], tolerance: report.tolerance, svg: null }
+}
+
+/** Rows that indicate real vertical paint/layout drift (not cosmetic CSS string diffs). */
+function isPaintDriftMetric(prop) {
+  if (prop === 'paint.cap.vs-border.top') return true
+  if (prop === 'paint.cap.root.top') return true
+  if (prop === 'paint.canvas.vs-border.top') return true
+  if (prop === 'paint.canvas.root.top') return true
+  if (prop === 'span-input') return true
+  return false
+}
+
+/** Informational rows (line box, derived model, legacy aliases). */
+function isInfoMetric(prop) {
+  if (prop.startsWith('paint.line-box.')) return true
+  if (prop.startsWith('paint.range.')) return true
+  if (prop.startsWith('model.')) return true
+  if (prop === 'line-height (computed string)') return true
+  return false
 }
 
 /**
@@ -271,20 +358,24 @@ export function renderCheckoutStructureHtml(report) {
     return `${sign}${d.toFixed(2)}px`
   }
 
-  let warnCount = 0
+  let paintDriftCount = 0
   let body = ''
 
   for (const sec of sections) {
     let tbody = ''
     for (const r of sec.rows) {
       const numericWarn =
+        isPaintDriftMetric(r.prop) &&
         typeof r.delta === 'number' &&
         Number.isFinite(r.delta) &&
         Math.abs(r.delta) > numericEps
-      const stringWarn = false
-      const warn = numericWarn || stringWarn
-      if (warn) warnCount++
-      tbody += `<tr${warn ? ' class="warn"' : ''}>
+      if (numericWarn) paintDriftCount++
+      const rowClass = numericWarn
+        ? 'warn'
+        : isInfoMetric(r.prop)
+          ? 'info'
+          : ''
+      tbody += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
         <td>${r.prop}</td>
         <td>${fmtVal(r.live)}</td>
         <td>${fmtVal(r.clone)}</td>
@@ -308,14 +399,14 @@ export function renderCheckoutStructureHtml(report) {
   const summary =
     sections.length === 0
       ? ''
-      : warnCount === 0
-        ? '<p class="structure-summary is-ok">All numeric metrics match exactly (IEEE float jitter only, ε = 10⁻⁶ px).</p>'
-        : `<p class="structure-summary is-warn">${warnCount} metric${warnCount === 1 ? '' : 's'} differ beyond float-safe equality.</p>`
+      : paintDriftCount === 0
+        ? '<p class="structure-summary is-ok">No paint drift — <strong>paint.cap.*</strong> and <strong>paint.canvas.*</strong> match exactly.</p>'
+        : `<p class="structure-summary is-warn">${paintDriftCount} paint-drift metric${paintDriftCount === 1 ? '' : 's'} (see <strong>paint.cap.*</strong> / <strong>paint.canvas.*</strong> rows).</p>`
 
   return `
   <div class="structure-report">
     <h2>Live DOM vs SVG clone (structure)</h2>
-    <p class="structure-summary"><strong>paint.range.*</strong> = Range client rects. <strong>font-metrics · …</strong> = Canvas <code>measureText</code> (ascent, descent, baselines, glyph bbox, advance). <strong>model.*</strong> = half-leading alignment. <strong>advance width · full line</strong> = layout width of the full label text.</p>
+    <p class="structure-summary">Trust <strong>paint.cap.vs-border.top</strong> (glyph cap ink) and <strong>paint.canvas.vs-border.top</strong> (live cap vs raster). <strong>paint.range.*</strong> is the line box only (informational).</p>
     ${summary}
     ${body}
   </div>`
@@ -337,65 +428,14 @@ export function renderSvgStructureHtml(report) {
  * @param {HTMLElement} host
  * @param {Element} root
  * @param {string|null} svgMarkup
+ * @param {{ canvas?: HTMLCanvasElement|null, dpr?: number }} [opts]
  */
-export function renderCheckoutStructureReport(host, root, svgMarkup) {
+export function renderCheckoutStructureReport(host, root, svgMarkup, opts = {}) {
   if (!host) return
-  host.innerHTML = renderCheckoutStructureHtml(buildCheckoutStructureReport(root, svgMarkup))
+  host.innerHTML = renderCheckoutStructureHtml(buildCheckoutStructureReport(root, svgMarkup, opts))
 }
 
 /** @deprecated */
-export function renderSvgStructureReport(host, root, svgMarkup) {
-  renderCheckoutStructureReport(host, root, svgMarkup)
-}
-
-/**
- * @param {Element} root
- * @param {Element} el
- * @param {number} dpr
- */
-export function canvasRegionForEl(root, el, dpr) {
-  const rootRect = root.getBoundingClientRect()
-  const r = el.getBoundingClientRect()
-  return {
-    x: Math.max(0, Math.floor((r.left - rootRect.left) * dpr)),
-    y: Math.max(0, Math.floor((r.top - rootRect.top) * dpr)),
-    w: Math.max(1, Math.ceil(r.width * dpr)),
-    h: Math.max(1, Math.ceil(r.height * dpr)),
-  }
-}
-
-/**
- * Dark-pixel ink band inside a canvas region (device pixels).
- * @param {HTMLCanvasElement} canvas
- * @param {{ x: number, y: number, w: number, h: number }} region
- * @param {{ glyph?: boolean, minRowCoverage?: number, lumMax?: number }} [opts]
- */
-export function measureCanvasTextInk(canvas, region, opts = {}) {
-  const { x, y, w, h } = region
-  const minRowCoverage = opts.minRowCoverage ?? (opts.glyph !== false ? 0.06 : 0)
-  const lumMax = opts.lumMax ?? 235
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })
-  const data = ctx.getImageData(x, y, w, h).data
-  let top = null
-  let bottom = null
-  for (let row = 0; row < h; row++) {
-    let dark = 0
-    for (let col = 0; col < w; col++) {
-      const i = (row * w + col) * 4
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
-      if (data[i + 3] > 32 && lum < lumMax) dark++
-    }
-    if (w > 0 && dark / w >= minRowCoverage) {
-      if (top === null) top = row
-      bottom = row
-    }
-  }
-  if (top === null) return null
-  return {
-    topPx: y + top,
-    bottomPx: y + bottom + 1,
-    heightPx: bottom - top + 1,
-    relTopPx: top,
-    relBottomPx: bottom + 1,
-  }
+export function renderSvgStructureReport(host, root, svgMarkup, opts = {}) {
+  renderCheckoutStructureReport(host, root, svgMarkup, opts)
 }

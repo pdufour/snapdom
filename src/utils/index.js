@@ -12,6 +12,7 @@ export {
   resolveLineHeightPxForCapture,
   usesNormalLineHeight,
   measureLayoutLineBoxPx,
+  measureCapInkInBorderBox,
   formatLineHeightPx,
 } from './helpers.js'
 export { debugWarn } from './debug.js'
