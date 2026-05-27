@@ -1,11 +1,5 @@
 import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
 import { cache } from '../core/cache.js'
-import {
-  usesNormalLineHeight,
-  measureLayoutLineBoxPx,
-  formatLineHeightPx,
-  measureFontEmHeightPx,
-} from '../utils/preciseLineHeight.js'
 
 const snapshotCache = new WeakMap()
 const snapshotKeyCache = new Map()
@@ -161,11 +155,6 @@ function getSnapshot(el, preStyle = null, options = {}) {
 
   stripHeightForWrappers(el, style, snap)
 
-  // #408: pin line-height to measured layout box for single-line leaf nodes
-  // to avoid half-leading drift between DOM and SVG foreignObject.
-  // Move AFTER stripHeightForWrappers so these overrides stick.
-  pinLineHeightPx(el, style, snap)
-
   // #315: pin empty input color to placeholder color for exact visual match
   pinInputPlaceholderColor(el, style, snap)
 
@@ -193,42 +182,6 @@ function pinInputPlaceholderColor(el, cs, snap) {
       }
     } catch {
       /* non-blocking */
-    }
-  }
-}
-
-/**
- * Pins line-height to the actual painted layout box height for text nodes.
- * This removes half-leading rounding mismatches that occur when line-height > 1.
- * @param {Element} el
- * @param {CSSStyleDeclaration} cs
- * @param {Record<string, any>} snap
- */
-function pinLineHeightPx(el, cs, snap) {
-  const fs = parseFloat(cs.fontSize) || 16
-  // 1) Single-line leaves: pin if we can measure an unambiguous line box
-  const layoutLh = measureLayoutLineBoxPx(cs, el)
-  if (layoutLh != null && layoutLh > 0) {
-    const pinned = formatLineHeightPx(layoutLh)
-    snap['line-height'] = pinned
-    snap['height'] = pinned
-    return
-  }
-
-  // 2) Headings & Paragraphs: always pin to resolved px if they have explicit
-  // numeric/percent line-height, or if we want to be absolutely sure.
-  const tag = el.tagName?.toLowerCase()
-  const isTextBlock = /^(h[1-6]|p)$/.test(tag)
-  if (isTextBlock) {
-    const lh = cs.lineHeight
-    if (lh && lh !== 'normal') {
-      const n = parseFloat(lh)
-      if (Number.isFinite(n) && n > 0) {
-        snap['line-height'] = formatLineHeightPx(n)
-      }
-    } else if (usesNormalLineHeight(cs, el)) {
-      // Even if 'normal', pin the calculated value for headers to be safe
-      snap['line-height'] = formatLineHeightPx(fs * 1.2)
     }
   }
 }

@@ -77,8 +77,9 @@ async function collectStructureWarns(page) {
           }
         })
         .filter((w) => {
-          // Allow ~1.5px slack for canvas metrics (AA threshold/sub-pixel distribution)
-          if (w.metric.includes('paint.canvas')) {
+          // Allow ~1.5px slack for paint metrics (AA threshold/sub-pixel distribution)
+          // We use this because we reverted explicit pinning to preserve better kerning.
+          if (w.metric.includes('paint.canvas') || w.metric.includes('paint.cap')) {
             const d = parseFloat(w.delta)
             if (Number.isFinite(d) && Math.abs(d) <= 1.5) return false
           }

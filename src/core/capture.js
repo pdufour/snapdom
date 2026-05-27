@@ -388,7 +388,8 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}">`
+      const rootFontSize = parseFloat(getStyle(elDoc.documentElement)?.fontSize) || 16
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`
