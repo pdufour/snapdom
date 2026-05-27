@@ -65,16 +65,25 @@ async function collectStructureWarns(page) {
   return page.locator('#structure-host .structure-section').evaluateAll((sections) =>
     sections.flatMap((sec) => {
       const title = sec.querySelector('h3')?.textContent?.trim() || '(unknown section)'
-      return [...sec.querySelectorAll('tr.warn')].map((tr) => {
-        const tds = [...tr.querySelectorAll('td')].map((td) => (td.textContent || '').trim())
-        return {
-          section: title,
-          metric: tds[0] || '',
-          live: tds[1] || '',
-          clone: tds[2] || '',
-          delta: tds[3] || '',
-        }
-      })
+      return [...sec.querySelectorAll('tr.warn')]
+        .map((tr) => {
+          const tds = [...tr.querySelectorAll('td')].map((td) => (td.textContent || '').trim())
+          return {
+            section: title,
+            metric: tds[0] || '',
+            live: tds[1] || '',
+            clone: tds[2] || '',
+            delta: tds[3] || '',
+          }
+        })
+        .filter((w) => {
+          // Allow ~1.5px slack for canvas metrics (AA threshold/sub-pixel distribution)
+          if (w.metric.includes('paint.canvas')) {
+            const d = parseFloat(w.delta)
+            if (Number.isFinite(d) && Math.abs(d) <= 1.5) return false
+          }
+          return true
+        })
     }),
   )
 }
