@@ -77,7 +77,7 @@ async function collectStructureWarns(page) {
           }
         })
         .filter((w) => {
-          // Absolute truth: no slack
+          // Absolute truth check
           return true
         })
     }),
@@ -107,7 +107,10 @@ function formatWarns(warns) {
 async function main() {
   const { server, port } = await startStaticServer()
   const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage({ viewport: { width: 1300, height: 900 } })
+  const page = await browser.newPage({ 
+    viewport: { width: 1300, height: 900 },
+    deviceScaleFactor: 2 
+  })
 
   try {
     await page.goto(`http://127.0.0.1:${port}/__localtests__/checkout-example.html`, {
