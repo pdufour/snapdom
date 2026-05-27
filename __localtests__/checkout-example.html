@@ -228,7 +228,7 @@
     import {
       renderCheckoutStructureReport,
     } from './structure-compare-report.js';
-    import { measureTextInk, measureSvgCloneTextInk, measureCapInk, measureCanvasInkForElement } from '../__tests__/helpers/svgLiveCompare.js';
+    import { measureTextInk, measureSvgCloneTextInk, measureCanvasInkForElement } from '../__tests__/helpers/svgLiveCompare.js';
 
     const body = document.body;
     const target = document.getElementById('capture-target');
@@ -333,7 +333,7 @@
       const capGuide = document.getElementById('ink-guide-cap');
       if (!emailEl || !liveGuide || !capGuide) return;
 
-      const liveInk = measureCapInk(emailEl, target);
+      const liveInk = measureTextInk(emailEl, target);
       if (liveInk) liveGuide.style.top = `${liveInk.top}px`;
 
       if (!lastSvgMarkup) {

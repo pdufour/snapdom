@@ -1,8 +1,48 @@
-import {
-  resolveLineHeightPx,
-  measureLayoutLineBoxPx,
-  usesNormalLineHeight,
-} from '../../src/utils/preciseLineHeight.js'
+/**
+ * Single-line content box height (compare helpers only).
+ * @param {CSSStyleDeclaration} style
+ * @param {Element} el
+ * @returns {number|null}
+ */
+function measureLayoutLineBoxPx(style, el) {
+  if (!(el instanceof Element) || el.childElementCount > 0) return null
+  if (!(el.textContent || '').trim()) return null
+  const pad =
+    (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+  const h = el.getBoundingClientRect().height
+  if (h <= pad) return null
+  const content = h - pad
+  return el.scrollHeight <= content + 2 ? content : null
+}
+
+/**
+ * Used line-height in px from computed style (compare helpers only).
+ * @param {CSSStyleDeclaration} style
+ * @param {Element} [el]
+ * @returns {number}
+ */
+function resolveLineHeightPx(style, el = null) {
+  const fs = parseFloat(style.fontSize) || 16
+  let px = NaN
+  const lhUsed = style.lineHeight
+  if (lhUsed && lhUsed !== 'normal') {
+    const n = parseFloat(lhUsed)
+    if (Number.isFinite(n) && n > 0) px = n
+  }
+  if (!Number.isFinite(px)) {
+    const gp = (style.getPropertyValue('line-height') || '').trim()
+    if (gp && gp !== 'normal') {
+      if (gp.endsWith('px')) px = parseFloat(gp)
+      else if (gp.endsWith('%')) px = (parseFloat(gp) / 100) * fs
+      else if (/^\d+(\.\d+)?$/.test(gp)) px = parseFloat(gp) * fs
+    }
+  }
+  if (!Number.isFinite(px) || px <= 0) {
+    const layout = measureLayoutLineBoxPx(style, el)
+    px = layout != null && layout > 0 ? layout : fs * 1.2
+  }
+  return px
+}
 
 /**
  * Numeric length equality for geometry from browser APIs (`tolPx` 0).
