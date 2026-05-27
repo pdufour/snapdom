@@ -10,20 +10,53 @@
     body {
       margin: 0; padding: 0; background: #fff;
       font-family: -apple-system, system-ui, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-      height: 100vh; overflow: hidden;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .controls {
-      position: fixed; top: 10px; z-index: 1000;
-      display: flex; gap: 10px; background: rgba(255, 255, 255, 0.9);
-      padding: 8px; border: 1px solid #ddd; border-radius: 8px;
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+      max-width: calc(100vw - 24px);
+    }
+
+    .workspace {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+      width: min(96vw, 1240px);
+      margin: 72px auto 32px;
+      padding: 0 12px;
+    }
+
+    @media (max-width: 960px) {
+      .workspace { flex-direction: column; align-items: center; }
+    }
+
+    .stage-wrap {
+      flex: 0 0 auto;
+      position: sticky;
+      top: 72px;
     }
 
     .stage {
       position: relative;
-      width: 500px; height: 600px;
-      margin-top: 60px; border: 1px solid #eee;
+      width: 500px;
+      max-height: calc(100vh - 88px);
+      border: 1px solid #eee;
+      background: #fff;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .stage-inner {
+      position: relative;
+      min-height: 600px;
     }
 
     .layer { position: absolute; inset: 0; background: #fff; }
@@ -73,7 +106,7 @@
     }
 
     /* Checkout Styles */
-    .checkout-page { background: #fff; color: #111; height: 100%; display: flex; flex-direction: column; font-size: 24px; }
+    .checkout-page { background: #fff; color: #111; min-height: 100%; display: flex; flex-direction: column; font-size: 24px; }
     .checkout-header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 20px 30px; background: #fff; border-bottom: 2px solid #eee;
@@ -91,146 +124,95 @@
     
     #cap-content canvas { display: block; }
 
-    .visual-diff-dialog {
-      border: none; border-radius: 10px; padding: 0;
-      max-width: min(96vw, 1200px); width: 96vw;
-      box-shadow: 0 12px 40px rgba(0,0,0,.2);
-    }
-    .visual-diff-dialog::backdrop { background: rgba(0,0,0,.45); }
-    .visual-diff-dialog header {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-    .visual-diff-dialog header button {
-      margin-left: auto; border: none; background: #eee;
-      width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 18px;
-    }
-    #visual-diff-stats { color: #666; font-weight: 500; font-size: 13px; }
-    #visual-diff-stats.is-ready { color: #c62828; font-weight: 600; }
-    #visual-diff-stats.is-ok { color: #2e7d32; font-weight: 600; }
-    .visual-diff-hint {
-      margin: 0; padding: 8px 16px 0;
-      font-size: 12px; color: #555; line-height: 1.45;
-    }
-    .visual-diff-opt {
-      display: block; margin: 6px 16px 0;
-      font-size: 12px; color: #444; cursor: pointer;
-    }
-    .visual-diff-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-      padding: 16px; background: #f8f8f8;
-    }
-    @media (max-width: 900px) { .visual-diff-grid { grid-template-columns: 1fr; } }
-    .visual-diff-grid figure { margin: 0; }
-    .visual-diff-grid figcaption {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      color: #666; margin-bottom: 6px;
-    }
-    .visual-diff-grid canvas {
-      display: block; max-width: 100%; height: auto;
-      border: 1px dashed #ccc; background: #fff;
-    }
-    .email-compare-panel {
-      padding: 12px 16px 16px;
-      border-top: 1px solid #eee;
-      background: #fff;
-      max-height: 280px;
-      overflow: auto;
+    .structure-host {
+      flex: 1 1 360px;
+      min-width: min(100%, 360px);
+      max-width: 720px;
       font-size: 12px;
     }
-    .email-compare-panel h3 { margin: 0 0 6px; font-size: 13px; }
-    .email-compare-panel h4 { margin: 14px 0 6px; font-size: 12px; color: #444; }
-    .email-compare-note { margin: 0 0 10px; color: #666; }
-    .email-compare-table {
-      width: 100%; border-collapse: collapse; margin-bottom: 8px;
+    .structure-host:empty { display: none; }
+    .structure-host:not(:empty) {
+      position: sticky;
+      top: 72px;
+      max-height: calc(100vh - 88px);
+      overflow: auto;
+      padding-right: 4px;
     }
-    .email-compare-table th, .email-compare-table td {
+    .structure-report > h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+    .structure-summary { margin: 0 0 12px; }
+    .structure-summary.is-ok { color: #2e7d32; font-weight: 600; }
+    .structure-summary.is-warn { color: #b71c1c; font-weight: 600; }
+    .structure-empty { color: #666; margin: 0; }
+    .structure-section {
+      padding: 10px 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      background: #fafafa;
+      margin-bottom: 10px;
+    }
+    .structure-section h3 { margin: 0 0 6px; font-size: 13px; }
+    .structure-table {
+      width: 100%; border-collapse: collapse;
+    }
+    .structure-table th, .structure-table td {
       border: 1px solid #e5e5e5; padding: 4px 8px; text-align: left;
     }
-    .email-compare-table tr.warn td { background: #fff3f3; color: #b71c1c; }
-    .email-compare-why {
-      margin: 8px 0 0; padding-left: 18px; color: #333; line-height: 1.45;
-    }
-    .email-compare-why code { font-size: 11px; }
-    .email-crop-host { margin-top: 10px; }
-    .email-crop-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-    }
-    .email-crop-grid figure { margin: 0; }
-    .email-crop-grid figcaption {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      color: #666; margin-bottom: 4px;
-    }
-    .email-crop-grid canvas {
-      display: block; border: 1px solid #ccc; background: #fff;
-    }
+    .structure-table tr.warn td { background: #fff3f3; color: #b71c1c; }
   </style>
 </head>
 <body>
   
   <div class="controls">
-    <span style="font-size:11px;color:#666;max-width:140px;line-height:1.3" title="Cmd+Shift+R if Pixel diff still says Live page">
+    <span style="font-size:11px;color:#666;max-width:140px;line-height:1.3">
       repro v3
     </span>
     <button id="btn-capture">Capture</button>
     <button id="btn-toggle">Show Canvas</button>
     <button id="btn-export-svg" type="button">Export SVG</button>
     <button id="btn-export-html" type="button">Export compare HTML</button>
-    <button id="btn-visual-diff" type="button" disabled title="Compare live tab vs SnapDOM capture">Pixel diff</button>
-    <label>Guide Y: <input type="range" id="guide-slider" min="0" max="600" value="100"></label>
+    <label>Guide Y: <input type="range" id="guide-slider" min="0" max="1200" value="100"></label>
   </div>
 
-  <dialog id="visual-diff-dialog" class="visual-diff-dialog">
-    <form method="dialog">
-      <header>
-        <strong>Pixel diff</strong>
-        <span id="visual-diff-stats"></span>
-        <button value="close" aria-label="Close">×</button>
-      </header>
-      <p class="visual-diff-hint" id="visual-diff-hint">
-        <strong>Live page</strong> = tab screenshot of this checkout (CropTarget).
-        <strong>SnapDOM</strong> = canvas from Capture. Use <kbd>Space</kbd> toggle for layout; red here is often font/AA noise.
-      </p>
-      <div class="visual-diff-grid">
-        <figure><figcaption>Live page</figcaption><canvas id="vd-live"></canvas></figure>
-        <figure><figcaption>SnapDOM</figcaption><canvas id="vd-cap"></canvas></figure>
-        <figure><figcaption>Diff (red)</figcaption><canvas id="vd-diff"></canvas></figure>
-      </div>
-      <div id="email-compare-host"></div>
-      <div id="email-crop-host" class="email-crop-host"></div>
-    </form>
-  </dialog>
+  <div class="workspace">
+    <div class="stage-wrap">
+      <div class="stage" id="stage-scroll">
+        <div class="stage-inner" id="stage-inner">
+        <div class="stage-flash-label" id="stage-flash-label" aria-live="polite"></div>
+        <div class="guide" id="guide-line"></div>
+        <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Live: top of Email Address ink"></div>
+        <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Capture: top of Email Address ink"></div>
 
-  <div class="stage">
-    <div class="stage-flash-label" id="stage-flash-label" aria-live="polite"></div>
-    <div class="guide" id="guide-line"></div>
-    <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Live: top of Email Address ink"></div>
-    <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Capture: top of Email Address ink"></div>
-    
-    <div class="layer" id="live-layer">
-      <div id="capture-target" class="checkout-page">
-        <header class="checkout-header">
-          <span class="logo">ShopDemo1</span>
-          <nav><a href="#">Home</a><a href="#">Products</a></nav>
-        </header>
-        <main class="checkout-main">
-          <h2 style="margin: 0 0 20px 0; font-size: 80px; font-weight: 700; line-height: 1.2; font-kerning: none; letter-spacing: normal; text-rendering: optimizeSpeed;">Checkout</h2>
-          <form class="checkout-form" onsubmit="return false">
-            <label><span>Email Address</span> <input type="email" placeholder="you@example.com"></label>
-            <label class="checkout-checkbox">
-              <input type="checkbox" id="checkout-remember">
-              Remember my details
-            </label>
-            <label><span>Promo Code</span> <input type="text" placeholder="SAVE10"></label>
-          </form>
-        </main>
+        <div class="layer" id="live-layer">
+          <div id="capture-target" class="checkout-page">
+            <header class="checkout-header">
+              <span class="logo">ShopDemo1</span>
+              <nav><a href="#">Home</a><a href="#">Products</a></nav>
+            </header>
+            <main class="checkout-main">
+              <h2 style="margin: 0 0 20px 0; font-size: 80px; font-weight: 700; line-height: 1.2; font-kerning: none; letter-spacing: normal; text-rendering: optimizeSpeed;">Checkout</h2>
+              <form class="checkout-form" onsubmit="return false">
+                <label><span>Email Address</span> <input type="email" placeholder="you@example.com"></label>
+                <label class="checkout-checkbox">
+                  <input type="checkbox" id="checkout-remember">
+                  Remember my details
+                </label>
+                <label><span>Promo Code</span> <input type="text" placeholder="SAVE10"></label>
+              </form>
+            </main>
+          </div>
+        </div>
+
+        <div class="layer" id="cap-layer">
+          <div id="cap-content"></div>
+        </div>
+        </div>
       </div>
     </div>
 
-    <div class="layer" id="cap-layer">
-      <div id="cap-content"></div>
-    </div>
+    <div id="structure-host" class="structure-host"></div>
   </div>
 
   <script type="module">
@@ -243,17 +225,10 @@
       downloadText,
     } from './checkout-export-utils.js';
     import {
-      alignCanvasPair,
-      compareVisualDiff,
-    } from './visual-diff.js';
-    import { captureLiveElement, liveCaptureSupported } from './capture-live-element.js';
-    import {
-      buildEmailCompareReport,
-      renderEmailCompareHtml,
-      renderEmailCropCanvases,
+      renderCheckoutStructureReport,
       measureCanvasTextInk,
-    } from './email-compare-report.js';
-    import { measureTextInk } from '../__tests__/helpers/svgLiveCompare.js';
+    } from './structure-compare-report.js';
+    import { measureTextInk, measureFontMetricInk } from '../__tests__/helpers/svgLiveCompare.js';
 
     const body = document.body;
     const target = document.getElementById('capture-target');
@@ -266,6 +241,16 @@
     }
 
     let showingCap = false;
+
+    function updateStructureReport() {
+      renderCheckoutStructureReport(
+        document.getElementById('structure-host'),
+        target,
+        lastSvgMarkup,
+      );
+    }
+
+    /** @type {string|null} */
     let lastSvgMarkup = null;
     /** @type {HTMLCanvasElement|null} */
     let lastCapCanvas = null;
@@ -278,7 +263,6 @@
       dpr: captureDpr(),
       scale: 1,
     });
-    const pixelDiffOpts = () => ({ ...captureOpts(), debug: false });
 
     /** One DOM capture; SVG string is free, canvas rasterizes the same snapshot. */
     async function snapdomOnce(opts) {
@@ -295,22 +279,31 @@
       return svgMarkup;
     }
 
+    function syncStageHeight() {
+      const inner = document.getElementById('stage-inner');
+      if (!inner || !target) return;
+      const h = Math.max(600, target.scrollHeight);
+      inner.style.height = `${h}px`;
+      guideSlider.max = String(h);
+    }
+
     function syncCapOverlay() {
       const canvas = capContent.querySelector('canvas');
-      const stage = document.querySelector('.stage');
-      if (!canvas || !stage) {
+      const stageInner = document.getElementById('stage-inner');
+      if (!canvas || !stageInner) {
         capContent.style.width = '';
         capContent.style.height = '';
         capContent.style.left = '';
         capContent.style.top = '';
         return;
       }
-      const stageRect = stage.getBoundingClientRect();
+      const stageRect = stageInner.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
       capContent.style.left = `${targetRect.left - stageRect.left}px`;
       capContent.style.top = `${targetRect.top - stageRect.top}px`;
       capContent.style.width = `${targetRect.width}px`;
       capContent.style.height = `${targetRect.height}px`;
+      syncStageHeight();
     }
 
     function setView(show) {
@@ -333,7 +326,7 @@
       if (!span || !liveGuide || !capGuide) return;
 
       const rootRect = target.getBoundingClientRect();
-      const ink = measureTextInk(span, target);
+      const ink = measureFontMetricInk(span, target) ?? measureTextInk(span, target);
       if (ink) liveGuide.style.top = `${ink.top}px`;
 
       const canvas = capContent.querySelector('canvas');
@@ -342,7 +335,7 @@
         return;
       }
       capGuide.style.display = '';
-      const dpr = pixelDiffOpts().dpr || 1;
+      const dpr = captureDpr();
       const spanRect = span.getBoundingClientRect();
       const reg = {
         x: Math.max(0, Math.floor((spanRect.left - rootRect.left) * dpr)),
@@ -350,7 +343,7 @@
         w: Math.max(1, Math.ceil(spanRect.width * dpr)),
         h: Math.max(1, Math.ceil(spanRect.height * dpr)),
       };
-      const capInk = measureCanvasTextInk(canvas, reg);
+      const capInk = measureCanvasTextInk(canvas, reg, { glyph: true });
       capGuide.style.top = capInk
         ? `${(reg.y + capInk.relTopPx) / dpr}px`
         : liveGuide.style.top;
@@ -359,9 +352,12 @@
     btnToggle.onclick = () => setView(!showingCap);
 
     window.addEventListener('resize', () => {
+      syncStageHeight();
       syncCapOverlay();
       if (showingCap) updateEmailInkGuides();
     });
+
+    syncStageHeight();
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') { e.preventDefault(); setView(!showingCap); }
@@ -377,33 +373,6 @@
       return copy;
     }
 
-    function getCachedCaptureCanvas() {
-      if (!lastCapCanvas) return null;
-      return cloneCanvas(lastCapCanvas);
-    }
-
-    const btnVisualDiff = document.getElementById('btn-visual-diff');
-    const btnVisualDiffLabel = btnVisualDiff.textContent;
-    const stageFlashLabel = document.getElementById('stage-flash-label');
-
-    function setPixelDiffReady(ready) {
-      btnVisualDiff.disabled = !ready;
-      btnVisualDiff.title = ready
-        ? 'Compare live tab screenshot vs SnapDOM capture'
-        : 'Run Capture first';
-    }
-
-    async function flashStage(mode, label, ms = 700) {
-      body.setAttribute('data-flash', mode);
-      stageFlashLabel.textContent = label;
-      if (mode === 'live') setView(false);
-      else if (mode === 'snapdom') setView(true);
-      else if (mode === 'both') setView(true);
-      await new Promise((r) => setTimeout(r, ms));
-      body.removeAttribute('data-flash');
-      stageFlashLabel.textContent = '';
-    }
-
     document.getElementById('btn-capture').onclick = async () => {
       const btn = document.getElementById('btn-capture');
       const btnLabel = btn.textContent;
@@ -411,11 +380,10 @@
         btn.disabled = true;
         btn.textContent = 'Capturing…';
         setCaptureQuiet(true);
-        const opts = pixelDiffOpts();
+        const opts = captureOpts();
         const { svgMarkup, canvas } = await snapdomOnce(opts);
         lastSvgMarkup = svgMarkup;
         lastCapCanvas = cloneCanvas(canvas);
-        setPixelDiffReady(true);
         capContent.innerHTML = '';
         const dpr = opts.dpr || 1;
         canvas.style.width = `${canvas.width / dpr}px`;
@@ -423,6 +391,7 @@
         capContent.appendChild(canvas);
         syncCapOverlay();
         updateEmailInkGuides();
+        updateStructureReport();
         setView(true);
       } catch (e) { alert(e.message); }
       finally {
@@ -440,165 +409,7 @@
       } catch (e) { alert(e.message); }
     };
 
-    const visualDialog = document.getElementById('visual-diff-dialog');
-    const vdStats = document.getElementById('visual-diff-stats');
-
-    function drawDiffCanvas(id, source) {
-      const el = document.getElementById(id);
-      el.width = source.width;
-      el.height = source.height;
-      el.getContext('2d').drawImage(source, 0, 0);
-      const cssDpr = captureDpr();
-      el.style.width = `${source.width / cssDpr}px`;
-      el.style.height = `${source.height / cssDpr}px`;
-    }
-
-    function clearDiffCanvas(id) {
-      const el = document.getElementById(id);
-      el.width = 0;
-      el.height = 0;
-      el.style.width = '';
-      el.style.height = '';
-      el.getContext('2d').clearRect(0, 0, 0, 0);
-    }
-
-    function openPixelDiffModal(statusText) {
-      vdStats.classList.remove('is-ready', 'is-ok');
-      vdStats.textContent = statusText;
-    }
-
-    /** showModal() only works with a fresh user gesture; after tab capture use show() fallback. */
-    function showVisualDialog() {
-      if (visualDialog.open) return;
-      try {
-        visualDialog.showModal();
-      } catch {
-        visualDialog.show();
-      }
-    }
-
-    function finishPixelDiff(liveCanvas, capCanvas, result) {
-      const pct = result.mismatchRatio * 100;
-      const pctStr = pct.toFixed(2);
-      vdStats.classList.remove('is-ok');
-      vdStats.classList.add('is-ready');
-      if (pct < 1) vdStats.classList.add('is-ok');
-      const note =
-        pct < 2
-          ? ' · very close (toggle is the layout check)'
-          : pct < 8
-            ? ' · typical tab vs canvas noise — trust toggle if it looks aligned'
-            : ' · large gap — re-run Capture or check tab picker';
-      vdStats.textContent = `${pctStr}% pixels differ (${result.mismatchedPixels.toLocaleString()} / ${result.totalPixels.toLocaleString()})${result.sizeMismatch ? ' · resized to match' : ''}${note}`;
-      drawDiffCanvas('vd-live', liveCanvas);
-      drawDiffCanvas('vd-cap', capCanvas);
-      drawDiffCanvas('vd-diff', result.diffCanvas);
-      showVisualDialog();
-
-      const dpr = pixelDiffOpts().dpr || 1;
-      try {
-        const report = buildEmailCompareReport({
-          root: target,
-          dpr,
-          liveCanvas,
-          capCanvas,
-          svgMarkup: lastSvgMarkup,
-        });
-        document.getElementById('email-compare-host').innerHTML = renderEmailCompareHtml(report);
-        renderEmailCropCanvases(
-          document.getElementById('email-crop-host'),
-          liveCanvas,
-          capCanvas,
-          target,
-          dpr,
-        );
-      } catch (reportErr) {
-        console.error('[pixel-diff] email report', reportErr);
-        document.getElementById('email-compare-host').innerHTML =
-          `<p class="email-compare-note" style="color:#b71c1c">Email metrics failed: ${reportErr?.message || reportErr}</p>`;
-      }
-    }
-
-    async function prepareForLiveCapture() {
-      if (visualDialog.open) visualDialog.close();
-      body.classList.add('pixel-diff-busy');
-      setView(false);
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    }
-
-    async function runPixelDiff() {
-      const capCanvas = getCachedCaptureCanvas();
-      if (!capCanvas) {
-        alert('Run Capture first.');
-        return;
-      }
-
-      const dpr = pixelDiffOpts().dpr || 1;
-      const prevView = showingCap;
-
-      btnVisualDiff.disabled = true;
-      btnVisualDiff.textContent = 'Share this tab…';
-      try {
-        setCaptureQuiet(true);
-        await prepareForLiveCapture();
-        openPixelDiffModal('Capturing live tab… choose “This tab” / the window with this checkout.');
-        const { canvas: liveCanvas } = await captureLiveElement(target, {
-          dpr,
-          outputWidth: capCanvas.width,
-          outputHeight: capCanvas.height,
-        });
-
-        const sizeMismatch =
-          liveCanvas.width !== capCanvas.width || liveCanvas.height !== capCanvas.height;
-        let live = liveCanvas;
-        let cap = capCanvas;
-        if (sizeMismatch) {
-          console.warn('[pixel-diff] size mismatch after tab capture', {
-            live: [liveCanvas.width, liveCanvas.height],
-            cap: [capCanvas.width, capCanvas.height],
-          });
-          const aligned = alignCanvasPair(liveCanvas, capCanvas);
-          live = aligned.a;
-          cap = aligned.b;
-        }
-        const result = compareVisualDiff(live, cap, { threshold: 32 });
-        if (!result.diffCanvas) {
-          throw new Error('Could not build diff image (size mismatch).');
-        }
-        result.sizeMismatch = sizeMismatch;
-        finishPixelDiff(live, cap, result);
-      } catch (e) {
-        const msg = e?.message || String(e);
-        console.error('[pixel-diff]', e);
-        openPixelDiffModal(`Failed: ${msg}`);
-        showVisualDialog();
-        alert(msg);
-      } finally {
-        body.classList.remove('pixel-diff-busy');
-        setCaptureQuiet(false);
-        setView(prevView);
-        setPixelDiffReady(!!lastCapCanvas);
-        btnVisualDiff.disabled = false;
-        btnVisualDiff.textContent = btnVisualDiffLabel;
-      }
-    }
-
-    btnVisualDiff.onclick = () => {
-      if (!liveCaptureSupported()) {
-        alert('Pixel diff needs Chrome or Edge on localhost / HTTPS (tab capture).');
-        return;
-      }
-      if (!lastCapCanvas) {
-        alert('Step 1: Capture. Step 2: Pixel diff (pick this tab).');
-        return;
-      }
-      showVisualDialog();
-      openPixelDiffModal('Waiting for tab share…');
-      void runPixelDiff();
-    };
-
     setView(false);
-    setPixelDiffReady(false);
 
     document.getElementById('btn-export-html').onclick = async () => {
       try {

@@ -16,7 +16,7 @@ export function liveCaptureSupported() {
  */
 function canvasHasInk(canvas) {
   if (canvas.width < 1 || canvas.height < 1) return false
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
   const samples = [
     [0, 0],
     [Math.floor(canvas.width / 2), Math.floor(canvas.height / 3)],
@@ -102,14 +102,36 @@ function viewportCropRect(video, el) {
 }
 
 /**
+ * @param {HTMLVideoElement} video
  * @param {Element} el
+ * @param {'restrict'|'crop'|'none'} cropMode
  * @param {number} dpr
- * @returns {Promise<HTMLCanvasElement>}
+ * @param {{ width?: number, height?: number }|null} outSize
  */
+function frameToCanvas(video, el, cropMode, dpr, outSize) {
+  const rect = el.getBoundingClientRect()
+  const w = outSize?.width ?? Math.round(rect.width * dpr)
+  const h = outSize?.height ?? Math.round(rect.height * dpr)
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+
+  if (cropMode === 'none') {
+    const { sx, sy, sw, sh } = viewportCropRect(video, el)
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h)
+  } else {
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, w, h)
+  }
+  return canvas
+}
+
 /**
  * @param {Element} el
  * @param {number} dpr
- * @param {{ width?: number, height?: number }} [outSize] device-pixel size (match SnapDOM canvas)
+ * @param {{ width?: number, height?: number }|null} outSize
  */
 async function captureViaDisplayMedia(el, dpr, outSize) {
   if (!navigator.mediaDevices?.getDisplayMedia) {
@@ -123,7 +145,6 @@ async function captureViaDisplayMedia(el, dpr, outSize) {
     selfBrowserSurface: 'include',
   }
 
-  // Must be the first async call from the click handler (user activation).
   const stream = await navigator.mediaDevices.getDisplayMedia(displayOpts)
   const [track] = stream.getVideoTracks()
   if (!track) {
@@ -133,7 +154,6 @@ async function captureViaDisplayMedia(el, dpr, outSize) {
 
   try {
     const cropMode = await applyElementCrop(track, el)
-
     const video = document.createElement('video')
     video.muted = true
     video.playsInline = true
@@ -145,32 +165,15 @@ async function captureViaDisplayMedia(el, dpr, outSize) {
       await waitForVideoFrame(video)
     }
 
-    const rect = el.getBoundingClientRect()
-    const w = outSize?.width ?? Math.round(rect.width * dpr)
-    const h = outSize?.height ?? Math.round(rect.height * dpr)
-    const canvas = document.createElement('canvas')
-    canvas.width = w
-    canvas.height = h
-    const ctx = canvas.getContext('2d')
-    ctx.imageSmoothingEnabled = true
-    ctx.imageSmoothingQuality = 'high'
-
-    if (cropMode === 'none') {
-      const { sx, sy, sw, sh } = viewportCropRect(video, el)
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h)
-    } else {
-      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, w, h)
-    }
-
+    const canvas = frameToCanvas(video, el, cropMode, dpr, outSize)
     if (!canvasHasInk(canvas)) {
       console.warn('[capture-live-element] tab frame looks blank; cropMode=', cropMode, {
         videoW: video.videoWidth,
         videoH: video.videoHeight,
-        outW: w,
-        outH: h,
+        outW: canvas.width,
+        outH: canvas.height,
       })
     }
-
     return canvas
   } finally {
     for (const t of stream.getTracks()) t.stop()
@@ -178,9 +181,66 @@ async function captureViaDisplayMedia(el, dpr, outSize) {
 }
 
 /**
+ * Two tab frames in one share session — matches Space toggle (live DOM, then canvas overlay).
  * @param {Element} el
- * @param {{ dpr?: number, requireDisplayMedia?: boolean }} [opts]
- * @returns {Promise<{ canvas: HTMLCanvasElement, method: 'displayMedia' }>}
+ * @param {{ dpr?: number, outputWidth?: number, outputHeight?: number, beforeLive?: () => Promise<void>, beforeCap?: () => Promise<void> }} opts
+ */
+export async function captureTogglePair(el, opts = {}) {
+  if (!navigator.mediaDevices?.getDisplayMedia) {
+    throw new Error('getDisplayMedia is not available (use HTTPS or localhost).')
+  }
+
+  const dpr = opts.dpr ?? 1
+  const outSize =
+    opts.outputWidth && opts.outputHeight
+      ? { width: opts.outputWidth, height: opts.outputHeight }
+      : null
+
+  /** @type {DisplayMediaStreamOptions} */
+  const displayOpts = {
+    video: { displaySurface: 'browser' },
+    preferCurrentTab: true,
+    selfBrowserSurface: 'include',
+  }
+
+  const stream = await navigator.mediaDevices.getDisplayMedia(displayOpts)
+  const [track] = stream.getVideoTracks()
+  if (!track) {
+    for (const t of stream.getTracks()) t.stop()
+    throw new Error('No video track in tab capture.')
+  }
+
+  try {
+    const cropMode = await applyElementCrop(track, el)
+    const video = document.createElement('video')
+    video.muted = true
+    video.playsInline = true
+    video.srcObject = stream
+    await video.play()
+    await waitForVideoFrame(video)
+    if (cropMode !== 'none') {
+      await new Promise((r) => setTimeout(r, 150))
+      await waitForVideoFrame(video)
+    }
+
+    if (opts.beforeLive) await opts.beforeLive()
+    await waitForVideoFrame(video)
+    const liveCanvas = frameToCanvas(video, el, cropMode, dpr, outSize)
+
+    if (opts.beforeCap) await opts.beforeCap()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    await waitForVideoFrame(video)
+    const capCanvas = frameToCanvas(video, el, cropMode, dpr, outSize)
+
+    return { liveCanvas, capCanvas, method: 'displayMedia' }
+  } finally {
+    for (const t of stream.getTracks()) t.stop()
+  }
+}
+
+/**
+ * @param {Element} el
+ * @param {{ dpr?: number, requireDisplayMedia?: boolean, outputWidth?: number, outputHeight?: number }} [opts]
  */
 export async function captureLiveElement(el, opts = {}) {
   const dpr = opts.dpr ?? 1

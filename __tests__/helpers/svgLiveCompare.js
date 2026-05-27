@@ -1,3 +1,5 @@
+import { resolveLineHeightPx } from '../../src/utils/preciseLineHeight.js'
+
 /** @typedef {{ path: string, tag: string, prop: string, live: string, clone: string, snapClass: string|null, snapCss: string }} StyleDiff */
 /** @typedef {{ path: string, tag: string, live: DOMRect, clone: DOMRect, deltaTop: number, deltaLeft: number, deltaHeight: number, deltaWidth: number }} LayoutDiff */
 /** @typedef {{ path: string, tag: string, prop: string, live: number|string, clone: number|string, delta: number }} MetricDiff */
@@ -304,6 +306,38 @@ export function measureFontBoxPx(cs) {
 }
 
 /**
+ * Text top/bottom from font metrics + line-height (half-leading model), relative to root.
+ * More stable than Range ink when line-height is pinned or fonts differ slightly.
+ * @param {Element} el
+ * @param {Element} root
+ */
+export function measureFontMetricInk(el, root) {
+  const cs = getComputedStyle(el)
+  const box = relRect(el, root)
+  const fontBox = measureFontBoxPx(cs)
+  if (!fontBox) return null
+
+  const borderTop = parseFloat(cs.borderTopWidth) || 0
+  const paddingTop = parseFloat(cs.paddingTop) || 0
+  const lineHeightPx = resolveLineHeightPx(cs, el)
+  const halfLeading = Math.max(0, (lineHeightPx - fontBox.height) / 2)
+  const contentTop = box.top + borderTop + paddingTop
+  const top = contentTop + halfLeading
+  const bottom = top + fontBox.height
+
+  return {
+    top,
+    bottom,
+    height: fontBox.height,
+    halfLeading,
+    lineHeightPx,
+    contentTop,
+    topInBox: borderTop + paddingTop + halfLeading,
+    fontBox,
+  }
+}
+
+/**
  * @param {Element} el
  * @param {Element} root
  */
@@ -311,15 +345,27 @@ export function collectTextFlowMetrics(el, root) {
   const cs = getComputedStyle(el)
   const box = relRect(el, root)
   const ink = measureTextInk(el, root)
+  const fontInk = measureFontMetricInk(el, root)
   const fontBox = measureFontBoxPx(cs)
   const out = {
     path: nodePath(el, root),
     tag: el.tagName.toLowerCase(),
     box,
     ink,
+    fontInk,
     fontBox,
   }
   for (const p of SPACING_PROPS) {
+    out[p] = cs.getPropertyValue(p).trim()
+  }
+  for (const p of [
+    'font-family',
+    'font-style',
+    'letter-spacing',
+    'text-rendering',
+    'font-kerning',
+    'color',
+  ]) {
     out[p] = cs.getPropertyValue(p).trim()
   }
   return out
@@ -423,6 +469,8 @@ export function compareEmailFieldMetrics(
   let liveMetrics = null
   let cloneMetrics = null
 
+  let spanInputGap = null
+
   if (liveSpan && cSpan) {
     liveMetrics = collectTextFlowMetrics(liveSpan, liveRoot)
     cloneMetrics = collectTextFlowMetrics(cSpan, cloneRoot)
@@ -477,6 +525,7 @@ export function compareEmailFieldMetrics(
       const liveGap = siblingVisualGap(liveSpan, liveInput)
       const cloneGap = siblingVisualGap(cSpan, cloneInput)
       const delta = cloneGap - liveGap
+      spanInputGap = { live: liveGap, clone: cloneGap, delta }
       if (Math.abs(delta) > tolPx) {
         metricDiffs.push({
           path: `${liveMetrics.path} → input`,
@@ -491,7 +540,90 @@ export function compareEmailFieldMetrics(
   }
 
   iframe.remove()
-  return { metricDiffs, liveMetrics, cloneMetrics }
+  return { metricDiffs, liveMetrics, cloneMetrics, spanInputGap }
+}
+
+/**
+ * Full checkout page: live DOM vs SVG clone structure (one iframe mount).
+ * @param {Element} liveRoot
+ * @param {string} svgStr
+ * @param {number} [tolPx]
+ */
+export function compareCheckoutStructure(liveRoot, svgStr, tolPx = 0.5) {
+  const { iframe, cloneRoot } = mountSvgClone(svgStr)
+  /** @type {{ title: string, kind: 'text'|'input', liveMetrics: object, cloneMetrics: object, siblingGap?: { live: number, clone: number }|null, usedHeight?: { live: string, clone: string }|null }[]} */
+  const sections = []
+
+  /**
+   * @param {string} title
+   * @param {Element|null|undefined} liveEl
+   * @param {Element|null|undefined} cloneEl
+   * @param {{ kind?: 'text'|'input', gapToInput?: boolean }} [opts]
+   */
+  function addSection(title, liveEl, cloneEl, opts = {}) {
+    if (!liveEl || !cloneEl || !cloneRoot) return
+    const kind = opts.kind ?? 'text'
+    const liveMetrics = collectTextFlowMetrics(liveEl, liveRoot)
+    const cloneMetrics = collectTextFlowMetrics(cloneEl, cloneRoot)
+    let siblingGap = null
+    if (opts.gapToInput) {
+      const liveInput = liveEl.parentElement?.querySelector('input:not([type=checkbox])')
+      const cloneInput = cloneEl.parentElement?.querySelector('input:not([type=checkbox])')
+      if (liveInput && cloneInput) {
+        siblingGap = {
+          live: siblingVisualGap(liveEl, liveInput),
+          clone: siblingVisualGap(cloneEl, cloneInput),
+        }
+      }
+    }
+    let usedHeight = null
+    if (kind === 'input') {
+      const win = cloneEl.ownerDocument.defaultView
+      usedHeight = {
+        live: getComputedStyle(liveEl).height,
+        clone: win ? win.getComputedStyle(cloneEl).height : '',
+      }
+    }
+    sections.push({ title, kind, liveEl, liveMetrics, cloneMetrics, siblingGap, usedHeight })
+  }
+
+  const findSpan = (text) => {
+    const live = [...liveRoot.querySelectorAll('span')].find(
+      (s) => (s.textContent || '').trim() === text,
+    )
+    const clone = [...(cloneRoot?.querySelectorAll('span') || [])].find(
+      (s) => (s.textContent || '').trim() === text,
+    )
+    return { live, clone }
+  }
+
+  addSection('Logo', liveRoot.querySelector('.logo'), cloneRoot?.querySelector('.logo'))
+  addSection('Checkout (h2)', liveRoot.querySelector('h2'), cloneRoot?.querySelector('h2'))
+
+  const email = findSpan('Email Address')
+  addSection('Email Address (label)', email.live, email.clone, { gapToInput: true })
+  addSection(
+    'Email input',
+    liveRoot.querySelector('input[type="email"]'),
+    cloneRoot?.querySelector('input[type="email"]'),
+    { kind: 'input' },
+  )
+
+  addSection(
+    'Remember my details',
+    liveRoot.querySelector('.checkout-checkbox'),
+    cloneRoot?.querySelector('.checkout-checkbox'),
+  )
+
+  const promo = findSpan('Promo Code')
+  addSection('Promo Code (label)', promo.live, promo.clone, { gapToInput: true })
+
+  const liveInputs = [...liveRoot.querySelectorAll('input:not([type=checkbox])')]
+  const cloneInputs = [...(cloneRoot?.querySelectorAll('input:not([type=checkbox])') || [])]
+  addSection('Promo input', liveInputs.at(-1), cloneInputs.at(-1), { kind: 'input' })
+
+  iframe.remove()
+  return { sections, tolerance: tolPx }
 }
 
 /**
