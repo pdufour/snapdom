@@ -1,3 +1,47 @@
+let __lhCanvas = null
+let __lhCtx = null
+
+function getMeasureCtx() {
+  if (!__lhCanvas && typeof document !== 'undefined') {
+    __lhCanvas = document.createElement('canvas')
+    __lhCtx = __lhCanvas.getContext('2d')
+  }
+  return __lhCtx
+}
+
+/**
+ * Theoretical font em-height from canvas (ascent + descent).
+ * @param {CSSStyleDeclaration} style
+ * @param {string} [sample]
+ */
+export function measureFontEmHeightPx(style, sample = 'Mg') {
+  const ctx = getMeasureCtx()
+  if (!ctx) return null
+
+  const fs = parseFloat(style.fontSize) || 16
+  const weight = style.fontWeight || '400'
+  const fontStyle = style.fontStyle || 'normal'
+  const family = style.fontFamily || 'sans-serif'
+  ctx.font = `${fontStyle} ${weight} ${fs}px ${family}`
+
+  const m = ctx.measureText(sample)
+  const a = m.fontBoundingBoxAscent
+  const d = m.fontBoundingBoxDescent
+
+  if (typeof a === 'number' && typeof d === 'number' && a + d > 0) {
+    return a + d
+  }
+
+  const aa = m.actualBoundingBoxAscent
+  const ad = m.actualBoundingBoxDescent
+  if (typeof aa === 'number' && typeof ad === 'number' && aa + ad > 0) {
+    return aa + ad
+  }
+
+  // Fallback to a common ratio if measurement fails
+  return fs * 1.15
+}
+
 /**
  * Single-line content box height (for pinning line-height to layout).
  * Returns null if not a single-line leaf or empty.
@@ -52,15 +96,11 @@ export function usesNormalLineHeight(cs, el) {
 }
 
 /**
- * Format a numeric line-height as a px string or unitless number with up to 6 decimal places.
+ * Format a numeric line-height as a px string with up to 6 decimal places.
  * @param {number} v - The line-height in pixels.
- * @param {number} [fs] - Optional font-size in pixels for unitless conversion.
  */
-export function formatLineHeightPx(v, fs) {
+export function formatLineHeightPx(v) {
   if (!Number.isFinite(v)) return 'normal'
-  if (fs && fs > 0) {
-    return (v / fs).toFixed(6).replace(/\.?0+$/, '')
-  }
   return v.toFixed(6).replace(/\.?0+$/, '') + 'px'
 }
 

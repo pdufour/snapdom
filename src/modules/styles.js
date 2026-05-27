@@ -4,6 +4,7 @@ import {
   usesNormalLineHeight,
   measureLayoutLineBoxPx,
   formatLineHeightPx,
+  measureFontEmHeightPx,
 } from '../utils/preciseLineHeight.js'
 
 const snapshotCache = new WeakMap()
@@ -158,14 +159,16 @@ function getSnapshot(el, preStyle = null, options = {}) {
   const style = preStyle || getComputedStyle(el)
   const snap = snapshotComputedStyleFull(style, options)
 
+  stripHeightForWrappers(el, style, snap)
+
   // #408: pin line-height to measured layout box for single-line leaf nodes
   // to avoid half-leading drift between DOM and SVG foreignObject.
+  // Move AFTER stripHeightForWrappers so these overrides stick.
   pinLineHeightPx(el, style, snap)
 
   // #315: pin empty input color to placeholder color for exact visual match
   pinInputPlaceholderColor(el, style, snap)
 
-  stripHeightForWrappers(el, style, snap)
   snapshotCache.set(el, { epoch: __epoch, snapshot: snap })
   return snap
 }
@@ -206,9 +209,10 @@ function pinLineHeightPx(el, cs, snap) {
   // 1) Single-line leaves: pin if we can measure an unambiguous line box
   const layoutLh = measureLayoutLineBoxPx(cs, el)
   if (layoutLh != null && layoutLh > 0) {
-    const pinned = formatLineHeightPx(layoutLh, fs)
+    const pinned = formatLineHeightPx(layoutLh)
     snap['line-height'] = pinned
-    snap['height'] = formatLineHeightPx(layoutLh) // Height always in px
+    snap['height'] = pinned
+    snap['text-rendering'] = 'geometricPrecision'
     return
   }
 
@@ -221,11 +225,13 @@ function pinLineHeightPx(el, cs, snap) {
     if (lh && lh !== 'normal') {
       const n = parseFloat(lh)
       if (Number.isFinite(n) && n > 0) {
-        snap['line-height'] = formatLineHeightPx(n, fs)
+        snap['line-height'] = formatLineHeightPx(n)
+        snap['text-rendering'] = 'geometricPrecision'
       }
     } else if (usesNormalLineHeight(cs, el)) {
       // Even if 'normal', pin the calculated value for headers to be safe
-      snap['line-height'] = formatLineHeightPx(fs * 1.2, fs)
+      snap['line-height'] = formatLineHeightPx(fs * 1.2)
+      snap['text-rendering'] = 'geometricPrecision'
     }
   }
 }
