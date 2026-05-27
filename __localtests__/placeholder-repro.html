@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Placeholder Color Repro</title>
+  <style>
+    #test-input::placeholder { color: blue; opacity: 1; }
+  </style>
+</head>
+<body>
+  <input id="test-input" placeholder="If blue, fix works!">
+  <br><br>
+  <button id="btn">Capture</button>
+  <div id="out"></div>
+
+  <script type="module">
+    import { snapdom } from './dist/snapdom.mjs';
+    document.getElementById('btn').onclick = async () => {
+      const input = document.getElementById('test-input');
+      const canvas = await snapdom.toCanvas(input);
+      document.getElementById('out').innerHTML = '';
+      document.getElementById('out').appendChild(canvas);
+    };
+  </script>
+</body>
+</html>

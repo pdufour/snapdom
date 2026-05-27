@@ -108,7 +108,12 @@ snapdom.capture = async (el, context, _token) => {
     },
     canvas: async (ctx, opts) => {
       const { toCanvas } = await import('../exporters/toCanvas.js')
-      return toCanvas(url, { ...ctx, ...(opts || {}) })
+      const { getDebugLines } = await import('../utils/debugLog.js')
+      return toCanvas(url, {
+        ...ctx,
+        ...(opts || {}),
+        debugLines: ctx.debug ? getDebugLines() : undefined,
+      })
     },
     blob: async (ctx, opts) => {
       const { toBlob } = await import('../exporters/toBlob.js')

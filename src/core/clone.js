@@ -335,6 +335,15 @@ export async function deepClone(node, sessionCache, options) {
       applyInputVisual = applyVisual
       clone = replacement
     } else {
+      // foreignObject shrinks native text inputs without explicit box size (checkout repro).
+      if (!isCheckboxOrRadio) {
+        const { width, height } = getUnscaledDimensions(node)
+        const rect = node.getBoundingClientRect()
+        const w = width || rect.width || 0
+        const h = height || rect.height || 0
+        if (w) clone.style.width = `${w}px`
+        if (h) clone.style.height = `${h}px`
+      }
       clone.value = node.value
       clone.setAttribute('value', node.value)
       if (node.checked !== void 0) {

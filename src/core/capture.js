@@ -21,6 +21,7 @@ import {
   limitDecimals,
   collectScrollbarCSS
 } from '../utils/capture.helpers.js'
+import { resetDebugLog } from '../utils/debugLog.js'
 import {
   parseBoxShadow,
   parseFilterBlur,
@@ -65,6 +66,7 @@ function hasPictureResolverPlugin(options) {
 export async function captureDOM(element, options) {
   if (!element) throw new Error('Element cannot be null or undefined')
   applyCachePolicy(options.cache)
+  resetDebugLog(!!options.debug)
   const fast = options.fast
   const outerTransforms = options.outerTransforms !== false   // default: true
 

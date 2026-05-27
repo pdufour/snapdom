@@ -1,5 +1,7 @@
 // src/core/lineClamp.js
 
+import { resolveLineHeightPx } from '../utils/helpers.js'
+
 /**
  * Apply line-clamp to element AND all descendants that have -webkit-line-clamp.
  * Fixes #386: ellipsis now renders for nested elements, not just the root.
@@ -81,13 +83,7 @@ function getClamp(el) {
 }
 
 function usedLineHeightPx(cs) {
-  const lh = (cs.lineHeight || '').trim()
-  const fs = parseFloat(cs.fontSize) || 16
-  if (!lh || lh === 'normal') return Math.round(fs * 1.2)
-  if (lh.endsWith('px')) return parseFloat(lh)
-  if (/^\d+(\.\d+)?$/.test(lh)) return Math.round(parseFloat(lh) * fs)
-  if (lh.endsWith('%')) return Math.round((parseFloat(lh) / 100) * fs)
-  return Math.round(fs * 1.2)
+  return Math.round(resolveLineHeightPx(cs))
 }
 
 function vpad(cs) {

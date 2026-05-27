@@ -31,6 +31,8 @@
   ],
   "scripts": {
     "compile": "node esbuild.config.mjs",
+    "compare:checkout": "node scripts/compare-checkout-svg.mjs",
+    "export:checkout": "node scripts/export-checkout-compare.mjs",
     "lint": "eslint src __tests__ --ext .js",
     "lint:fix": "eslint src __tests__ --ext .js --fix",
     "test": "npm run lint:fix && npx vitest run --browser.headless --reporter=verbose",

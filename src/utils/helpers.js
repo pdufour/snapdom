@@ -60,9 +60,17 @@ export function stripTranslate(transform) {
   return cleaned.trim().replace(/\s{2,}/g, ' ')
 }
 
-export function safeEncodeURI(uri) {
-  if (/%[0-9A-Fa-f]{2}/.test(uri)) return uri // prevent reencode
-  try { return encodeURI(uri) } catch { return uri }
+export {
+  getPreciseLineHeight,
+  resolveLineHeightPx,
+  resolveLineHeightPxForCapture,
+  usesNormalLineHeight,
+  measureLayoutLineBoxPx,
+  formatLineHeightPx,
+} from './preciseLineHeight.js'
+export function safeEncodeURI(url) {
+  if (/%[0-9A-Fa-f]{2}/.test(url)) return url // prevent reencode
+  try { return encodeURI(url) } catch { return url }
 }
 
 /**

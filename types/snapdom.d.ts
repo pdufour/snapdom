@@ -43,6 +43,8 @@ export interface ExcludeFonts {
  * ========================= */
 
 export interface SnapdomOptions {
+  /** Log style extraction to an on-canvas panel (toCanvas / PNG when rasterized). */
+  debug?: boolean;
   /** Fast path: skip small idle delays where safe. */
   fast?: boolean;
   /** Output scale multiplier. Takes precedence over width/height. */

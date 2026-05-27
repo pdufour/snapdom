@@ -1,5 +1,6 @@
 // src/exporters/toCanvas.js
 import { isSafari } from '../utils/browser'
+import { drawDebugOverlay, getDebugLines, isDebug } from '../utils/debugLog.js'
 
 /**
  * Converts a data URL to a Canvas element.
@@ -188,6 +189,8 @@ export async function toCanvas(url, options) {
 
   const ctx = canvas.getContext('2d')
   if (dpr !== 1) ctx.scale(dpr, dpr)
+  ctx.imageSmoothingEnabled = true
+  if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high'
 
   if (backgroundColor) {
     ctx.save()
@@ -197,5 +200,11 @@ export async function toCanvas(url, options) {
   }
 
   ctx.drawImage(img, 0, 0, outW, outH)
+
+  if (isDebug(options)) {
+    const lines = options.debugLines?.length ? options.debugLines : getDebugLines()
+    if (lines.length) drawDebugOverlay(ctx, lines, outW, outH)
+  }
+
   return canvas
 }
