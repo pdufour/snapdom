@@ -352,8 +352,9 @@ export async function captureDOM(element, options) {
 
       const styleTag = document.createElement('style')
       const foNormalize =
-        'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
-        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
+        'svg{display:block;overflow:visible;} foreignObject{overflow:visible;} ' +
+        'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}' +
+        '* { box-sizing: border-box; text-rendering: optimizespeed!important; font-kerning: none!important; }'
       styleTag.textContent =
         (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
       fo.appendChild(styleTag)
@@ -362,11 +363,13 @@ export async function captureDOM(element, options) {
       container.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
       container.setAttribute('lang', elDoc.documentElement.lang || 'en')
       // Cleanest isolation. Element is at its document coordinates.
+      // Force block and top alignment to eliminate baseline-induced shifts.
       container.style.cssText =
-        'all:initial;box-sizing:border-box;display:block;overflow:visible;margin:0;border:none;' +
-        `-webkit-text-size-adjust:100%;text-size-adjust:100%;` +
+        'all:initial;box-sizing:border-box;display:block!important;overflow:visible!important;' +
+        'margin:0!important;border:none!important;padding:0!important;vertical-align:top!important;' +
+        'line-height:0!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;' +
         `width:${limitDecimals(w0)}px;height:${limitDecimals(h0)}px;` +
-        `font-size:${limitDecimals(rootFontSize)}px`
+        'font-size:0!important;'
       try {
         container.style.setProperty('font-family', rootFontFamily)
       } catch { /* non-blocking */ }
@@ -390,8 +393,8 @@ export async function captureDOM(element, options) {
         ? vbH
         : limitDecimals(outH + pad * 2)
 
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
-      const svgFooter = '</svg>'
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px" style="display:block;shape-rendering:geometricPrecision;overflow:visible;">`
+      const svgFooter = `<!-- snapdom-id:${Date.now()} --></svg>`
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`
       state = { svgString, dataURL, ...state }

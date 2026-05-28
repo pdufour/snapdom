@@ -1,223 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SnapDOM checkout repro (v3)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - snapDOM Parity Playground</title>
+  <link rel="stylesheet" href="../docs/shared.css">
   <style>
-    :root { --guide-color: #ff0000; }
-    * { box-sizing: border-box; }
     body {
-      margin: 0; padding: 0; background: #fff;
+      background: #f8f9fa;
+      padding: 20px;
+      margin: 0;
       font-family: -apple-system, system-ui, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-      overflow-y: auto;
     }
-
-    .controls {
-      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-      z-index: 1000;
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
-      max-width: calc(100vw - 24px);
-    }
-
-    .workspace {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      gap: 20px;
-      width: min(96vw, 1240px);
-      margin: 72px auto 32px;
-      padding: 0 12px;
-    }
-
-    @media (max-width: 960px) {
-      .workspace { flex-direction: column; align-items: center; }
-    }
-
-    .stage-wrap {
-      flex: 0 0 auto;
-      position: sticky;
-      top: 72px;
-    }
-
-    .stage {
-      position: relative;
-      width: 500px;
-      max-height: calc(100vh - 88px);
-      border: 1px solid #eee;
+    .checkout-page {
       background: #fff;
-      overflow-x: hidden;
-      overflow-y: auto;
-    }
-
-    .stage-inner {
+      display: flex;
+      flex-direction: column;
+      width: 500px;
+      height: 600px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       position: relative;
-      min-height: 600px;
+    }
+    .checkout-header {
+      padding: 20px 30px;
+      border-bottom: 2px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 80px;
+      box-sizing: border-box;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 32px;
+      color: #2563eb;
+    }
+    nav {
+      display: flex;
+      gap: 20px;
+      font-size: 20px;
+    }
+    nav a {
+      text-decoration: none;
+      color: #666;
+    }
+    .checkout-main {
+      padding: 30px;
+      flex: 1;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      font-size: 80px;
+      font-weight: 700;
+    }
+    .checkout-form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      display: block;
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: #444;
+    }
+    label span {
+       display: block;
+       margin-bottom: 10px;
+    }
+    input[type="email"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 50px;
+      box-sizing: border-box;
+    }
+    .checkout-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+    }
+    input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
     }
 
-    .layer { position: absolute; inset: 0; background: #fff; }
-    #live-layer { z-index: 1; }
-    #cap-layer { z-index: 2; opacity: 0; pointer-events: none; }
-    body[data-show-cap="true"] #cap-layer { opacity: 1; pointer-events: auto; }
-    body[data-flash="live"] #cap-layer { opacity: 0; }
-    body[data-flash="snapdom"] #cap-layer { opacity: 1; }
-    body[data-flash="both"] #cap-layer { opacity: 0.45; }
-
-    .stage-flash-label {
-      position: absolute; left: 0; right: 0; top: 8px; z-index: 200;
-      text-align: center; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      color: #2563eb; pointer-events: none; opacity: 0;
-      transition: opacity 0.15s;
+    /* Comparison UI */
+    .controls {
+      max-width: 500px;
+      margin: 20px auto;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
-    body[data-flash] .stage-flash-label { opacity: 1; }
-
-    .guide {
-      position: absolute; left: 0; right: 0; height: 0;
-      border-top: 1px solid var(--guide-color);
-      pointer-events: none; z-index: 100; top: 100px;
+    button {
+      padding: 8px 16px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
     }
-    .ink-guide {
-      position: absolute; left: 0; right: 0; height: 0;
-      pointer-events: none; z-index: 101;
-    }
-    .ink-guide-live { border-top: 2px solid #22c55e; }
-    .ink-guide-cap { border-top: 2px solid #ef4444; opacity: 0; }
-    body[data-show-cap="true"] .ink-guide-cap { opacity: 1; }
-    body[data-show-cap="true"] .ink-guide-live { opacity: 1; }
-    body.pixel-diff-busy #cap-layer { opacity: 0 !important; pointer-events: none !important; }
-    /* Hide debug overlays in any SnapDOM raster (they caused a red line in old tab screenshots). */
-    body.capture-quiet .guide,
-    body.capture-quiet .ink-guide,
-    body.capture-quiet .stage-flash-label {
-      display: none !important;
-    }
-
+    button:hover { background: #1d4ed8; }
+    button.secondary { background: #64748b; }
+    
     #cap-content {
       position: absolute;
-      left: 0;
       top: 0;
-      overflow: hidden;
+      left: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
+      opacity: 0;
+      background: white;
     }
-
-    /* Checkout Styles */
-    .checkout-page { background: #fff; color: #111; min-height: 100%; display: flex; flex-direction: column; font-size: 24px; }
-    .checkout-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 30px; background: #fff; border-bottom: 2px solid #eee;
+    body.show-cap #cap-content {
+      opacity: 1;
     }
-    .logo { font-weight: 800; color: #2563eb; font-size: 32px; }
-    .checkout-header nav { display: flex; gap: 20px; font-size: 20px; }
-    .checkout-header a { color: #666; text-decoration: none; }
-    .checkout-main { padding: 30px; flex: 1; }
-    .checkout-form { display: flex; flex-direction: column; }
-    .checkout-form label { display: block; font-size: 48px; font-weight: 700; color: #444; margin: 0 0 25px 0; font-family: -apple-system, system-ui, sans-serif; letter-spacing: normal; }
-    .checkout-form label span { display: block; margin-bottom: 10px; }
-    .checkout-form input:not([type="checkbox"]) { padding: 12px 16px; border-radius: 8px; border: 2px solid #ddd; width: 100%; font-size: 50px; margin: 0; font-family: -apple-system, system-ui, sans-serif; letter-spacing: normal; }
-    .checkout-checkbox { display: flex; align-items: center; gap: 12px; font-weight: 600; padding: 10px 0; font-size: 22px; }
-    .checkout-checkbox input { margin: 0; width: 24px; height: 24px; }
+    body.show-cap #capture-target {
+      opacity: 0.1;
+    }
     
-    #cap-content canvas { display: block; }
-
+    .overlay-grid {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(to right, rgba(255,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,0,0,0.05) 1px, transparent 1px);
+      background-size: 10px 10px;
+      display: none;
+    }
+    body.show-grid .overlay-grid { display: block; }
+    
+    .guide-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,0,0,0.4);
+      z-index: 100;
+      pointer-events: none;
+      display: none;
+    }
+    body.show-guide .guide-line { display: block; }
+    
     .structure-host {
-      flex: 1 1 360px;
-      min-width: min(100%, 360px);
-      max-width: 720px;
-      font-size: 12px;
+      max-width: 1200px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border: 1px solid #ddd;
     }
-    .structure-host:empty { display: none; }
-    .structure-host:not(:empty) {
-      position: sticky;
-      top: 72px;
-      max-height: calc(100vh - 88px);
-      overflow: auto;
-      padding-right: 4px;
+
+    /* Hide stuff when capturing if needed */
+    .capture-quiet .controls,
+    .capture-quiet .structure-host {
+       display: none;
     }
-    .structure-report > h2 {
-      margin: 0 0 10px;
-      font-size: 15px;
-    }
-    .structure-summary { margin: 0 0 12px; }
-    .structure-summary.is-ok { color: #2e7d32; font-weight: 600; }
-    .structure-summary.is-warn { color: #b71c1c; font-weight: 600; }
-    .structure-empty { color: #666; margin: 0; }
-    .structure-section {
-      padding: 10px 12px;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-      background: #fafafa;
-      margin-bottom: 10px;
-    }
-    .structure-section h3 { margin: 0 0 6px; font-size: 13px; }
-    .structure-table {
-      width: 100%; border-collapse: collapse;
-    }
-    .structure-table th, .structure-table td {
-      border: 1px solid #e5e5e5; padding: 4px 8px; text-align: left;
-    }
-    .structure-table tr.warn td { background: #fff3f3; color: #b71c1c; }
-    .structure-table tr.info td { color: #666; font-style: italic; }
   </style>
 </head>
 <body>
-  
+
   <div class="controls">
-    <span style="font-size:11px;color:#666;max-width:140px;line-height:1.3">
-      repro v3
-    </span>
-    <button id="btn-capture">Capture</button>
-    <button id="btn-toggle">Show Canvas</button>
-    <button id="btn-export-svg" type="button">Export SVG</button>
-    <button id="btn-export-html" type="button">Export compare HTML</button>
-    <label>Guide Y: <input type="range" id="guide-slider" min="0" max="1200" value="100"></label>
+    <button id="btn-capture">Capture (snapDOM)</button>
+    <button id="btn-toggle" class="secondary">Toggle Live/SVG</button>
+    <button id="btn-grid" class="secondary">Toggle Grid</button>
+    <button id="btn-guide" class="secondary">Toggle Guide</button>
+    <input type="range" id="guide-slider" min="0" max="600" value="300" style="width:100px">
+    <button id="btn-download" class="secondary">Download SVG</button>
   </div>
 
-  <div class="workspace">
-    <div class="stage-wrap">
-      <div class="stage" id="stage-scroll">
-        <div class="stage-inner" id="stage-inner">
-        <div class="stage-flash-label" id="stage-flash-label" aria-live="polite"></div>
-        <div class="guide" id="guide-line"></div>
-    <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Green: live DOM Range ink top"></div>
-    <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Red: SVG clone Range ink top (same ruler as structure table)"></div>
+  <div class="checkout-page" id="capture-target">
+    <header class="checkout-header">
+      <span class="logo">ShopDemo1</span>
+      <nav><a href="#">Home</a><a href="#">Products</a></nav>
+    </header>
+    <main class="checkout-main">
+      <h2>Checkout</h2>
+      <form class="checkout-form" onsubmit="return false">
+        <label><span>Email Address</span> <input type="email" placeholder="you@example.com"></label>
+        <label class="checkout-checkbox">
+          <input type="checkbox" id="checkout-remember">
+          Remember my details
+        </label>
+        <label><span>Promo Code</span> <input type="text" placeholder="SAVE10"></label>
+      </form>
+    </main>
+    <div id="cap-content"></div>
+    <div class="overlay-grid"></div>
+    <div id="guide-line" class="guide-line"></div>
+  </div>
 
-        <div class="layer" id="live-layer">
-          <div id="capture-target" class="checkout-page">
-            <header class="checkout-header">
-              <span class="logo">ShopDemo1</span>
-              <nav><a href="#">Home</a><a href="#">Products</a></nav>
-            </header>
-            <main class="checkout-main">
-              <h2 style="margin: 0 0 20px 0; font-size: 80px; font-weight: 700; line-height: 1.2; letter-spacing: normal;">Checkout</h2>
-              <form class="checkout-form" onsubmit="return false">
-                <label><span>Email Address</span> <input type="email" placeholder="you@example.com"></label>
-                <label class="checkout-checkbox">
-                  <input type="checkbox" id="checkout-remember">
-                  Remember my details
-                </label>
-                <label><span>Promo Code</span> <input type="text" placeholder="SAVE10"></label>
-              </form>
-            </main>
-          </div>
-        </div>
-
-        <div class="layer" id="cap-layer">
-          <div id="cap-content"></div>
-        </div>
-        </div>
-      </div>
-    </div>
-
+  <div id="comparison-report">
     <div id="structure-host" class="structure-host"></div>
   </div>
 
   <script type="module">
-    import { snapdom } from '/dist/snapdom.mjs';
     import {
       buildCompareHtml,
       svgFromDataUrl,
@@ -229,6 +214,9 @@
       renderCheckoutStructureReport,
     } from './structure-compare-report.js';
     import { measureTextInk, measureSvgCloneTextInk, measureCanvasInkForElement } from '../__tests__/helpers/svgLiveCompare.js';
+
+    // Use dynamic import for cache busting (Top Level Await)
+    const { snapdom } = await import('/dist/snapdom.mjs?t=' + Date.now());
 
     const body = document.body;
     const target = document.getElementById('capture-target');
@@ -251,185 +239,61 @@
       );
     }
 
-    /** @type {string|null} */
-    let lastSvgMarkup = null;
-    /** @type {HTMLCanvasElement|null} */
+    let lastSvgMarkup = '';
     let lastCapCanvas = null;
+    
+    function captureDpr() { return 2; }
 
-    const captureDpr = () => Math.min(window.devicePixelRatio || 1, 2);
-    const urlDebug = new URLSearchParams(location.search).get('debug') === '1';
-    const captureOpts = () => ({
-      embedFonts: true,
-      debug: urlDebug,
-      dpr: captureDpr(),
-      scale: 1,
-    });
-
-    /** One DOM capture; SVG string is free, canvas rasterizes the same snapshot. */
-    async function snapdomOnce(opts) {
-      const snap = await snapdom(target, opts);
-      return {
-        snap,
-        svgMarkup: svgFromDataUrl(snap.toRaw()),
-        canvas: await snap.toCanvas(),
-      };
+    async function doCapture() {
+      console.log('Capturing...');
+      const dpr = captureDpr();
+      
+      // 1. toRaw for the structure report
+      const dataUrl = await snapdom.toRaw(target, { embedFonts: true});
+      lastSvgMarkup = svgFromDataUrl(dataUrl);
+      
+      // 2. toCanvas for the visual toggle and ink measurement
+      const result = await snapdom(target, { embedFonts: true, dpr });
+      const canvas = await result.toCanvas();
+      lastCapCanvas = canvas;
+      
+      capContent.innerHTML = '';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      capContent.appendChild(canvas);
+      
+      updateStructureReport();
+      console.log('Done.');
     }
 
-    async function captureSvgMarkup() {
-      const { svgMarkup } = await snapdomOnce(captureOpts());
-      return svgMarkup;
-    }
+    document.getElementById('btn-capture').onclick = doCapture;
 
-    function syncStageHeight() {
-      const inner = document.getElementById('stage-inner');
-      if (!inner || !target) return;
-      const h = Math.max(600, target.scrollHeight);
-      inner.style.height = `${h}px`;
-      guideSlider.max = String(h);
-    }
-
-    function syncCapOverlay() {
-      const canvas = capContent.querySelector('canvas');
-      const stageInner = document.getElementById('stage-inner');
-      if (!canvas || !stageInner) {
-        capContent.style.width = '';
-        capContent.style.height = '';
-        capContent.style.left = '';
-        capContent.style.top = '';
-        return;
-      }
-      const stageRect = stageInner.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-      capContent.style.left = `${targetRect.left - stageRect.left}px`;
-      capContent.style.top = `${targetRect.top - stageRect.top}px`;
-      capContent.style.width = `${targetRect.width}px`;
-      capContent.style.height = `${targetRect.height}px`;
-      syncStageHeight();
-    }
-
-    function setView(show) {
-      const wantCap = !!show && !!lastCapCanvas;
-      showingCap = wantCap;
-      if (wantCap) body.setAttribute('data-show-cap', 'true');
-      else body.removeAttribute('data-show-cap');
-      btnToggle.disabled = !lastCapCanvas;
-      btnToggle.textContent = wantCap ? 'Show Live' : 'Show Canvas';
-      syncCapOverlay();
-      updateEmailInkGuides();
-    }
-
-    function findTextLeaf(root, text) {
-      const want = text.trim();
-      for (const el of root.querySelectorAll('*')) {
-        if (el.childElementCount > 0) continue;
-        if ((el.textContent || '').trim() === want) return el;
-      }
-      return null;
-    }
-
-    function updateEmailInkGuides() {
-      const emailEl = findTextLeaf(target, 'Email Address');
-      const liveGuide = document.getElementById('ink-guide-live');
-      const capGuide = document.getElementById('ink-guide-cap');
-      if (!emailEl || !liveGuide || !capGuide) return;
-
-      const liveInk = measureTextInk(emailEl, target);
-      if (liveInk) liveGuide.style.top = `${liveInk.top}px`;
-
-      if (!lastSvgMarkup) {
-        capGuide.style.display = 'none';
-        return;
-      }
-      capGuide.style.display = '';
-      const canvas = capContent.querySelector('canvas');
-      const capInk = canvas
-        ? measureCanvasInkForElement(canvas, target, emailEl, captureDpr())
-        : measureSvgCloneTextInk(target, lastSvgMarkup, emailEl);
-      capGuide.style.top = capInk
-        ? `${capInk.top}px`
-        : liveGuide.style.top;
-    }
-
-    btnToggle.onclick = () => setView(!showingCap);
-
-    window.addEventListener('resize', () => {
-      syncStageHeight();
-      syncCapOverlay();
-      if (showingCap) updateEmailInkGuides();
-    });
-
-    syncStageHeight();
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') { e.preventDefault(); setView(!showingCap); }
-    });
-
-    guideSlider.oninput = () => { guideLine.style.top = guideSlider.value + 'px'; };
-
-    function cloneCanvas(source) {
-      const copy = document.createElement('canvas');
-      copy.width = source.width;
-      copy.height = source.height;
-      copy.getContext('2d').drawImage(source, 0, 0);
-      return copy;
-    }
-
-    document.getElementById('btn-capture').onclick = async () => {
-      const btn = document.getElementById('btn-capture');
-      const btnLabel = btn.textContent;
-      try {
-        btn.disabled = true;
-        btn.textContent = 'Capturing…';
-        setCaptureQuiet(true);
-        const opts = captureOpts();
-        const { svgMarkup, canvas } = await snapdomOnce(opts);
-        lastSvgMarkup = svgMarkup;
-        lastCapCanvas = cloneCanvas(canvas);
-        capContent.innerHTML = '';
-        const dpr = opts.dpr || 1;
-        canvas.style.width = `${canvas.width / dpr}px`;
-        canvas.style.height = `${canvas.height / dpr}px`;
-        capContent.appendChild(canvas);
-        syncCapOverlay();
-        updateEmailInkGuides();
-        updateStructureReport();
-        setView(true);
-      } catch (e) { alert(e.message); }
-      finally {
-        setCaptureQuiet(false);
-        btn.disabled = false;
-        btn.textContent = btnLabel;
-      }
+    btnToggle.onclick = () => {
+      showingCap = !showingCap;
+      body.classList.toggle('show-cap', showingCap);
+      btnToggle.textContent = showingCap ? 'Show Live' : 'Show SVG';
     };
 
-    document.getElementById('btn-export-svg').onclick = async () => {
-      try {
-        const svg = lastSvgMarkup || await captureSvgMarkup();
-        lastSvgMarkup = svg;
-        downloadText(svg, 'checkout-capture.svg', 'image/svg+xml;charset=utf-8');
-      } catch (e) { alert(e.message); }
+    document.getElementById('btn-grid').onclick = () => {
+      body.classList.toggle('show-grid');
     };
 
-    setView(false);
-
-    document.getElementById('btn-export-html').onclick = async () => {
-      try {
-        const svg = lastSvgMarkup || await captureSvgMarkup();
-        lastSvgMarkup = svg;
-        const size = parseSvgSize(svg);
-        const html = buildCompareHtml({
-          svgMarkup: svg,
-          target,
-          pageStyles: collectPageStyles(),
-          meta: {
-            width: size.width,
-            height: size.height,
-            capturedAt: new Date().toISOString(),
-          },
-        });
-        downloadText(html, 'checkout-compare.html', 'text/html;charset=utf-8');
-      } catch (e) { alert(e.message); }
+    document.getElementById('btn-guide').onclick = () => {
+      body.classList.toggle('show-guide');
     };
+
+    guideSlider.oninput = () => {
+      guideLine.style.top = guideSlider.value + 'px';
+    };
+
+    document.getElementById('btn-download').onclick = () => {
+      if (lastSvgMarkup) downloadText('snapdom-checkout.svg', lastSvgMarkup);
+    };
+
+    // Initial capture
+    // wait a bit for fonts
+    setTimeout(doCapture, 500);
+
   </script>
 </body>
 </html>

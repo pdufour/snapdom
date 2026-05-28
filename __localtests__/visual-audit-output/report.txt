@@ -1,0 +1,22 @@
+=== Visual alignment audit (checkout-example) ===
+Screenshots: /Users/pauldufour/Repos/snapdom/__localtests__/visual-audit-output
+  01-live-only.png — live DOM
+  02-canvas-only.png — snapdom raster
+  03-blend-both.png — 45% overlay (fringe = misalignment)
+  04-structural-diff.png — orange = ink mismatch
+
+Structural ink mismatch: 0.000%
+Color mismatch (threshold 24): 0.000%
+Best translation to align canvas→live: dx=-2px dy=-2px
+Email ink guides: live=226px cap=238px
+
+Landmark boxes (live DOM, root-relative):
+  ShopDemo1: top=20.00 left=30.00 w=185.16 h=38.00
+  Home: top=27.50 left=316.58 w=52.61 h=23.00
+  Products: top=27.50 left=389.19 w=78.81 h=23.00
+  Checkout: top=110.00 left=30.00 w=438.00 h=96.00
+  Email Address: top=226.00 left=30.00 w=438.00 h=56.00
+  Promo Code: top=561.00 left=30.00 w=438.00 h=56.00
+Ink guide Δ (email canvas vs live): 12.00px
+
+VISUAL: ok (structural ink aligned; see 03-blend-both.png)

@@ -244,7 +244,7 @@ describe('inlineAllStyles – branches y firmas', () => {
     const session = freshSession()
 
     // Should not throw even though getComputedStyle() on a detached node is unreliable
-    await expect(inlineAllStyles(src, clone, session, { cache: 'auto' })).resolves.not.toThrow()
+    expect(() => inlineAllStyles(src, clone, session, { cache: 'auto' })).not.toThrow()
     // styleMap entry is written (even if the key may be empty/incomplete for detached nodes)
     expect(session.styleMap.has(clone)).toBe(true)
   })

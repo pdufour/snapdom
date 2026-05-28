@@ -150,7 +150,7 @@ async function runCompare(page, svgOverride) {
 
       let svgStr = svgOverride
       if (!svgStr) {
-        const { snapdom } = await import('/dist/snapdom.mjs')
+        const { snapdom } = await import(`/dist/snapdom.mjs?t=${Date.now()}`)
         const target = document.getElementById('capture-target')
         const dataUrl = await snapdom.toRaw(target, { embedFonts: true })
         svgStr = dataUrlToSvg(dataUrl)
@@ -360,7 +360,7 @@ async function main() {
     const freshSvgPath = path.join(REPO_ROOT, '__localtests__/checkout-fresh.svg')
     await page
       .evaluate(async () => {
-        const { snapdom } = await import('/dist/snapdom.mjs')
+        const { snapdom } = await import(`/dist/snapdom.mjs?t=${Date.now()}`)
         const target = document.getElementById('capture-target')
         const dataUrl = await snapdom.toRaw(target, { embedFonts: true })
         const prefix = 'data:image/svg+xml;charset=utf-8,'

@@ -104,7 +104,7 @@ async function main() {
       const cap = document.querySelector('#cap-content canvas')
       if (!cap) return { error: 'no cap canvas' }
 
-      const { snapdom } = await import('/dist/snapdom.mjs')
+      const { snapdom } = await import(`/dist/snapdom.mjs?t=${Date.now()}`)
       const liveCanvas = await (
         await snapdom(target, { embedFonts: true, dpr: 2, scale: 1 })
       ).toCanvas()
@@ -152,7 +152,7 @@ async function main() {
     // Diff image via canvas in page
     const diffPng = await page.evaluate(async () => {
       const { compareVisualDiff } = await import('/__tests__/helpers/visualDiff.js')
-      const { snapdom } = await import('/dist/snapdom.mjs')
+      const { snapdom } = await import(`/dist/snapdom.mjs?t=${Date.now()}`)
       const target = document.getElementById('capture-target')
       const cap = document.querySelector('#cap-content canvas')
       const liveCanvas = await (

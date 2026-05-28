@@ -2,34 +2,16 @@
   "fresh": {
     "diffs": [
       {
-        "path": "header[0]:\"ShopDemo1 \"",
-        "tag": "header",
-        "prop": "line-height",
-        "live": "normal",
-        "clone": "28px",
-        "snapClass": "c3",
-        "snapCss": "28px"
-      },
-      {
-        "path": "header[0]:\"ShopDemo1 \" > span[0]:\"ShopDemo1\"",
+        "path": "header[0]:\"ShopDemo1 HomeProd\" > span[0]:\"ShopDemo1\"",
         "tag": "span",
         "prop": "line-height",
         "live": "normal",
         "clone": "38px",
-        "snapClass": "c9",
+        "snapClass": "c3",
         "snapCss": "38px"
       },
       {
-        "path": "header[0]:\"ShopDemo1 \" > span[0]:\"ShopDemo1\"",
-        "tag": "span",
-        "prop": "width",
-        "live": "185.156px",
-        "clone": "185.141px",
-        "snapClass": "c9",
-        "snapCss": "185.156px"
-      },
-      {
-        "path": "header[0]:\"ShopDemo1 \" > nav[0]:\"HomeProducts\" > a[0]:\"Home\"",
+        "path": "header[0]:\"ShopDemo1 HomeProd\" > nav[0]:\"HomeProducts\" > a[0]:\"Home\"",
         "tag": "a",
         "prop": "line-height",
         "live": "normal",
@@ -38,7 +20,7 @@
         "snapCss": "23px"
       },
       {
-        "path": "header[0]:\"ShopDemo1 \" > nav[0]:\"HomeProducts\" > a[1]:\"Products\"",
+        "path": "header[0]:\"ShopDemo1 HomeProd\" > nav[0]:\"HomeProducts\" > a[1]:\"Products\"",
         "tag": "a",
         "prop": "line-height",
         "live": "normal",
@@ -47,22 +29,13 @@
         "snapCss": "23px"
       },
       {
-        "path": "main[0]:\"Checkout \"",
-        "tag": "main",
+        "path": "main[0]:\"Checkout \" > h2[0]:\"Checkout\"",
+        "tag": "h2",
         "prop": "line-height",
         "live": "normal",
-        "clone": "28px",
+        "clone": "94px",
         "snapClass": "c7",
-        "snapCss": "28px"
-      },
-      {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[0]:\"Email Address\"",
-        "tag": "label",
-        "prop": "line-height",
-        "live": "normal",
-        "clone": "56px",
-        "snapClass": "c11",
-        "snapCss": "56px"
+        "snapCss": "94px"
       },
       {
         "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[0]:\"Email Address\" > span[0]:\"Email Address\"",
@@ -70,26 +43,17 @@
         "prop": "line-height",
         "live": "normal",
         "clone": "56px",
-        "snapClass": "c12",
+        "snapClass": "c4",
         "snapCss": "56px"
       },
       {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[1]:\"Remember my details\"",
-        "tag": "label",
-        "prop": "line-height",
-        "live": "normal",
-        "clone": "56px",
+        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[1]:\"Remember my details\" > input[0]",
+        "tag": "input",
+        "prop": "width",
+        "live": "20.1094px",
+        "clone": "16.9531px",
         "snapClass": "c10",
-        "snapCss": "56px"
-      },
-      {
-        "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[2]:\"Promo Code\"",
-        "tag": "label",
-        "prop": "line-height",
-        "live": "normal",
-        "clone": "56px",
-        "snapClass": "c11",
-        "snapCss": "56px"
+        "snapCss": "20.1094px"
       },
       {
         "path": "main[0]:\"Checkout \" > form[0]:\"Email Address \" > label[2]:\"Promo Code\" > span[0]:\"Promo Code\"",
@@ -97,56 +61,93 @@
         "prop": "line-height",
         "live": "normal",
         "clone": "56px",
-        "snapClass": "c12",
+        "snapClass": "c4",
         "snapCss": "56px"
+      },
+      {
+        "path": "div[0] > child[0]",
+        "tag": "?",
+        "prop": "(structure)",
+        "live": "CANVAS",
+        "clone": "missing",
+        "snapClass": null,
+        "snapCss": ""
+      },
+      {
+        "path": "div[1]",
+        "tag": "div",
+        "prop": "relTop",
+        "live": "-132.000px",
+        "clone": "0.000px",
+        "snapClass": "c11",
+        "snapCss": "(not in class)"
+      },
+      {
+        "path": "div[1]",
+        "tag": "div",
+        "prop": "relLeft",
+        "live": "-20.000px",
+        "clone": "0.000px",
+        "snapClass": "c11",
+        "snapCss": "(not in class)"
+      },
+      {
+        "path": "div[2]",
+        "tag": "div",
+        "prop": "relTop",
+        "live": "-132.000px",
+        "clone": "0.000px",
+        "snapClass": "c14",
+        "snapCss": "(not in class)"
+      },
+      {
+        "path": "div[2]",
+        "tag": "div",
+        "prop": "relLeft",
+        "live": "-20.000px",
+        "clone": "0.000px",
+        "snapClass": "c14",
+        "snapCss": "(not in class)"
       }
     ],
-    "matchCount": 227,
-    "diffCount": 11,
-    "classCount": 14,
-    "svgBytes": 57670,
+    "matchCount": 269,
+    "diffCount": 12,
+    "classCount": 17,
+    "svgBytes": 57651,
     "cloneProbe": {
       "hasCaptureId": true,
       "checkoutPage": true,
       "foreignObject": true,
-      "foDivs": 2
+      "foDivs": 5
     },
-    "svgHead": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"498\" height=\"769\" viewBox=\"0 0 498 769\" font-size=\"16px\" style=\"display:block;shape-rendering:geometricPrecision;overflow:visible;\"><foreignObject xmlns=\"http://www.w3.org/2000/svg\" x=\"0\" y=\"0\" width=\"498\" height=\"769\" style=\"overflow: visible;\"><style xmlns=\"http://www.w3.org/1999/xhtml\">a,label,span { -webkit-border-horizontal-spacing:0px;-webkit-bo",
+    "svgHead": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"502\" height=\"602\" viewBox=\"0 0 502 602\" font-size=\"16px\" style=\"display:block;shape-rendering:geometricPrecision;overflow:visible;\"><foreignObject xmlns=\"http://www.w3.org/2000/svg\" x=\"0\" y=\"0\" width=\"502\" height=\"602\" style=\"overflow: visible;\"><style xmlns=\"http://www.w3.org/1999/xhtml\">a,label,span { -webkit-border-horizontal-spacing:0px;-webkit-bo",
     "sampleClasses": [
       {
         "class": "c8",
-        "lineHeight": "96px",
-        "height": "96px",
-        "display": "block",
-        "fontSize": "80px"
+        "height": "80px",
+        "display": "flex"
       },
       {
         "class": "c10",
-        "lineHeight": "56px",
-        "height": "132px",
+        "height": "24px",
         "display": "block",
-        "fontSize": "48px"
+        "fontSize": "13.3333px"
       },
       {
         "class": "c11",
-        "lineHeight": "56px",
-        "height": "153px",
-        "display": "block",
-        "fontSize": "48px"
+        "display": "none"
       },
       {
         "class": "c12",
-        "lineHeight": "56px",
-        "display": "block",
-        "fontSize": "48px"
+        "height": "600px",
+        "display": "flex"
       },
       {
         "class": "c13",
-        "height": "87px",
-        "display": "inline-block",
-        "fontSize": "50px"
+        "height": "600px",
+        "display": "block"
       }
     ]
   },
-  "generatedAt": "2026-05-27T15:49:43.389Z"
+  "generatedAt": "2026-05-28T02:37:04.807Z"
 }

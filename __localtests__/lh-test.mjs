@@ -47,7 +47,7 @@ async function main() {
     const livePng = await emailHandle.screenshot()
     
     return await page.evaluate(async ({ strategyName, livePngBase64 }) => {
-      const { snapdom } = await import('/dist/snapdom.mjs')
+      const { snapdom } = await import(`/dist/snapdom.mjs?t=${Date.now()}`)
       const target = document.getElementById('target')
       
       async function measureInk(urlOrB64) {

@@ -80,7 +80,7 @@ export function resolveLineHeightPxForCapture(style, el) {
 export function usesNormalLineHeight(style) {
   const lh = style.lineHeight
   if (lh === 'normal') return true
-  
+
   // Also check the raw property value if computed says something else (though unlikely for normal)
   const raw = style.getPropertyValue('line-height')
   if (raw === 'normal') return true

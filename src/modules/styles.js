@@ -127,9 +127,11 @@ function snapshotComputedStyleFull(el, style, options = {}) {
     const isRelative = lhVal && !lhVal.endsWith('px') && lhVal !== '0'
 
     if (shouldPinLineHeightForCapture(el, style) && (isNormal || isRelative)) {
+      // #324 / #406: We MUST explicitly pin line-height globally for SVG raster parity.
       const px = resolveLineHeightPxForCapture(style, el)
       if (px !== null) {
         out['line-height'] = formatLineHeightPx(px)
+        out._snapdomPinnedLineHeight = '1'
       }
     } else if (isFlexCrossStretchTextLeaf(el, style)) {
       // Cross-stretch: layout box height is flex line size, not line-height. FO must not
@@ -137,6 +139,7 @@ function snapshotComputedStyleFull(el, style, options = {}) {
       const px = measureNormalLineHeightPx(el, style)
       if (px !== null) {
         out['line-height'] = formatLineHeightPx(px)
+        out._snapdomPinnedLineHeight = '1'
       }
       const selfAlign = style.alignSelf || 'auto'
       if (selfAlign === 'auto' || selfAlign === 'normal' || selfAlign === 'stretch') {
