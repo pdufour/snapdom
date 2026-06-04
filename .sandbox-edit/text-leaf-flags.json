@@ -1,0 +1,131 @@
+{
+  "fixture": "flex-row-stretch-link-center",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "flagScope": [
+    "experimentalFoTextLeafNormalize"
+  ],
+  "pinProps": [
+    "line-height",
+    "vertical-align",
+    "display"
+  ],
+  "variants": [
+    {
+      "id": "baseline",
+      "flags": {
+        "experimentalFoTextLeafNormalize": false
+      },
+      "livePin": {
+        "line-height": "21.6px",
+        "vertical-align": "baseline",
+        "display": "flex"
+      },
+      "serializedPinInSvg": {
+        "line-height": true,
+        "vertical-align": true,
+        "display": true
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875,
+        "svgVsCanvasTopPx": 2.3046875
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "textLeafNormalize",
+      "flags": {
+        "experimentalFoTextLeafNormalize": true
+      },
+      "livePin": {
+        "line-height": "21.6px",
+        "vertical-align": "baseline",
+        "display": "flex"
+      },
+      "serializedPinInSvg": {
+        "line-height": true,
+        "vertical-align": true,
+        "display": true
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875,
+        "svgVsCanvasTopPx": 2.3046875
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    }
+  ],
+  "baselineCanvasDeltaPx": 2.296875,
+  "comparisons": [
+    {
+      "id": "baseline",
+      "canvasDeltaPx": 2.296875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.3046875,
+      "deltaFromBaselinePx": 0,
+      "livePin": {
+        "line-height": "21.6px",
+        "vertical-align": "baseline",
+        "display": "flex"
+      },
+      "serializedPinInSvg": {
+        "line-height": true,
+        "vertical-align": true,
+        "display": true
+      }
+    },
+    {
+      "id": "textLeafNormalize",
+      "canvasDeltaPx": 2.296875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.3046875,
+      "deltaFromBaselinePx": 0,
+      "livePin": {
+        "line-height": "21.6px",
+        "vertical-align": "baseline",
+        "display": "flex"
+      },
+      "serializedPinInSvg": {
+        "line-height": true,
+        "vertical-align": true,
+        "display": true
+      }
+    }
+  ],
+  "verdict": "BITMAP_ONLY_DRIFT_UNCHANGED",
+  "interpretation": [
+    "Baseline canvasΔ (live↔canvas topInBorder): 2.297px.",
+    "Baseline svgΔ (live↔SVG topInBorder): -0.008px.",
+    "textLeafNormalize: no meaningful canvasΔ change vs baseline (0.000px).",
+    "textLeafNormalize: serializedPinInSvg { line-height=yes, vertical-align=yes, display=yes }."
+  ],
+  "generatedAt": "2026-06-02T16:27:15.377Z",
+  "port": 8765,
+  "headless": false
+}

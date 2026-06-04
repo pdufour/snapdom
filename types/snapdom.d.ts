@@ -88,6 +88,78 @@ export interface SnapdomOptions {
    */
   outerShadows?: boolean;
 
+  /** Experimental: global structural FO text-layout CSS at capture (default false). */
+  experimentalFoTextLayout?: boolean;
+  /** Experimental: leading-trim:both on foreignObject * at capture (default false). */
+  experimentalFoLeadingTrim?: boolean;
+  /** Experimental: text-box-edge:auto on FO text leaves at capture (default false). */
+  experimentalFoTextBoxEdgeAuto?: boolean;
+  /** Experimental: pin FO text-leaf line-height from live layout when stretch-inflated (default false). */
+  experimentalFoPinLineHeightFromLive?: boolean;
+  /** Experimental: alias for experimentalFoPinLineHeightFromLive (default false). */
+  experimentalFoPinLineHeightOnTextLeaf?: boolean;
+  /** Experimental: pin text-leaf line-height, vertical-align, display from live getComputedStyle at inline (default false). */
+  experimentalFoTextLeafNormalize?: boolean;
+  /** Experimental: reinforce align-items:center on FO flex containers at capture (default false). */
+  experimentalFoFlexRowAlignCenter?: boolean;
+  /** Experimental: fonts.ready + post-decode settle interval in toCanvas (default false). */
+  experimentalRasterDecodeSettle?: boolean;
+  /** Experimental: Math.ceil(out*dpr) for canvas backing dimensions in toCanvas (default false). */
+  experimentalRasterBackingCeil?: boolean;
+  /** Experimental: await img.decode() twice with 100ms interval in toCanvas (default false). */
+  experimentalRasterDoubleDecode?: boolean;
+  /** Experimental: drawImage dest uses natural dimensions scaled contain to outW/outH (default false). */
+  experimentalRasterNaturalDims?: boolean;
+  /** Experimental: skip fractional GBCR drawImage dest nudge in toCanvas (default false). */
+  experimentalRasterDisableGbcrNudge?: boolean;
+  /** Experimental: store Range ink topInBorder fraction in capture meta (default false). */
+  experimentalCaptureInkMeta?: boolean;
+  /** Experimental: adjust drawImage dest dy from capture ink meta (default false). */
+  experimentalRasterInkAlign?: boolean;
+  /** Experimental (wave-2): Chromium FO text block CSS at capture (default false). */
+  experimentalFoChromiumText?: boolean;
+  /** Experimental (wave-2): FO flex row align-items:center CSS bundle at capture (default false). */
+  experimentalFoFlexRowCenter?: boolean;
+  /** Experimental (wave-2): floor SVG viewBox components at capture (default false). */
+  experimentalCaptureIntViewBox?: boolean;
+  /** Experimental (wave-2): geometricPrecision on FO * at capture (default false). */
+  experimentalFoTextGeometric?: boolean;
+  /** Experimental: pin text-leaf line-height to live px + vertical-align:baseline + display:inline (default false). */
+  experimentalFoTextBaselineFix?: boolean;
+  /** Experimental: line-height:normal on FO text leaves at serialize (default false). */
+  experimentalFoTextLineHeightNormal?: boolean;
+  /** Experimental (wave-2): skip ctx.scale(dpr) in toCanvas (default false). */
+  experimentalRasterCtxNoScale?: boolean;
+  /** Experimental (wave-2): offscreen attach + 2× rAF before decode in toCanvas (default false). */
+  experimentalRasterPreDecodeRaf?: boolean;
+  /**
+   * Experimental: raster-only SVG fork patch before decode (default `none` = off).
+   * `fo-y-half-leading-meta`: structural FO strut fix — foreignObject y -= ½(lh−fs) from live capture meta.
+   * Lab (checkout nav): canvas Δtop ~2.797→~−0.203 px; bounce-check 0.06 ink gate not fully passed (NOT_FIXED).
+   */
+  experimentalRasterSvgPatch?:
+    | 'none'
+    | 'fo-lh-pin'
+    | 'pin-lh-leaf'
+    | 'lh-normal-leaf'
+    | 'baseline-leaf'
+    | 'combo-lh-baseline'
+    | 'lh-1-leaf'
+    | 'lh-1em-leaf'
+    | 'fo-flex-start'
+    | 'flex-center'
+    | 'viewbox-floor'
+    | 'root-height-48'
+    | 'line-height-normal'
+    | 'combo-lh-normal-flex-start'
+    | 'combo-lh-center'
+    | 'fo-height-linebox'
+    | 'combo-lh-flexstart'
+    | 'fo-y-half-leading-meta'
+    | 'fo-y-range-subpixel-only-meta'
+    | 'combo-va-baseline-range-subpixel-meta'
+    | 'combo-baseline-leaf-subpixel-meta';
+
   /** Inline non-icon fonts actually used within the subtree. */
   embedFonts?: boolean;
   /** Provide fonts explicitly to avoid remote discovery. */
@@ -234,9 +306,26 @@ export interface BlobOptions {
   height?: number;
 }
 
+export interface CaptureMeta {
+  w0?: number;
+  h0?: number;
+  vbW?: number;
+  vbH?: number;
+  targetW?: number;
+  targetH?: number;
+  inkTopFracInBorder?: number;
+  inkTopFracExpected?: number;
+  inkRefBorderH?: number;
+  inkTopInRootFrac?: number | null;
+  gbcrFracX?: number;
+  gbcrFracY?: number;
+}
+
 export interface CaptureResult {
   /** Canonical data URL of the SVG snapshot (when available). */
   url: string;
+  /** Capture dimensions and optional experimental ink metadata. */
+  meta?: CaptureMeta | null;
 
   /**
    * @deprecated Use `toSvg()` for an <img> that renders the SVG snapshot.

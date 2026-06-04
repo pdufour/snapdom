@@ -1,0 +1,35 @@
+{
+  "landmark": "Home",
+  "dpr": 0,
+  "parallel": 1,
+  "matrixIds": [
+    "product-baseline",
+    "drift-batch222-*"
+  ],
+  "recipeIds": [
+    "product-baseline"
+  ],
+  "rankMetric": "|svgΔ|+|canvasΔ|+|svg−canvas|",
+  "baselineTripleScore": 3,
+  "bestRecipeId": "product-baseline",
+  "bestTripleScore": 3,
+  "ranked": [
+    {
+      "id": "product-baseline",
+      "recipeId": "product-baseline",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "absSvgVsCanvas": 1.5,
+      "tripleScore": 3,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "previewSvgVsCanvas": 1.5,
+      "svgVsCanvas": 1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    }
+  ],
+  "errors": []
+}

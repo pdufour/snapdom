@@ -1,0 +1,41 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-blackbox-w7.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "baseline": {
+      "patch": "none",
+      "exitCode": 1,
+      "passed": false,
+      "capDeltas": {
+        "Home": -0.91,
+        "Products": -0.91,
+        "Checkout": -0.16,
+        "Email Address": -0.43,
+        "Promo Code": 0.07
+      },
+      "navInkParityPx": 0,
+      "stdoutTail": "44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t4.25\t-0.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t31.5\t-0.91px  (canvas raster)\n  Nav: Products\n    paint.cap.vs-border.top\t5.16\t5.41\t+0.25px  (SVG clone)\n    paint.cap.vs-border.bottom\t19.44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t4.25\t-0.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t31.5\t-0.91px  (canvas raster)\n\nCanvas ink (from structure report; top gated ≤0.06px per landmark):\n  Home: paint.canvas.vs-border.top -0.91px\n  Products: paint.canvas.vs-border.top -0.91px\n  Checkout: paint.canvas.vs-border.top -0.16px\n  Email Address: paint.canvas.vs-border.top -0.43px\n  Promo Code: paint.canvas.vs-border.top +0.07px\n  Nav |Δtop(Home)-Δtop(Products)|: 0.00px\n\nToggle bounce: none\n\nFAIL (5):\n  Home paint.canvas.vs-border.top Δ=-0.91px (fail>0.06px)\n  Products paint.canvas.vs-border.top Δ=-0.91px (fail>0.06px)\n  Checkout paint.canvas.vs-border.top Δ=-0.16px (fail>0.06px)\n  Email Address paint.canvas.vs-border.top Δ=-0.43px (fail>0.06px)\n  Promo Code paint.canvas.vs-border.top Δ=+0.07px (fail>0.06px)\n\n"
+    },
+    "w7": {
+      "patch": "fo-y-half-leading-meta",
+      "exitCode": 1,
+      "passed": false,
+      "capDeltas": {
+        "Home": -1.91,
+        "Products": -1.91,
+        "Checkout": -2.16,
+        "Email Address": -2.43,
+        "Promo Code": -1.93
+      },
+      "navInkParityPx": 0,
+      "stdoutTail": "44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t3.25\t-1.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t30.5\t-1.91px  (canvas raster)\n  Nav: Products\n    paint.cap.vs-border.top\t5.16\t5.41\t+0.25px  (SVG clone)\n    paint.cap.vs-border.bottom\t19.44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t3.25\t-1.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t30.5\t-1.91px  (canvas raster)\n\nCanvas ink (from structure report; top gated ≤0.06px per landmark):\n  Home: paint.canvas.vs-border.top -1.91px\n  Products: paint.canvas.vs-border.top -1.91px\n  Checkout: paint.canvas.vs-border.top -2.16px\n  Email Address: paint.canvas.vs-border.top -2.43px\n  Promo Code: paint.canvas.vs-border.top -1.93px\n  Nav |Δtop(Home)-Δtop(Products)|: 0.00px\n\nToggle bounce: none\n\nFAIL (5):\n  Home paint.canvas.vs-border.top Δ=-1.91px (fail>0.06px)\n  Products paint.canvas.vs-border.top Δ=-1.91px (fail>0.06px)\n  Checkout paint.canvas.vs-border.top Δ=-2.16px (fail>0.06px)\n  Email Address paint.canvas.vs-border.top Δ=-2.43px (fail>0.06px)\n  Promo Code paint.canvas.vs-border.top Δ=-1.93px (fail>0.06px)\n\n"
+    },
+    "homeCapDeltaShift": -1,
+    "w7CapPassesGate": false,
+    "w7CapAgreesWithLabRange": false,
+    "verdict": "BLACKBOX_CAP_DIVERGES_FROM_LAB_RANGE",
+    "implication": "Checkout blackbox uses cap-model ink reference — compare shift magnitude to mini lab Range Δ, not absolute equality."
+  }
+}

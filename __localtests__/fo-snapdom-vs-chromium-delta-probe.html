@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO snapdom vs chromium delta probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    window.snapdom = snapdom
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { findLandmarkElement, runFoFixProbe } from './fo-fix-lab-runner.js'
+    import { fnv1aHash } from './fo-fix-toCanvas.js'
+    import {
+      buildStaticMinimalNavFoSvg,
+      compareThreeWay,
+      rasterSvgToCanvasEx,
+    } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function byteDiffSummary(a, b) {
+      const lenA = a?.length ?? 0
+      const lenB = b?.length ?? 0
+      const minLen = Math.min(lenA, lenB)
+      let firstDiff = -1
+      let diffCount = 0
+      for (let i = 0; i < minLen; i++) {
+        if (a.charCodeAt(i) !== b.charCodeAt(i)) {
+          if (firstDiff < 0) firstDiff = i
+          diffCount++
+        }
+      }
+      diffCount += Math.abs(lenA - lenB)
+      return {
+        lenA,
+        lenB,
+        lenDelta: lenB - lenA,
+        firstDiffIndex: firstDiff >= 0 ? firstDiff : null,
+        diffByteCount: diffCount,
+        hashA: fnv1aHash(a),
+        hashB: fnv1aHash(b),
+        identical: diffCount === 0,
+      }
+    }
+
+    async function decodeThreeWay(svgText, root, el) {
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const { canvas } = await rasterSvgToCanvasEx(svgText, cssW * scale, cssH * scale, dpr, {})
+      const threeWay = compareThreeWay(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return {
+        canvasDelta: roundPx(threeWay.liveVsCanvasTopPx),
+        svgDelta: roundPx(threeWay.liveVsSvgTopPx),
+        svgVsCanvas: roundPx(threeWay.svgVsCanvasTopPx),
+      }
+    }
+
+    window.__foSnapdomVsChromiumDeltaProbe = { ready: false, bootError: null, result: null }
+
+    async function run() {
+      await document.fonts.ready
+      const root = document.getElementById('capture-target')
+      const el = findLandmarkElement(root, landmark)
+      const recipe = getFoFixRecipe('product-baseline')
+      const snapRow = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const snapSvg = snapRow.svgText
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const handSvg = buildStaticMinimalNavFoSvg(cssW, cssH)
+
+      const byteDiff = byteDiffSummary(handSvg, snapSvg)
+      const snapDecode = await decodeThreeWay(snapSvg, root, el)
+      const handDecode = await decodeThreeWay(handSvg, root, el)
+      const decodeDeltaPx =
+        snapDecode.canvasDelta != null && handDecode.canvasDelta != null
+          ? roundPx(snapDecode.canvasDelta - handDecode.canvasDelta)
+          : null
+
+      return {
+        probe: 'fo-snapdom-vs-chromium-delta-probe',
+        dpr,
+        scale,
+        landmark,
+        byteDiff,
+        decode: {
+          snapdomCaptureSvg: snapDecode,
+          handBuiltStaticSvg: handDecode,
+          canvasDeltaDiffPx: decodeDeltaPx,
+          decodeLayerAddsOffset: decodeDeltaPx != null && Math.abs(decodeDeltaPx) >= 0.08,
+        },
+        synthesis: {
+          svgBytesDiffer: !byteDiff.identical,
+          decodeInvariant:
+            decodeDeltaPx != null && Math.abs(decodeDeltaPx) < 0.08
+              ? 'CONFIRMED — decode delta 0 px despite SVG byte diff'
+              : decodeDeltaPx != null
+                ? `decode adds ${decodeDeltaPx}px beyond hand-built`
+                : 'INCONCLUSIVE',
+          implication:
+            decodeDeltaPx != null && Math.abs(decodeDeltaPx) < 0.08
+              ? 'Strut gap is Chromium FO decode class; snapdom serialization is not the delta source.'
+              : 'Inspect snapdom-specific SVG bytes affecting decode.',
+        },
+      }
+    }
+
+    run()
+      .then((result) => {
+        window.__foSnapdomVsChromiumDeltaProbe.result = result
+        window.__foSnapdomVsChromiumDeltaProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foSnapdomVsChromiumDeltaProbe.bootError = String(err?.message || err)
+        window.__foSnapdomVsChromiumDeltaProbe.ready = true
+      })
+  </script>
+</body>
+</html>

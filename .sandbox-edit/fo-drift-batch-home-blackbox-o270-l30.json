@@ -1,0 +1,102 @@
+{
+  "metric": "paint.canvas.vs-border.top",
+  "fixture": "checkout-example.html",
+  "dpr": 2,
+  "offset": 270,
+  "limit": 30,
+  "matrixIds": [
+    "product-baseline",
+    "tc-fix-*",
+    "tc-blh-*",
+    "tc-decode-*",
+    "tc-raster-*",
+    "fix321-*",
+    "tc-fork-*"
+  ],
+  "recipeIds": [
+    "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+    "tc-blh-w1-combo-capture-rfork-decode-settle",
+    "tc-blh-w1-combo-full-lh-raster",
+    "tc-blh-w2-rfork-lh-meta-leaf",
+    "tc-blh-w2-rfork-inline-block-linebox",
+    "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+    "tc-blh-w2-rfork-strut-translate-y-meta"
+  ],
+  "baseline": {
+    "home": -0.91,
+    "products": -0.91
+  },
+  "blackboxGate": {
+    "baselineHome": -0.91,
+    "baselineProducts": -0.91,
+    "note": "Rank toward 0 from −0.91; do not promote fo-y-strut-range-meta / fo-y-half-leading-meta as product default."
+  },
+  "ranked": [
+    {
+      "recipeId": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+      "checkoutQuery": "experimentalRasterSvgPatch=pin-lh-leaf",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-decode-settle",
+      "checkoutQuery": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=pin-lh-leaf",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-full-lh-raster",
+      "checkoutQuery": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=pin-lh-leaf",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-blh-w2-rfork-lh-meta-leaf",
+      "checkoutQuery": "experimentalRasterSvgPatch=lh-meta-leaf&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=chromium-copy-lh-baseline-leaf&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-blh-w2-rfork-strut-translate-y-meta",
+      "checkoutQuery": "experimentalRasterSvgPatch=strut-translate-y-meta&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": 1.09,
+      "productsCanvasVsBorderTop": 1.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200010.9,
+      "beatsBaseline": false
+    }
+  ],
+  "skipped": [],
+  "errors": [],
+  "best": {
+    "recipeId": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+    "checkoutQuery": "experimentalRasterSvgPatch=pin-lh-leaf",
+    "homeCanvasVsBorderTop": -0.91,
+    "productsCanvasVsBorderTop": -0.91,
+    "navDeltaTopHomeProducts": 0,
+    "rankScore": 200009.1,
+    "beatsBaseline": false
+  },
+  "beatsBaseline": []
+}

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal FO+flex+text drift repro</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #capture-target .row {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    #capture-target .row a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+    pre#report {
+      margin-top: 12px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font: 11px/1.4 ui-monospace, Menlo, monospace;
+      overflow: auto;
+      max-height: 70vh;
+    }
+  </style>
+</head>
+<body>
+  <h1>Minimal FO + flex stretch + text</h1>
+  <p class="hint">
+    Smallest hand-built <code>foreignObject</code> + flex stretch + <code>font:600 16px/1.35</code> text.
+    Three-way ink (live / inline FO SVG / FO→canvas). Proves <strong>BITMAP_ONLY</strong> drift on the minimal
+    case — no snapdom capture. Headed Chrome only; run <code>npm run debug:fo-minimal-repro</code>.
+  </p>
+  <div id="capture-target">
+    <div class="row" aria-label="Minimal flex row">
+      <a href="#">Home</a>
+    </div>
+  </div>
+  <p id="status">Booting…</p>
+  <pre id="report" hidden></pre>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import { probeHandBuiltFoPath, VARIANTS, isBitmapOnlyDrift } from './fo-minimal-repro-probe.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const reportEl = document.getElementById('report')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const sweep = params.get('sweep') !== '0'
+    const includeSnapdom = params.get('snapdom') !== '0'
+    const primaryVariantId = (params.get('variant') || 'static-inline-flex').trim()
+
+    function threeWayFromCmp(cmp) {
+      return {
+        livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx:
+          cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+            ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+            : null,
+      }
+    }
+
+    function reproducesDrift(ink) {
+      const canvas = ink?.liveVsCanvasTopPx ?? 0
+      const svg = ink?.liveVsSvgTopPx ?? 0
+      return Math.abs(svg) < 0.35 && Math.abs(canvas) >= 1.5
+    }
+
+    async function probeVariant(variant) {
+      root.innerHTML = variant.html
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const el = findLandmarkElement(root, landmark)
+      if (!el) {
+        return { id: variant.id, error: `landmark "${landmark}" not found`, description: variant.description }
+      }
+
+      const handBuilt = await probeHandBuiltFoPath(root, el, landmark, dpr, scale, {
+        svgMode: variant.svgMode ?? 'fixture-css-outerHTML',
+      })
+      const handBuiltThreeWay = threeWayFromCmp(handBuilt.cmp)
+
+      /** @type {Record<string, unknown> | null} */
+      let snapdomBaseline = null
+      if (includeSnapdom) {
+        const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+        const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+        const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr, handBuilt.fixtureDims)
+        snapdomBaseline = threeWayFromCmp(cmp)
+      }
+
+      return {
+        id: variant.id,
+        description: variant.description,
+        svgMode: variant.svgMode ?? 'fixture-css-outerHTML',
+        markupBytes: variant.html.length,
+        svgBytes: handBuilt.svgText.length,
+        handBuilt: {
+          method:
+            variant.svgMode === 'static-minimal'
+              ? 'static-inline-foreignObject-svg'
+              : 'fixture-css-plus-capture-target-outerHTML-in-foreignObject',
+          usesSnapdomCapture: false,
+          fixtureDims: handBuilt.fixtureDims,
+          threeWay: handBuiltThreeWay,
+          bitmapOnlyDrift: isBitmapOnlyDrift(handBuiltThreeWay),
+          reproducesDrift: reproducesDrift(handBuiltThreeWay),
+        },
+        snapdomBaseline: snapdomBaseline
+          ? { threeWay: snapdomBaseline, bitmapOnlyDrift: isBitmapOnlyDrift(snapdomBaseline) }
+          : null,
+        snapdomMatchesHandBuilt:
+          snapdomBaseline &&
+          handBuiltThreeWay.liveVsCanvasTopPx != null &&
+          snapdomBaseline.liveVsCanvasTopPx != null
+            ? Math.abs(snapdomBaseline.liveVsCanvasTopPx - handBuiltThreeWay.liveVsCanvasTopPx) < 0.35
+            : null,
+        staticMinimalSvg: variant.svgMode === 'static-minimal' ? handBuilt.svgText : undefined,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+
+      const variantsToRun = sweep ? VARIANTS : VARIANTS.filter((v) => v.id === primaryVariantId)
+      /** @type {Record<string, unknown>[]} */
+      const rows = []
+      for (const variant of variantsToRun) {
+        status.textContent = `Probing ${variant.id}…`
+        rows.push(await probeVariant(variant))
+      }
+
+      const reproducing = rows.filter((r) => r.handBuilt?.reproducesDrift)
+      const smallest = reproducing.reduce(
+        (best, r) =>
+          !best || (r.svgBytes ?? r.markupBytes ?? Infinity) < (best.svgBytes ?? best.markupBytes ?? Infinity)
+            ? r
+            : best,
+        /** @type {Record<string, unknown> | null} */ (null),
+      )
+
+      const primary = rows.find((r) => r.id === primaryVariantId) || rows[0]
+      const primaryThreeWay = primary?.handBuilt?.threeWay ?? {}
+      const canvasDrift = primaryThreeWay.liveVsCanvasTopPx ?? null
+      const svgDrift = primaryThreeWay.liveVsSvgTopPx ?? null
+      const handBuiltBitmapOnly = primary?.handBuilt?.bitmapOnlyDrift === true
+      const snapdomBitmapOnly = primary?.snapdomBaseline?.bitmapOnlyDrift === true
+
+      /** @type {string} */
+      let verdict
+      if (handBuiltBitmapOnly && (primary?.snapdomMatchesHandBuilt !== false)) {
+        verdict = 'BITMAP_ONLY'
+      } else if (handBuiltBitmapOnly) {
+        verdict = 'HANDBUILT_BITMAP_ONLY'
+      } else if (primary?.handBuilt?.reproducesDrift) {
+        verdict = 'DRIFT_REPRODUCED'
+      } else {
+        verdict = 'NO_DRIFT'
+      }
+
+      /** @type {string} */
+      let handBuiltVerdict
+      if (verdict === 'BITMAP_ONLY') {
+        handBuiltVerdict =
+          `BITMAP_ONLY — inline FO SVG ink ≈ live (svgΔ ${svgDrift?.toFixed(3) ?? '—'}px), ` +
+          `canvas raster only drifts (canvasΔ ${canvasDrift?.toFixed(3) ?? '—'}px); no snapdom capture.`
+      } else if (handBuiltBitmapOnly) {
+        handBuiltVerdict = `BITMAP_ONLY on hand-built path; snapdom baseline differs.`
+      } else if (primary?.handBuilt?.reproducesDrift) {
+        handBuiltVerdict = `DRIFT — canvasΔ ${canvasDrift?.toFixed(3) ?? '—'}px but svgΔ ${svgDrift?.toFixed(3) ?? '—'}px fails BITMAP_ONLY band.`
+      } else {
+        handBuiltVerdict = 'NO — hand-built path does not show svg≈live + canvas-only drift.'
+      }
+
+      const staticRow = rows.find((r) => r.id === 'static-inline-flex')
+      return {
+        fixture: 'fo-minimal-repro',
+        purpose:
+          'Smallest hand-built foreignObject+flex+16px/1.35 text; three-way ink; prove BITMAP_ONLY without snapdom.',
+        probe: 'three-way',
+        dpr,
+        scale,
+        landmark,
+        sweep,
+        includeSnapdom,
+        primaryVariantId,
+        verdict,
+        handBuiltVerdict,
+        bitmapOnly: {
+          handBuilt: handBuiltBitmapOnly,
+          snapdom: snapdomBitmapOnly,
+          criteria: '|liveVsSvgTopPx| < 0.35 and |liveVsCanvasTopPx| > 1.5',
+        },
+        requiresSnapdomCapture: !handBuiltBitmapOnly,
+        smallestReproducingVariant: smallest
+          ? {
+              id: smallest.id,
+              description: smallest.description,
+              markupBytes: smallest.markupBytes,
+              svgBytes: smallest.svgBytes,
+            }
+          : null,
+        staticMinimalSvg: staticRow?.staticMinimalSvg ?? primary?.staticMinimalSvg ?? null,
+        variants: rows,
+        threeWay: primaryThreeWay,
+        summary: {
+          handBuiltCanvasDriftPx: canvasDrift,
+          handBuiltSvgDriftPx: svgDrift,
+          snapdomCanvasDriftPx: primary?.snapdomBaseline?.threeWay?.liveVsCanvasTopPx ?? null,
+          snapdomSvgDriftPx: primary?.snapdomBaseline?.threeWay?.liveVsSvgTopPx ?? null,
+          snapdomMatchesHandBuilt: primary?.snapdomMatchesHandBuilt ?? null,
+        },
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__foMinimalRepro = {
+        ready: false,
+        bootError: null,
+        run: runProbe,
+        landmark,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__foMinimalRepro.ready = true
+        status.textContent = 'Ready — CLI runner will invoke run().'
+        if (params.get('auto') === '1') {
+          const payload = await runProbe()
+          reportEl.hidden = false
+          reportEl.textContent = JSON.stringify(payload, null, 2)
+          status.textContent = payload.handBuiltVerdict
+          window.__foMinimalRepro.lastReport = payload
+        }
+      } catch (err) {
+        window.__foMinimalRepro.bootError = String(err?.message || err)
+        status.textContent = window.__foMinimalRepro.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__foMinimalRepro = window.__foMinimalRepro || {}
+      window.__foMinimalRepro.bootError = String(err?.message || err)
+      status.textContent = window.__foMinimalRepro.bootError
+    })
+  </script>
+</body>
+</html>

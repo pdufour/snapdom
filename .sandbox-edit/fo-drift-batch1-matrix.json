@@ -1,0 +1,93 @@
+{
+  "landmark": "Home",
+  "dpr": 0,
+  "parallel": 1,
+  "matrixIds": [
+    "product-baseline",
+    "drift-batch1-*"
+  ],
+  "recipeIds": [
+    "product-baseline",
+    "drift-batch1-001-fonts-ready-raster",
+    "drift-batch1-002-phantom-font-prime",
+    "drift-batch1-003-combo-settle-interval-fonts",
+    "drift-batch1-004-blob-url-decode-interval"
+  ],
+  "rankMetric": "|svgΔ|+|canvasΔ|",
+  "baselineSumAbs": 1.5,
+  "bestRecipeId": "product-baseline",
+  "bestSumAbs": 1.5,
+  "ranked": [
+    {
+      "id": "product-baseline",
+      "recipeId": "product-baseline",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "sumAbsSvgCanvas": 1.5,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "svgVsCanvas": -1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    },
+    {
+      "id": "drift-batch1-001-fonts-ready-raster",
+      "recipeId": "drift-batch1-001-fonts-ready-raster",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "sumAbsSvgCanvas": 1.5,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "svgVsCanvas": -1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    },
+    {
+      "id": "drift-batch1-002-phantom-font-prime",
+      "recipeId": "drift-batch1-002-phantom-font-prime",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "sumAbsSvgCanvas": 1.5,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "svgVsCanvas": -1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    },
+    {
+      "id": "drift-batch1-003-combo-settle-interval-fonts",
+      "recipeId": "drift-batch1-003-combo-settle-interval-fonts",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "sumAbsSvgCanvas": 1.5,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "svgVsCanvas": -1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    },
+    {
+      "id": "drift-batch1-004-blob-url-decode-interval",
+      "recipeId": "drift-batch1-004-blob-url-decode-interval",
+      "svgVsLive": 1.5,
+      "canvasVsLive": 0,
+      "absSvgVsLive": 1.5,
+      "absCanvasVsLive": 0,
+      "sumAbsSvgCanvas": 1.5,
+      "previewSvgVsLive": 1.5,
+      "previewCanvasVsLive": 0,
+      "svgVsCanvas": -1.5,
+      "svgHigherPx": -1.5,
+      "canvasHigherPx": 0
+    }
+  ],
+  "errors": []
+}

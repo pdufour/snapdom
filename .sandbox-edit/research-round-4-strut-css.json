@@ -1,0 +1,56 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-strut-css.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "variantId": "baseline",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "first-line-bold",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "line-box-contain",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "initial-letter",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "leading-trim-both",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "STRUT_CSS_INVARIANT",
+    "refuted": [
+      "::first-line",
+      "line-box-contain",
+      "initial-letter",
+      "leading-trim"
+    ]
+  }
+}

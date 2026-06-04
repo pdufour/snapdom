@@ -1,0 +1,55 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-fo-subpixel.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "variantId": "integer-fo-100pct",
+        "foWidth": "100%",
+        "foHeight": "100%",
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "variantId": "fractional-fo-dims",
+        "foWidth": "499.60",
+        "foHeight": "50.30",
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "variantId": "floor-fo-dims",
+        "foWidth": "500",
+        "foHeight": "50",
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "variantId": "ceil-fo-dims",
+        "foWidth": "500",
+        "foHeight": "50",
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      }
+    ],
+    "baselineCanvasDelta": 2.796875,
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "FO_SUBPIXEL_DIMS_INVARIANT",
+    "implication": "Round-4 integer floor/ceil ruled out; round-5 adds fractional FO width/height on snapdom SVG."
+  }
+}

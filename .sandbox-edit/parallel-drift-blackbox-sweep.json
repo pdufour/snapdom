@@ -1,0 +1,1493 @@
+{
+  "runAt": "2026-06-03",
+  "mergedLab": {
+    "globalBestId": "tc-fix-drift-039-capture-line-height-normal-important",
+    "absCanvasVsLive": 0.1875,
+    "canvasVsLive": -0.1875,
+    "note": "Refreshed after full parallel sweep 2026-06-03"
+  },
+  "mergedTop10LabIds": [
+    "tc-fix-drift-039-capture-line-height-normal-important",
+    "tc-fix-drift-017-rfork-fo-y-strut-range-meta",
+    "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+    "tc-fix-w10-rfork-y-strut-range-subpixel",
+    "tc-fix-w11-rfork-strut-range-trim",
+    "tc-fix-w12-rfork-y-strut-range-preserve",
+    "tc-fix-w12-rfork-leaf-translate-y-strut-range",
+    "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive",
+    "tc-fix-w16-rfork-leaf-subpx-positive-only",
+    "tc-fix-w5-rfork-lh-normal-flex-start"
+  ],
+  "baseline": {
+    "homeCanvasVsBorderTop": -0.91,
+    "productsCanvasVsBorderTop": -0.91,
+    "navDeltaTopHomeProducts": 0
+  },
+  "blackboxSweep": [
+    {
+      "patch": "(default product, no query)",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "experimentalFoTextLineHeightNormal=1",
+      "mapsLab": "tc-fix-drift-039",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "verifiedAt": "2026-06-03"
+    },
+    {
+      "patch": "line-height-normal-important",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "lh-normal-leaf",
+      "mapsLab": "tc-fix-drift-040",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "lh-meta-leaf",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "inline-block-linebox-leaf",
+      "mapsLab": "tc-fix-drift-007",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "fo-y-range-subpixel-only-meta",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "text-leaf-translate-y-half-leading-minus-subpixel-positive-meta",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "fix321-decode-interval",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "decode-interval",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "experimentalRasterDecodeSettle=1",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "experimentalRasterDoubleDecode=1",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "fo-y-strut-range-meta",
+      "mapsLab": "tc-fix-drift-017",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "regression": "known -1.91px"
+    },
+    {
+      "patch": "combo-fo-y-strut-range-trim-text-box",
+      "mapsLab": "tc-fix-w11-rfork-strut-range-trim",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta",
+      "mapsLab": "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "fo-y-half-leading-meta",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "fo-y-half-leading-fontbox-meta",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false
+    },
+    {
+      "patch": "strut-translate-y-meta",
+      "mapsLab": "tc-fix-drift-016",
+      "home": 1.09,
+      "products": 1.09,
+      "navDelta": 0,
+      "beatsBaseline": false
+    }
+  ],
+  "winner": null,
+  "srcChanged": false,
+  "conclusion": "Wide corpus lab best tc-fix-drift-039 (|canvasVsLive|=0.1875). Decode/raster corpus (26 recipes) ties at lab |canvas−live|=1.1875; checkout blackbox stays -0.91 for all decode leaders. No src promotion.",
+  "lastExperimentalRun": {
+    "query": "experimentalFoTextLineHeightNormal=1",
+    "headed": true,
+    "home": -0.91,
+    "products": -0.91,
+    "navDelta": 0,
+    "beatsBaseline": false,
+    "exitCode": 1
+  },
+  "wideCorpus": {
+    "recipeCount": 252,
+    "slices": 9,
+    "offsets": [
+      0,
+      30,
+      60,
+      90,
+      120,
+      150,
+      180,
+      210,
+      240
+    ],
+    "labBest": {
+      "offset": 0,
+      "id": "tc-fix-drift-039-capture-line-height-normal-important",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    "blackboxResults": [
+      {
+        "labId": "tc-fix-drift-039-capture-line-height-normal-important",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalFoTextLineHeightNormal=1",
+        "patch": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-drift-017-rfork-fo-y-strut-range-meta",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=fo-y-strut-range-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "fo-y-strut-range-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=lh-normal-leaf&experimentalRasterDisableGbcrNudge=1",
+        "patch": "lh-normal-leaf",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w10-rfork-y-strut-range-subpixel",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=fo-y-strut-range-meta",
+        "patch": "fo-y-strut-range-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w11-rfork-strut-range-trim",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-strut-range-trim-text-box",
+        "patch": "combo-fo-y-strut-range-trim-text-box",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w12-rfork-y-strut-range-preserve",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=fo-y-strut-range-preserve-height",
+        "patch": "fo-y-strut-range-preserve-height",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w12-rfork-leaf-translate-y-strut-range",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=leaf-translate-y-strut-range-meta",
+        "patch": "leaf-translate-y-strut-range-meta",
+        "home": -2.41,
+        "products": -2.41,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=text-leaf-translate-y-range-subpixel-positive-meta",
+        "patch": "text-leaf-translate-y-range-subpixel-positive-meta",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=text-leaf-translate-y-range-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "text-leaf-translate-y-range-subpixel-positive-meta",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w5-rfork-lh-normal-flex-start",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=combo-lh-normal-flex-start",
+        "patch": "combo-lh-normal-flex-start",
+        "home": -4.91,
+        "products": -4.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalFoPinLineHeightOnTextLeaf=1",
+        "patch": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w9-rfork-fo-y-strut-range-meta",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=fo-y-strut-range-meta",
+        "patch": "fo-y-strut-range-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      }
+    ],
+    "winner": null,
+    "srcChanged": false,
+    "note": "No checkout blackbox row beat Home/Products -0.91px toward 0; lab |canvasVsLive| leaders not promoted.",
+    "mergedLabBest": {
+      "offset": 0,
+      "id": "tc-fix-drift-039-capture-line-height-normal-important",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    "mergedTop10LabIds": [
+      "tc-fix-drift-039-capture-line-height-normal-important",
+      "tc-fix-drift-017-rfork-fo-y-strut-range-meta",
+      "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+      "tc-fix-w10-rfork-y-strut-range-subpixel",
+      "tc-fix-w11-rfork-strut-range-trim",
+      "tc-fix-w12-rfork-y-strut-range-preserve",
+      "tc-fix-w12-rfork-leaf-translate-y-strut-range",
+      "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive",
+      "tc-fix-w16-rfork-leaf-subpx-positive-only",
+      "tc-fix-w5-rfork-lh-normal-flex-start"
+    ],
+    "mergedTop8BlackboxIds": [
+      "tc-fix-drift-039-capture-line-height-normal-important",
+      "tc-fix-drift-017-rfork-fo-y-strut-range-meta",
+      "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+      "tc-fix-w10-rfork-y-strut-range-subpixel",
+      "tc-fix-w11-rfork-strut-range-trim",
+      "tc-fix-w12-rfork-y-strut-range-preserve",
+      "tc-fix-w12-rfork-leaf-translate-y-strut-range",
+      "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive"
+    ],
+    "globalBaselineAbsLab": 1.1875,
+    "mergeNote": "All offsets merged; baseline abs from offset-0 product-baseline slice"
+  },
+  "blackboxSweepWide": [
+    {
+      "patch": "experimentalFoTextLineHeightNormal=1",
+      "mapsLab": "tc-fix-drift-039-capture-line-height-normal-important",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "fo-y-strut-range-meta",
+      "mapsLab": "tc-fix-drift-017-rfork-fo-y-strut-range-meta",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "lh-normal-leaf",
+      "mapsLab": "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "combo-fo-y-strut-range-trim-text-box",
+      "mapsLab": "tc-fix-w11-rfork-strut-range-trim",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "fo-y-strut-range-preserve-height",
+      "mapsLab": "tc-fix-w12-rfork-y-strut-range-preserve",
+      "home": -1.91,
+      "products": -1.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "leaf-translate-y-strut-range-meta",
+      "mapsLab": "tc-fix-w12-rfork-leaf-translate-y-strut-range",
+      "home": -2.41,
+      "products": -2.41,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "text-leaf-translate-y-range-subpixel-positive-meta",
+      "mapsLab": "tc-fix-w15-rfork-leaf-translate-y-subpixel-positive",
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "experimentalRasterDecodeSettle=1",
+      "mapsLab": null,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "experimentalRasterDoubleDecode=1",
+      "mapsLab": null,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    },
+    {
+      "patch": "experimentalRasterDecodeSettle=1&experimentalRasterDoubleDecode=1",
+      "mapsLab": null,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "exitCode": 1
+    }
+  ],
+  "decodeRasterAttempt": {
+    "runAt": "2026-06-03",
+    "corpusIds": "product-baseline,fix321-*,tc-decode-*,tc-raster-*",
+    "recipeCount": 26,
+    "batches": 1,
+    "parallelLimit": 30,
+    "headed": true,
+    "labBest": {
+      "bestId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "absCanvasVsLive": 0.1875,
+      "canvasVsLive": -0.1875,
+      "note": "Decode-only slice offset 0; all 26 recipes tie |svg−canvas|=0 and |canvas−live|=1.1875 at lab dpr=1"
+    },
+    "labMerged": {
+      "bestId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "absCanvasVsLive": 0.1875,
+      "canvasVsLive": -0.1875,
+      "allRecipesTied": true,
+      "note": "Decode-only slice offset 0; all 26 recipes tie |svg−canvas|=0 and |canvas−live|=1.1875 at lab dpr=1"
+    },
+    "blackboxRows": [
+      {
+        "recipeId": "product-baseline",
+        "patch": "product-baseline",
+        "query": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-decode-interval",
+        "patch": "fix321-decode-interval",
+        "query": "experimentalRasterSvgPatch=decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-decode-interval-raf",
+        "patch": "fix321-decode-interval-raf",
+        "query": "experimentalRasterSvgPatch=decode-interval-raf",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-double-decode",
+        "patch": "fix321-double-decode",
+        "query": "experimentalRasterSvgPatch=double-decode",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-triple-decode",
+        "patch": "fix321-triple-decode",
+        "query": "experimentalRasterSvgPatch=triple-decode",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-fonts-ready",
+        "patch": "fix321-fonts-ready",
+        "query": "experimentalRasterSvgPatch=fonts-ready",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-fonts-ready-interval",
+        "patch": "fix321-fonts-ready-interval",
+        "query": "experimentalRasterSvgPatch=fonts-ready-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-decode-microtask-twice",
+        "patch": "fix321-decode-microtask-twice",
+        "query": "experimentalRasterSvgPatch=decode-microtask-twice",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-load-event-interval",
+        "patch": "fix321-load-event-interval",
+        "query": "experimentalRasterSvgPatch=load-event-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "fix321-decode-interval-prototype",
+        "patch": "fix321-decode-interval-prototype",
+        "query": "experimentalRasterSvgPatch=decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-001-product-decode-settle",
+        "patch": "tc-decode-001-product-decode-settle",
+        "query": "experimentalRasterDecodeSettle=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-002-product-double-decode",
+        "patch": "tc-decode-002-product-double-decode",
+        "query": "experimentalRasterDoubleDecode=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-003-product-pre-decode-raf",
+        "patch": "tc-decode-003-product-pre-decode-raf",
+        "query": "experimentalRasterPreDecodeRaf=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-004-wait-decode-3pass",
+        "patch": "tc-decode-004-wait-decode-3pass",
+        "query": "experimentalRasterSvgPatch=lab-toCanvas-wait-decode",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-005-safari-raf-mp",
+        "patch": "tc-decode-005-safari-raf-mp",
+        "query": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-006-two-stage",
+        "patch": "tc-decode-006-two-stage",
+        "query": "experimentalRasterSvgPatch=two-stage",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-007-settle-plus-interval",
+        "patch": "tc-decode-007-settle-plus-interval",
+        "query": "experimentalRasterDecodeSettle=1&experimentalRasterSvgPatch=decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-decode-008-double-plus-interval",
+        "patch": "tc-decode-008-double-plus-interval",
+        "query": "experimentalRasterDoubleDecode=1&experimentalRasterSvgPatch=decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-001-natural-dims",
+        "patch": "tc-raster-001-natural-dims",
+        "query": "experimentalRasterNaturalDims=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-002-backing-ceil",
+        "patch": "tc-raster-002-backing-ceil",
+        "query": "experimentalRasterBackingCeil=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-003-disable-gbcr-nudge",
+        "patch": "tc-raster-003-disable-gbcr-nudge",
+        "query": "experimentalRasterDisableGbcrNudge=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-004-ctx-no-scale",
+        "patch": "tc-raster-004-ctx-no-scale",
+        "query": "experimentalRasterCtxNoScale=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-005-natural-plus-settle",
+        "patch": "tc-raster-005-natural-plus-settle",
+        "query": "experimentalRasterNaturalDims=1&experimentalRasterDecodeSettle=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-006-interval-int-viewbox",
+        "patch": "tc-raster-006-interval-int-viewbox",
+        "query": "experimentalRasterSvgPatch=decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-007-blob-decode-interval",
+        "patch": "tc-raster-007-blob-decode-interval",
+        "query": "experimentalRasterSvgPatch=blob-url-decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": "tc-raster-008-product-baseline-decode",
+        "patch": "tc-raster-008-product-baseline-decode",
+        "query": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      }
+    ],
+    "blackboxSweep": [
+      {
+        "recipeId": null,
+        "patch": "(default)",
+        "query": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "experimentalRasterDecodeSettle=1",
+        "query": "experimentalRasterDecodeSettle=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "experimentalRasterDoubleDecode=1",
+        "query": "experimentalRasterDoubleDecode=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "experimentalRasterNaturalDims=1",
+        "query": "experimentalRasterNaturalDims=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "experimentalRasterDisableGbcrNudge=1",
+        "query": "experimentalRasterDisableGbcrNudge=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "combo-settle+double+nudge",
+        "query": "experimentalRasterDecodeSettle=1&experimentalRasterDoubleDecode=1&experimentalRasterNaturalDims=1&experimentalRasterDisableGbcrNudge=1",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "recipeId": null,
+        "patch": "decode-interval",
+        "query": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      }
+    ],
+    "winner": null,
+    "blocker": "No decode/raster variant beats blackbox baseline -0.91 on Home and Products (all tied). Lab |canvas−live| remains 1.1875 vs blackbox gate metric.",
+    "promoteSrc": false
+  },
+  "strutPaintOriginAttempt": {
+    "runAt": "2026-06-03",
+    "harness": "node __localtests__/fo-drift-batch-home-parallel.mjs --ids 'product-baseline,tc-blh-*,tc-fix-w7-*,tc-fix-w16-*,tc-fix-w18-*' --offsets auto --parallel 3 --include-inactive",
+    "mergeArtifact": ".sandbox-edit/fo-drift-batch-home-strut-merged.json",
+    "corpusIds": "product-baseline,tc-blh-*,tc-fix-w7-*,tc-fix-w16-*,tc-fix-w18-*",
+    "recipeCount": 65,
+    "batches": 3,
+    "offsets": [
+      0,
+      30,
+      60
+    ],
+    "parallelLimit": 30,
+    "headed": true,
+    "labMerged": {
+      "landmark": "Home",
+      "limit": 30,
+      "offsets": [
+        0,
+        30,
+        60
+      ],
+      "matrixIds": [
+        "product-baseline",
+        "tc-blh-*",
+        "tc-fix-w7-*",
+        "tc-fix-w16-*",
+        "tc-fix-w18-*"
+      ],
+      "recipeCount": 65,
+      "baselineAbsCanvasVsLive": 1.1875,
+      "blackboxGate": "Home paint.canvas.vs-border.top default ≈ -0.91px; do not promote fo-y-strut-range-meta (-1.91) or fo-y-half-leading-meta (-1.91)",
+      "top10": [
+        {
+          "offset": 0,
+          "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+          "canvasVsLive": -0.1875,
+          "absCanvasVsLive": 0.1875,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 0,
+          "id": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+          "canvasVsLive": -0.1875,
+          "absCanvasVsLive": 0.1875,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 30,
+          "id": "tc-blh-w1-lh-normal-leaf",
+          "canvasVsLive": -0.1875,
+          "absCanvasVsLive": 0.1875,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 30,
+          "id": "tc-blh-w1-rfork-lh-normal-leaf",
+          "canvasVsLive": -0.1875,
+          "absCanvasVsLive": 0.1875,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 30,
+          "id": "tc-blh-w1-combo-capture-rfork-lh-normal",
+          "canvasVsLive": -0.1875,
+          "absCanvasVsLive": 0.1875,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 60,
+          "id": "tc-blh-w2-rfork-strut-translate-y-meta",
+          "canvasVsLive": -1,
+          "absCanvasVsLive": 1,
+          "beatsBaseline": true
+        },
+        {
+          "offset": 0,
+          "id": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+          "canvasVsLive": -1.1875,
+          "absCanvasVsLive": 1.1875,
+          "beatsBaseline": false
+        },
+        {
+          "offset": 0,
+          "id": "tc-fix-w16-rfork-w7-viewbox-subpx",
+          "canvasVsLive": -1.1875,
+          "absCanvasVsLive": 1.1875,
+          "beatsBaseline": false
+        },
+        {
+          "offset": 0,
+          "id": "tc-fix-w16-rfork-w7-leaf-subpx-draw",
+          "canvasVsLive": -1.1875,
+          "absCanvasVsLive": 1.1875,
+          "beatsBaseline": false
+        },
+        {
+          "offset": 0,
+          "id": "tc-fix-w16-rfork-viewbox-fo-adjust-trim",
+          "canvasVsLive": -1.1875,
+          "absCanvasVsLive": 1.1875,
+          "beatsBaseline": false
+        }
+      ],
+      "best": {
+        "offset": 0,
+        "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      }
+    },
+    "blackboxTop10": [
+      {
+        "labId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+        "patch": null,
+        "query": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=lab-toCanvas",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=text-leaf-translate-y-range-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-blh-w1-lh-normal-leaf",
+        "patch": null,
+        "query": "experimentalFoTextLineHeightNormal=1&experimentalRasterSvgPatch=lab-toCanvas",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-blh-w1-rfork-lh-normal-leaf",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=lh-normal-leaf",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-blh-w1-combo-capture-rfork-lh-normal",
+        "patch": null,
+        "query": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=lh-normal-leaf",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-blh-w2-rfork-strut-translate-y-meta",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=strut-translate-y-meta&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": 1.09,
+        "products": 1.09,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "regression": "+1.09px away from 0"
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-viewbox-subpx",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-viewbox-y-subpixel-meta&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-leaf-subpx-draw",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false
+      },
+      {
+        "labId": "tc-fix-w16-rfork-viewbox-fo-adjust-trim",
+        "patch": null,
+        "query": "experimentalRasterSvgPatch=combo-viewbox-y-fo-adjust-trim-text-box&experimentalRasterDisableGbcrNudge=1",
+        "labOnly": false,
+        "exitCode": 1,
+        "home": 1.09,
+        "products": 1.09,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "regression": "+1.09px away from 0"
+      }
+    ],
+    "winner": null,
+    "srcChanged": false,
+    "srcNote": "No src/ promotion: lab |canvas−live| leaders at 0.1875 (dpr=1 Home ink probe) all tie checkout blackbox -0.91; w7/half-leading combos regress to -1.91.",
+    "metricBridge": {
+      "probeArtifact": ".sandbox-edit/fo-blackbox-metric-bridge-strut.json",
+      "labHomeDpr": 1,
+      "blackboxCheckoutDpr": 2,
+      "labBaselineAbsCanvasVsLive": 1.1875,
+      "labBestAbsCanvasVsLive": 0.1875,
+      "blackboxBaselineCanvasVsBorderTop": -0.91,
+      "gapPx": 1,
+      "whyNotTuned": "Different landmarks/metrics: lab fo-fix-lab sync ink top (canvas vs live, dpr=1); blackbox structure-report paint.canvas.vs-border.top vs live cap (dpr=2). Bridge probe: Range topInBorder 27.25 vs cap live 5.16 — ~22px coordinate offset; 1.1875−0.91≈1.0 is convention not a tunable gate knob.",
+      "headed": true
+    },
+    "doNotPromoteAsDefault": [
+      "fo-y-strut-range-meta",
+      "fo-y-half-leading-meta"
+    ],
+    "blockedAt": -0.91,
+    "recommendedNext": "FO strut paint-origin fixes improve lab ink probe only; checkout gate unchanged. Need product-path capture+raster wired like lab (parent lh pin, leaf subpx) or Chromium FO strut fix — not metric retune."
+  },
+  "strutPaintAttempt": {
+    "runAt": "2026-06-03",
+    "headed": true,
+    "baseline": {
+      "home": -0.91,
+      "products": -0.91
+    },
+    "mergeArtifact": ".sandbox-edit/fo-drift-batch-home-strut-merged.json",
+    "labTop10": [
+      {
+        "offset": 0,
+        "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 0,
+        "id": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 30,
+        "id": "tc-blh-w1-lh-normal-leaf",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 30,
+        "id": "tc-blh-w1-rfork-lh-normal-leaf",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 30,
+        "id": "tc-blh-w1-combo-capture-rfork-lh-normal",
+        "canvasVsLive": -0.1875,
+        "absCanvasVsLive": 0.1875,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 60,
+        "id": "tc-blh-w2-rfork-strut-translate-y-meta",
+        "canvasVsLive": -1,
+        "absCanvasVsLive": 1,
+        "beatsBaseline": true
+      },
+      {
+        "offset": 0,
+        "id": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+        "canvasVsLive": -1.1875,
+        "absCanvasVsLive": 1.1875,
+        "beatsBaseline": false
+      },
+      {
+        "offset": 0,
+        "id": "tc-fix-w16-rfork-w7-viewbox-subpx",
+        "canvasVsLive": -1.1875,
+        "absCanvasVsLive": 1.1875,
+        "beatsBaseline": false
+      },
+      {
+        "offset": 0,
+        "id": "tc-fix-w16-rfork-w7-leaf-subpx-draw",
+        "canvasVsLive": -1.1875,
+        "absCanvasVsLive": 1.1875,
+        "beatsBaseline": false
+      },
+      {
+        "offset": 0,
+        "id": "tc-fix-w16-rfork-viewbox-fo-adjust-trim",
+        "canvasVsLive": -1.1875,
+        "absCanvasVsLive": 1.1875,
+        "beatsBaseline": false
+      }
+    ],
+    "blackboxRows": [
+      {
+        "labId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalFoNonEmptyLineHeightNormal=1&experimentalFoPinLineHeightOnTextLeaf=1",
+        "patch": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=text-leaf-translate-y-range-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "text-leaf-translate-y-range-subpixel-positive-meta",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "fo-y-range-subpixel-only-meta",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=fo-y-range-subpixel-only-meta",
+        "patch": "fo-y-range-subpixel-only-meta",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-blh-w1-lh-normal-leaf",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalFoTextLineHeightNormal=1",
+        "patch": null,
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-blh-w1-rfork-lh-normal-leaf",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalRasterSvgPatch=lh-normal-leaf",
+        "patch": "lh-normal-leaf",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-blh-w1-combo-capture-rfork-lh-normal",
+        "labAbsCanvasVsLive": 0.1875,
+        "query": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=lh-normal-leaf",
+        "patch": "lh-normal-leaf",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-blh-w2-rfork-strut-translate-y-meta",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=strut-translate-y-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "strut-translate-y-meta",
+        "home": 1.09,
+        "products": 1.09,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-viewbox-subpx",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-viewbox-y-subpixel-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "combo-fo-y-half-leading-viewbox-y-subpixel-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-w7-leaf-subpx-draw",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta&experimentalRasterDisableGbcrNudge=1",
+        "patch": "combo-fo-y-half-leading-leaf-translate-y-subpixel-positive-meta",
+        "home": -1.91,
+        "products": -1.91,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      },
+      {
+        "labId": "tc-fix-w16-rfork-viewbox-fo-adjust-trim",
+        "labAbsCanvasVsLive": null,
+        "query": "experimentalRasterSvgPatch=combo-viewbox-y-fo-adjust-trim-text-box&experimentalRasterDisableGbcrNudge=1",
+        "patch": "combo-viewbox-y-fo-adjust-trim-text-box",
+        "home": 1.09,
+        "products": 1.09,
+        "navDelta": 0,
+        "beatsBaseline": false,
+        "exitCode": 1
+      }
+    ],
+    "winner": null,
+    "srcChanged": false,
+    "checkoutWiring": [
+      "experimentalFoPinLineHeightOnTextLeaf",
+      "experimentalFoNonEmptyLineHeightNormal"
+    ],
+    "promoteSrc": false,
+    "blocker": "Lab strut leaders |canvas−live|=0.1875 (fo-fix-lab, dpr=1); checkout blackbox paint.canvas.vs-border.top stays -0.91 on Home+Products for w7 parent-lh pin, w16 leaf subpx, fo-y-range-subpixel-only-meta. w7+half-leading combos regress -1.91; strut-translate-y-meta +1.09 overshoots.",
+    "recommendedNext": "Metric/scene gap: promote capture parent lh + leaf pin only after blackbox probe aligns with lab ink (or fix FO strut in Chromium path). Do NOT default-on fo-y-strut-range-meta / fo-y-half-leading-meta."
+  },
+  "blackboxScoredCorpus": {
+    "runAt": "2026-06-03",
+    "harness": "node __localtests__/fo-drift-batch-home-blackbox-parallel.mjs --offsets auto --parallel 3 --include-inactive --ids 'product-baseline,tc-fix-*,tc-blh-*,tc-decode-*,tc-raster-*,fix321-*,tc-fork-*'",
+    "mergeArtifact": ".sandbox-edit/fo-drift-batch-home-blackbox-scored-merged.json",
+    "metric": "paint.canvas.vs-border.top",
+    "fixture": "checkout-example.html",
+    "dpr": 2,
+    "headed": true,
+    "corpusIds": "product-baseline,tc-fix-*,tc-blh-*,tc-decode-*,tc-raster-*,fix321-*,tc-fork-*",
+    "recipeCountResolved": 277,
+    "recipeCountScored": 252,
+    "recipeCountSkipped": 0,
+    "recipeCountNullStructureMetric": 25,
+    "slices": 10,
+    "offsets": [
+      0,
+      30,
+      60,
+      90,
+      120,
+      150,
+      180,
+      210,
+      240,
+      270
+    ],
+    "parallel": 3,
+    "baseline": {
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0
+    },
+    "labVsGateNote": ".sandbox-edit/lab-blackbox-metric-bridge.json — lab block-anchor ~0.19px @ dpr=1 does not move checkout cap-model gate",
+    "top5ByAbsHome": [
+      {
+        "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+        "home": 0.09,
+        "products": 0.09,
+        "navDelta": 0,
+        "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+        "home": 0.09,
+        "products": 0.09,
+        "navDelta": 0,
+        "checkoutQuery": "experimentalRasterSvgPatch=combo-lh-normal-va-baseline-leaf",
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+        "home": 0.09,
+        "products": 0.09,
+        "navDelta": 0,
+        "checkoutQuery": "experimentalFoTextBaselineFix=1&experimentalRasterSvgPatch=baseline-leaf",
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "product-baseline",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "checkoutQuery": null,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-decode-interval",
+        "home": -0.91,
+        "products": -0.91,
+        "navDelta": 0,
+        "checkoutQuery": "experimentalRasterSvgPatch=decode-interval",
+        "beatsBaselineTowardZero": false
+      }
+    ],
+    "winner": {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "home": 0.09,
+      "products": 0.09,
+      "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+      "rasterPatchAlias": "vertical-align-baseline-leaf"
+    },
+    "beatsBaselineTowardZeroCount": 3,
+    "regressionsObserved": {
+      "foYStrutMeta": -1.91,
+      "strutTranslateYMeta": 1.09,
+      "note": "Do not default-on fo-y-strut-range-meta / fo-y-half-leading-meta"
+    },
+    "blackboxFullGate": {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+      "exitCode": 1,
+      "home": 0.09,
+      "products": 0.09,
+      "checkout": 0.84,
+      "email": -3.43,
+      "promo": -2.93,
+      "navDelta": 0,
+      "rawFail": true,
+      "inNavBudget": false,
+      "beatsBaselineTowardZero": true
+    },
+    "promoteSrc": false,
+    "srcChanged": false,
+    "blocker": "277-recipe checkout sweep: only baseline-leaf forks beat −0.91 toward 0 on nav (+0.09). No recipe reaches 0; tc-fix-* / decode / w7 lab leaders stay −0.91. Full npm run test:blackbox unchanged; baseline-leaf query fails 5 landmarks.",
+    "inBudgetCount": 0,
+    "bestInBudget": null,
+    "blackboxTop10": [
+      {
+        "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+        "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+        "exitCode": 1,
+        "home": 0.09,
+        "products": 0.09,
+        "checkout": 0.84,
+        "email": -3.43,
+        "promo": -2.93,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+        "checkoutQuery": "experimentalRasterSvgPatch=combo-lh-normal-va-baseline-leaf",
+        "exitCode": 1,
+        "home": 0.09,
+        "products": 0.09,
+        "checkout": -0.16,
+        "email": -5.43,
+        "promo": -4.93,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+        "checkoutQuery": "experimentalFoTextBaselineFix=1&experimentalRasterSvgPatch=baseline-leaf",
+        "exitCode": 1,
+        "home": 0.09,
+        "products": 0.09,
+        "checkout": 0.84,
+        "email": -3.43,
+        "promo": -2.93,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": true
+      },
+      {
+        "recipeId": "product-baseline",
+        "checkoutQuery": null,
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-decode-interval",
+        "checkoutQuery": "experimentalRasterSvgPatch=decode-interval",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-decode-interval-raf",
+        "checkoutQuery": "experimentalRasterSvgPatch=decode-interval-raf",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-double-decode",
+        "checkoutQuery": "experimentalRasterSvgPatch=double-decode",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-triple-decode",
+        "checkoutQuery": "experimentalRasterSvgPatch=triple-decode",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-fonts-ready",
+        "checkoutQuery": "experimentalRasterSvgPatch=fonts-ready",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      },
+      {
+        "recipeId": "fix321-fonts-ready-interval",
+        "checkoutQuery": "experimentalRasterSvgPatch=fonts-ready-interval",
+        "exitCode": 1,
+        "home": -0.91,
+        "products": -0.91,
+        "checkout": -0.16,
+        "email": -0.43,
+        "promo": 0.07,
+        "navDelta": 0,
+        "rawFail": true,
+        "inNavBudget": false,
+        "beatsBaselineTowardZero": false
+      }
+    ],
+    "inNavBudgetPasses": []
+  }
+}

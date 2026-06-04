@@ -1,0 +1,61 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-decode-context.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "contextId": "main-doc-img-decode",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "iframe-sandbox-decode-retry",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "iframe-fresh-marked-fo",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "font-display-block",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "font-display-swap",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "font-display-optional",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "contextId": "fonts-before-ready",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "DECODE_CONTEXT_INVARIANT",
+    "implication": "Fresh iframe, font-display, and decode pipeline do not explain ~2.8px plateau."
+  }
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium-only — minimal nav FO raster</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px 14px 24px; font: 14px/1.4 system-ui, sans-serif; background: #f8fafc; color: #111; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 78ch; }
+    #fixture {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #fixture .row { display: flex; align-items: stretch; min-height: 48px; }
+    #fixture .row a {
+      display: flex; align-items: center; padding: 0 12px;
+      text-decoration: none; color: #111;
+    }
+    .controls { margin: 12px 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    button { font: 13px system-ui; padding: 6px 12px; cursor: pointer; }
+    label { font-size: 13px; color: #475569; }
+    #canvas-out { display: block; border: 1px solid #e2e8f0; background: #fff; margin-top: 8px; image-rendering: pixelated; }
+    #metrics { font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 12px; color: #334155; white-space: pre-wrap; }
+    pre#report { margin-top: 12px; padding: 10px; background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 6px; font: 11px/1.4 ui-monospace, Menlo, monospace; overflow: auto; max-height: 50vh; }
+  </style>
+</head>
+<body>
+  <h1>Chromium-only: FO → Image → canvas</h1>
+  <p class="hint">
+    Raster uses only <code>data:image/svg+xml</code> + <code>new Image()</code> + <code>decode()</code>
+    + <code>drawImage</code> (or optional <code>createImageBitmap</code>). No snapdom / capture.js.
+    Headed Chrome required for reliable FO ink.
+  </p>
+  <div id="fixture">
+    <div class="row"><a href="#">Home</a></div>
+  </div>
+  <div class="controls">
+    <button type="button" id="raster-btn">Raster to canvas</button>
+    <label><input type="checkbox" id="use-bitmap" /> createImageBitmap path</label>
+    <span id="path-label">path: —</span>
+  </div>
+  <canvas id="canvas-out" width="1" height="1"></canvas>
+  <p id="metrics">Click Raster or wait for auto-run…</p>
+  <pre id="report" hidden></pre>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      probeChromiumFoOnly,
+    } from './chromium-fo-only-shared.js'
+
+    const root = document.getElementById('fixture')
+    const outCanvas = document.getElementById('canvas-out')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const autoRun = params.get('autorun') !== '0'
+    const useBitmapDefault = params.get('bitmap') === '1'
+
+    const bitmapCheck = document.getElementById('use-bitmap')
+    bitmapCheck.checked = useBitmapDefault
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    function showCanvas(canvas, cssW, cssH) {
+      outCanvas.width = canvas.width
+      outCanvas.height = canvas.height
+      outCanvas.style.width = `${cssW}px`
+      outCanvas.style.height = `${cssH}px`
+      const ctx = outCanvas.getContext('2d')
+      ctx.imageSmoothingEnabled = false
+      ctx.clearRect(0, 0, outCanvas.width, outCanvas.height)
+      ctx.drawImage(canvas, 0, 0)
+    }
+
+    async function runRaster() {
+      const useBitmap = bitmapCheck.checked
+      const result = await probeChromiumFoOnly({
+        root,
+        landmark,
+        dpr,
+        buildSvg: buildStaticMinimalNavFoSvg,
+        rasterOpts: { useCreateImageBitmap: useBitmap },
+      })
+
+      const { cssW, cssH } = result.fixtureDims
+      showCanvas(result.canvas, cssW, cssH)
+
+      const t = result.threeWay
+      document.getElementById('path-label').textContent = `path: ${result.rasterPath}`
+      document.getElementById('metrics').textContent =
+        `verdict: ${result.verdict}\n` +
+        `live topInBorder: ${fmt(t.livePaintedTopInBorder)}\n` +
+        `svg  topInBorder: ${fmt(t.svgPaintedTopInBorder)} · svgΔ: ${fmt(t.liveVsSvgTopPx)}\n` +
+        `canvas topInBorder: ${fmt(t.canvasPaintedTopInBorder)} · canvasΔ: ${fmt(t.liveVsCanvasTopPx)}\n` +
+        `dpr=${dpr} · raster=${result.rasterPath}`
+
+      const report = document.getElementById('report')
+      report.hidden = false
+      report.textContent = JSON.stringify(result, null, 2)
+      return result
+    }
+
+    document.getElementById('raster-btn').addEventListener('click', () => {
+      runRaster().catch((err) => {
+        document.getElementById('metrics').textContent = `Error: ${err.message}`
+      })
+    })
+
+    window.__chromiumFoOnlyProbe = {
+      ready: false,
+      pageId: 'minimal-nav-fo-raster',
+      async run() {
+        return runRaster()
+      },
+    }
+
+    const boot = autoRun
+      ? runRaster()
+      : Promise.resolve({ pageId: 'minimal-nav-fo-raster', skipped: true })
+
+    boot
+      .then(() => { window.__chromiumFoOnlyProbe.ready = true })
+      .catch((err) => {
+        document.getElementById('metrics').textContent = `Error: ${err.message}`
+        window.__chromiumFoOnlyProbe.bootError = String(err)
+        window.__chromiumFoOnlyProbe.ready = true
+      })
+  </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+{
+  "probe": "drift-vs-half-leading-by-type",
+  "generatedAt": "2026-06-02T16:26:47.418Z",
+  "headed": true,
+  "path": "snapdom",
+  "recipe": {
+    "id": "product-baseline",
+    "rasterPatch": "product-toCanvas"
+  },
+  "lhSweep": [
+    "1",
+    "normal",
+    "1.35"
+  ],
+  "lhAppliedOn": "live text leaf + matching FO CSS inject",
+  "landmarkTypes": [
+    "nav-link",
+    "h2",
+    "label"
+  ],
+  "port": 9934,
+  "dpr": 2,
+  "scale": 1,
+  "byType": [
+    {
+      "landmarkType": "nav-link",
+      "fixtureSource": "checkout-calibrate-header",
+      "landmark": "Home",
+      "textLeafSelector": "foreignObject nav a",
+      "rows": [
+        {
+          "landmarkType": "nav-link",
+          "fixtureSource": "checkout-calibrate-header",
+          "landmark": "Home",
+          "textLeafSelector": "foreignObject nav a",
+          "lhVariant": "1",
+          "lhInjected": "1",
+          "injectCss": "foreignObject nav a{line-height:1!important}",
+          "metrics": {
+            "tag": "A",
+            "computedLineHeight": "16px",
+            "fontSizePx": 16,
+            "lineHeightPx": 16,
+            "halfLeadingLhFsPx": 0,
+            "heightGbcr": 55,
+            "display": "flex",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 19.5,
+            "svgPaintedTopInBorder": 19.5,
+            "canvasPaintedTopInBorder": 23.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 4
+          },
+          "canvasDeltaPx": 4,
+          "halfLeadingLhFsPx": 0,
+          "residualCanvasMinusHalfLeadingPx": 4,
+          "recipeId": "lab-drift-hl-nav-link-1",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "nav-link",
+          "fixtureSource": "checkout-calibrate-header",
+          "landmark": "Home",
+          "textLeafSelector": "foreignObject nav a",
+          "lhVariant": "normal",
+          "lhInjected": "normal",
+          "injectCss": "foreignObject nav a{line-height:normal!important}",
+          "metrics": {
+            "tag": "A",
+            "computedLineHeight": "normal",
+            "fontSizePx": 16,
+            "lineHeightPx": 55,
+            "halfLeadingLhFsPx": 19.5,
+            "heightGbcr": 55,
+            "display": "flex",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 19.5,
+            "svgPaintedTopInBorder": 19.5,
+            "canvasPaintedTopInBorder": 23.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 4
+          },
+          "canvasDeltaPx": 4,
+          "halfLeadingLhFsPx": 19.5,
+          "residualCanvasMinusHalfLeadingPx": -15.5,
+          "recipeId": "lab-drift-hl-nav-link-normal",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "nav-link",
+          "fixtureSource": "checkout-calibrate-header",
+          "landmark": "Home",
+          "textLeafSelector": "foreignObject nav a",
+          "lhVariant": "1.35",
+          "lhInjected": "1.35",
+          "injectCss": "foreignObject nav a{line-height:1.35!important}",
+          "metrics": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingLhFsPx": 2.8,
+            "heightGbcr": 55,
+            "display": "flex",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 19.203125,
+            "svgPaintedTopInBorder": 19.203125,
+            "canvasPaintedTopInBorder": 22.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.296875
+          },
+          "canvasDeltaPx": 3.297,
+          "halfLeadingLhFsPx": 2.8,
+          "residualCanvasMinusHalfLeadingPx": 0.497,
+          "recipeId": "lab-drift-hl-nav-link-1-35",
+          "dpr": 2,
+          "scale": 1
+        }
+      ]
+    },
+    {
+      "landmarkType": "h2",
+      "fixtureSource": "minimal-h2-block",
+      "landmark": "Section title",
+      "textLeafSelector": "foreignObject h2",
+      "rows": [
+        {
+          "landmarkType": "h2",
+          "fixtureSource": "minimal-h2-block",
+          "landmark": "Section title",
+          "textLeafSelector": "foreignObject h2",
+          "lhVariant": "1",
+          "lhInjected": "1",
+          "injectCss": "foreignObject h2{line-height:1!important}",
+          "metrics": {
+            "tag": "H2",
+            "computedLineHeight": "22px",
+            "fontSizePx": 22,
+            "lineHeightPx": 22,
+            "halfLeadingLhFsPx": 0,
+            "heightGbcr": 22,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": -2,
+            "svgPaintedTopInBorder": -2,
+            "canvasPaintedTopInBorder": 4,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 6
+          },
+          "canvasDeltaPx": 6,
+          "halfLeadingLhFsPx": 0,
+          "residualCanvasMinusHalfLeadingPx": 6,
+          "recipeId": "lab-drift-hl-h2-1",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "h2",
+          "fixtureSource": "minimal-h2-block",
+          "landmark": "Section title",
+          "textLeafSelector": "foreignObject h2",
+          "lhVariant": "normal",
+          "lhInjected": "normal",
+          "injectCss": "foreignObject h2{line-height:normal!important}",
+          "metrics": {
+            "tag": "H2",
+            "computedLineHeight": "normal",
+            "fontSizePx": 22,
+            "lineHeightPx": 26,
+            "halfLeadingLhFsPx": 2,
+            "heightGbcr": 26,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 0,
+            "svgPaintedTopInBorder": 0,
+            "canvasPaintedTopInBorder": 6,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 6
+          },
+          "canvasDeltaPx": 6,
+          "halfLeadingLhFsPx": 2,
+          "residualCanvasMinusHalfLeadingPx": 4,
+          "recipeId": "lab-drift-hl-h2-normal",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "h2",
+          "fixtureSource": "minimal-h2-block",
+          "landmark": "Section title",
+          "textLeafSelector": "foreignObject h2",
+          "lhVariant": "1.35",
+          "lhInjected": "1.35",
+          "injectCss": "foreignObject h2{line-height:1.35!important}",
+          "metrics": {
+            "tag": "H2",
+            "computedLineHeight": "29.7px",
+            "fontSizePx": 22,
+            "lineHeightPx": 29.7,
+            "halfLeadingLhFsPx": 3.85,
+            "heightGbcr": 29.695,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 1.5,
+            "svgPaintedTopInBorder": 1.5,
+            "canvasPaintedTopInBorder": 7,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 5.5
+          },
+          "canvasDeltaPx": 5.5,
+          "halfLeadingLhFsPx": 3.85,
+          "residualCanvasMinusHalfLeadingPx": 1.65,
+          "recipeId": "lab-drift-hl-h2-1-35",
+          "dpr": 2,
+          "scale": 1
+        }
+      ]
+    },
+    {
+      "landmarkType": "label",
+      "fixtureSource": "minimal-form-label",
+      "landmark": "Email",
+      "textLeafSelector": "foreignObject label",
+      "rows": [
+        {
+          "landmarkType": "label",
+          "fixtureSource": "minimal-form-label",
+          "landmark": "Email",
+          "textLeafSelector": "foreignObject label",
+          "lhVariant": "1",
+          "lhInjected": "1",
+          "injectCss": "foreignObject label{line-height:1!important}",
+          "metrics": {
+            "tag": "LABEL",
+            "computedLineHeight": "15px",
+            "fontSizePx": 15,
+            "lineHeightPx": 15,
+            "halfLeadingLhFsPx": 0,
+            "heightGbcr": 15,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": -1.5,
+            "svgPaintedTopInBorder": -1.5,
+            "canvasPaintedTopInBorder": 1.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3
+          },
+          "canvasDeltaPx": 3,
+          "halfLeadingLhFsPx": 0,
+          "residualCanvasMinusHalfLeadingPx": 3,
+          "recipeId": "lab-drift-hl-label-1",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "label",
+          "fixtureSource": "minimal-form-label",
+          "landmark": "Email",
+          "textLeafSelector": "foreignObject label",
+          "lhVariant": "normal",
+          "lhInjected": "normal",
+          "injectCss": "foreignObject label{line-height:normal!important}",
+          "metrics": {
+            "tag": "LABEL",
+            "computedLineHeight": "normal",
+            "fontSizePx": 15,
+            "lineHeightPx": 17.5,
+            "halfLeadingLhFsPx": 1.25,
+            "heightGbcr": 17.5,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 0,
+            "svgPaintedTopInBorder": 0,
+            "canvasPaintedTopInBorder": 3.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.5
+          },
+          "canvasDeltaPx": 3.5,
+          "halfLeadingLhFsPx": 1.25,
+          "residualCanvasMinusHalfLeadingPx": 2.25,
+          "recipeId": "lab-drift-hl-label-normal",
+          "dpr": 2,
+          "scale": 1
+        },
+        {
+          "landmarkType": "label",
+          "fixtureSource": "minimal-form-label",
+          "landmark": "Email",
+          "textLeafSelector": "foreignObject label",
+          "lhVariant": "1.35",
+          "lhInjected": "1.35",
+          "injectCss": "foreignObject label{line-height:1.35!important}",
+          "metrics": {
+            "tag": "LABEL",
+            "computedLineHeight": "20.25px",
+            "fontSizePx": 15,
+            "lineHeightPx": 20.25,
+            "halfLeadingLhFsPx": 2.625,
+            "heightGbcr": 20.25,
+            "display": "block",
+            "alignSelf": "auto"
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 1,
+            "svgPaintedTopInBorder": 1,
+            "canvasPaintedTopInBorder": 4.5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.5
+          },
+          "canvasDeltaPx": 3.5,
+          "halfLeadingLhFsPx": 2.625,
+          "residualCanvasMinusHalfLeadingPx": 0.875,
+          "recipeId": "lab-drift-hl-label-1-35",
+          "dpr": 2,
+          "scale": 1
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "byType": [
+      {
+        "landmarkType": "nav-link",
+        "pearsonR_canvasDeltaVsHalfLeadingLhFs": 0.381,
+        "olsSlopeCanvasDeltaOnHalfLeading": 0.015,
+        "canvasDeltaSpreadPx": 0.703,
+        "residualSpreadPx": 19.5,
+        "scalesWithHalfLeading": "INCONCLUSIVE",
+        "closestOneToOneMatch": {
+          "lhVariant": "1.35",
+          "halfLeadingLhFsPx": 2.8,
+          "canvasDeltaPx": 3.297,
+          "deltaAbs": 0.497
+        },
+        "notes": [
+          "r(canvasΔ, (lh−fs)/2)=0.381; OLS slope=0.015; canvasΔ spread across lh=0.703px.",
+          "Residual (canvasΔ − halfLeading) spread=19.5px across lh sweep.",
+          "Closest |canvasΔ−(lh−fs)/2|: lh=1.35 Δ=0.497px (canvasΔ=3.297, halfLeading=2.8)."
+        ]
+      },
+      {
+        "landmarkType": "h2",
+        "pearsonR_canvasDeltaVsHalfLeadingLhFs": -0.855,
+        "olsSlopeCanvasDeltaOnHalfLeading": -0.128,
+        "canvasDeltaSpreadPx": 0.5,
+        "residualSpreadPx": 4.35,
+        "scalesWithHalfLeading": "INCONCLUSIVE",
+        "closestOneToOneMatch": {
+          "lhVariant": "1.35",
+          "halfLeadingLhFsPx": 3.85,
+          "canvasDeltaPx": 5.5,
+          "deltaAbs": 1.65
+        },
+        "notes": [
+          "r(canvasΔ, (lh−fs)/2)=-0.855; OLS slope=-0.128; canvasΔ spread across lh=0.5px.",
+          "Residual (canvasΔ − halfLeading) spread=4.35px across lh sweep.",
+          "Closest |canvasΔ−(lh−fs)/2|: lh=1.35 Δ=1.65px (canvasΔ=5.5, halfLeading=3.85)."
+        ]
+      },
+      {
+        "landmarkType": "label",
+        "pearsonR_canvasDeltaVsHalfLeadingLhFs": 0.852,
+        "olsSlopeCanvasDeltaOnHalfLeading": 0.187,
+        "canvasDeltaSpreadPx": 0.5,
+        "residualSpreadPx": 2.125,
+        "scalesWithHalfLeading": "INCONCLUSIVE",
+        "closestOneToOneMatch": {
+          "lhVariant": "1.35",
+          "halfLeadingLhFsPx": 2.625,
+          "canvasDeltaPx": 3.5,
+          "deltaAbs": 0.875
+        },
+        "notes": [
+          "r(canvasΔ, (lh−fs)/2)=0.852; OLS slope=0.187; canvasΔ spread across lh=0.5px.",
+          "Residual (canvasΔ − halfLeading) spread=2.125px across lh sweep.",
+          "Closest |canvasΔ−(lh−fs)/2|: lh=1.35 Δ=0.875px (canvasΔ=3.5, halfLeading=2.625)."
+        ]
+      }
+    ],
+    "overall": {
+      "typesStronglyScaling": 0,
+      "typesPartiallyScaling": 0,
+      "typesNotScaling": 0,
+      "summary": "Mixed: 0 partial, 0 flat/weak across types."
+    }
+  }
+}

@@ -1,4 +1,5 @@
-import { getStyleKey, shouldIgnoreProp } from '../utils/index.js'
+import { getStyleKey, shouldIgnoreProp, getStyle } from '../utils/index.js'
+import { isTextLeaf } from '../utils/textLeaf.js'
 import { cache } from '../core/cache.js'
 
 const snapshotCache = new WeakMap()
@@ -149,11 +150,17 @@ function styleSignature(snap) {
 }
 function getSnapshot(el, preStyle = null, options = {}) {
   const rec = snapshotCache.get(el)
-  if (rec && rec.epoch === __epoch) return rec.snapshot
+  // The snapshot content depends on embedFonts (extra font props) and excludeStyleProps
+  // (skipped props), but __epoch only bumps on DOM/font mutation — not option changes.
+  // Capturing the same element twice with different options must not reuse the snapshot
+  // (#348). excludeStyleProps is compared by reference: a fresh value misses safely.
+  const ef = !!(options && options.embedFonts)
+  const ex = (options && options.excludeStyleProps) || null
+  if (rec && rec.epoch === __epoch && rec.embedFonts === ef && rec.excludeStyleProps === ex) return rec.snapshot
   const style = preStyle || getComputedStyle(el)
   const snap = snapshotComputedStyleFull(style, options)
   stripHeightForWrappers(el, style, snap)
-  snapshotCache.set(el, { epoch: __epoch, snapshot: snap })
+  snapshotCache.set(el, { epoch: __epoch, snapshot: snap, embedFonts: ef, excludeStyleProps: ex })
   return snap
 }
 
@@ -240,6 +247,27 @@ export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
   }
 
   const snap = getSnapshot(source, pre, ctx.options)
+  const pinLh =
+    ctx.options.experimentalFoPinLineHeightFromLive === true ||
+    ctx.options.experimentalFoPinLineHeightOnTextLeaf === true
+  const textLeafNorm = ctx.options.experimentalFoTextLeafNormalize === true
+  const flexCenter = ctx.options.experimentalFoFlexRowAlignCenter === true
+  const textBaselineFix = ctx.options.experimentalFoTextBaselineFix === true
+  const textLhNormal = ctx.options.experimentalFoTextLineHeightNormal === true
+  const flexTextLeafAlignStart = ctx.options.experimentalFoFlexTextLeafAlignStart === true
+  const textLeaf = isTextLeaf(source)
+  const flexTextLeaf = flexTextLeafAlignStart && textLeaf && isFlexOrGridItem(source)
+  let snapMut = snap
+  if (
+    (pinLh && textLeaf) ||
+    (textLeafNorm && textLeaf) ||
+    flexCenter ||
+    (textBaselineFix && textLeaf) ||
+    (textLhNormal && textLeaf) ||
+    flexTextLeaf
+  ) {
+    snapMut = { ...snap }
+  }
 
   // #406: foreignObject may resolve min-width:auto differently than normal DOM
   // for flex/grid items. Explicitly set min-width:0 on flex/grid items that have
@@ -248,18 +276,174 @@ export async function inlineAllStyles(source, clone, sessionOrCtx, opts) {
   if (isFlexOrGridItem(source)) {
     const mw = pre.getPropertyValue('min-width')
     if (!mw || mw === 'auto' || mw === '0px') {
-      snap['min-width'] = '0px'
+      snapMut['min-width'] = '0px'
     }
   }
 
-  const sig = styleSignature(snap)
+  // experimentalFoPinLineHeightFromLive / experimentalFoPinLineHeightOnTextLeaf: pin text-leaf
+  // line-height to live used px from getComputedStyle (e.g. 21.6px), not flex-inflated layout.
+  // Default off — validate via __localtests__/fo-fix-lab.mjs tc-blh-w1-* before promotion.
+  if (pinLh && textLeaf) {
+    pinLineHeightFromLive(source, pre, snapMut)
+  }
+
+  // experimentalFoTextLeafNormalize: pin typographic box props from live computed style.
+  if (textLeafNorm && textLeaf) {
+    pinTextLeafNormalizeFromLive(pre, snapMut)
+  }
+
+  // experimentalFoFlexRowAlignCenter: mark flex containers with live align-items:center so
+  // capture.js FO CSS can reinforce center cross-axis (no nav/tag selectors).
+  if (flexCenter && isFlexContainerWithCenterAlign(source, pre)) {
+    clone.setAttribute('data-snapdom-flex-center', '')
+  }
+
+  // experimentalFoTextLineHeightNormal: line-height:normal on text leaves only.
+  if (textLhNormal && textLeaf) {
+    snapMut['line-height'] = 'normal'
+  }
+
+  // experimentalFoTextBaselineFix: pin live used px lh, vertical-align:baseline on text leaves.
+  // Default off — validate via __localtests__/fo-text-baseline-flags.mjs before promotion.
+  if (textBaselineFix && textLeaf) {
+    applyFoTextBaselineFixSerialize(source, pre, snapMut)
+  }
+
+  // experimentalFoFlexTextLeafAlignStart: align-self:flex-start on flex/grid text leaves only.
+  if (flexTextLeaf) {
+    snapMut['align-self'] = 'flex-start'
+  }
+
+  const sig = styleSignature(snapMut)
   let key = persist.snapshotKeyCache.get(sig)
   if (!key) {
     const tag = source.tagName?.toLowerCase() || 'div'
-    key = getStyleKey(snap, tag)
+    key = getStyleKey(snapMut, tag)
     persist.snapshotKeyCache.set(sig, key)
   }
   session.styleMap.set(clone, key)
+}
+
+/**
+ * @param {number} px
+ */
+function formatLineHeightPx(px) {
+  if (!Number.isFinite(px)) return null
+  return `${parseFloat(px.toFixed(6))}px`
+}
+
+/**
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function measureNormalLineHeightPx(el, style) {
+  if (!(el instanceof Element) || el.childElementCount > 0) return null
+  const text = (el.textContent || '').trim()
+  if (!text) return null
+  const probe = document.createElement('span')
+  probe.textContent = text
+  probe.style.cssText =
+    'position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;' +
+    'display:inline-block;margin:0;padding:0;border:0;line-height:normal;white-space:nowrap;'
+  for (const prop of [
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-style',
+    'font-stretch',
+    'font-variant',
+    'letter-spacing',
+    'word-spacing',
+    'text-transform',
+  ]) {
+    probe.style.setProperty(prop, style.getPropertyValue(prop))
+  }
+  document.documentElement.appendChild(probe)
+  const h = probe.getBoundingClientRect().height
+  probe.remove()
+  return h > 0 ? h : null
+}
+
+/**
+ * Content line box height from live layout (excludes padding/border).
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function resolveLineHeightPxForCapture(el, style) {
+  if (!(el instanceof Element) || el.childElementCount > 0) return null
+  if (!(el.textContent || '').trim()) return null
+  const rect = el.getBoundingClientRect()
+  const pt = parseFloat(style.paddingTop) || 0
+  const pb = parseFloat(style.paddingBottom) || 0
+  const bt = parseFloat(style.borderTopWidth) || 0
+  const bb = parseFloat(style.borderBottomWidth) || 0
+  const h = rect.height - pt - pb - bt - bb
+  if (h <= 0 || el.scrollHeight > el.clientHeight + 1.5) return null
+  return h
+}
+
+/**
+ * Resolve getComputedStyle line-height as used px for FO text-leaf pinning.
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function resolveUsedLineHeightPx(el, style) {
+  const lh = style.lineHeight || style.getPropertyValue('line-height')
+  if (lh && lh.endsWith('px')) {
+    const px = parseFloat(lh)
+    if (Number.isFinite(px) && px > 0) return px
+  }
+  return measureNormalLineHeightPx(el, style) ?? resolveLineHeightPxForCapture(el, style)
+}
+
+/**
+ * experimentalFoTextBaselineFix: serialize vertical-align:baseline, display:inline,
+ * and live px line-height on text leaves.
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ * @param {Record<string, string>} snap
+ */
+function applyFoTextBaselineFixSerialize(el, style, snap) {
+  snap['vertical-align'] = 'baseline'
+  snap['display'] = 'inline'
+  const px = resolveUsedLineHeightPx(el, style)
+  if (px != null) snap['line-height'] = formatLineHeightPx(px)
+}
+
+/** @type {readonly string[]} */
+const TEXT_LEAF_NORMALIZE_PROPS = ['line-height', 'vertical-align', 'display']
+
+/**
+ * Pin line-height, vertical-align, display on text leaves from live getComputedStyle.
+ * @param {CSSStyleDeclaration} style
+ * @param {Record<string, string>} snap
+ */
+function pinTextLeafNormalizeFromLive(style, snap) {
+  for (const prop of TEXT_LEAF_NORMALIZE_PROPS) {
+    snap[prop] = style.getPropertyValue(prop)
+  }
+}
+
+/**
+ * Pin line-height on FO text leaves to live used px from getComputedStyle.
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ * @param {Record<string, string>} snap
+ */
+function pinLineHeightFromLive(el, style, snap) {
+  const px = resolveUsedLineHeightPx(el, style)
+  if (px != null) snap['line-height'] = formatLineHeightPx(px)
+}
+
+/**
+ * Flex container with computed align-items:center (structural — no nav/tag selectors).
+ * @param {Element} el
+ * @param {CSSStyleDeclaration} style
+ */
+function isFlexContainerWithCenterAlign(el, style) {
+  const disp = style.display || ''
+  if (!disp.includes('flex')) return false
+  return style.getPropertyValue('align-items') === 'center'
 }
 /**
  * @param {Element} el
@@ -297,7 +481,9 @@ function hasBox(cs) {
 function isFlexOrGridItem(el) {
   const p = el.parentElement
   if (!p) return false
-  const pd = getComputedStyle(p).display || ''
+  // getStyle memoizes in cache.computedStyle; raw getComputedStyle forced a fresh resolution
+  // per node on every capture (even on snapshot-cache hits).
+  const pd = getStyle(p).display || ''
   return pd.includes('flex') || pd.includes('grid')
 }
 

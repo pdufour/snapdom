@@ -1,0 +1,2865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO recipe lab</title>
+  <link rel="icon" href="data:," />
+  <!-- transformation-matrix@3.1.0 — devDependency; bare specifier for fo-transformation-matrix.mjs -->
+  <script type="importmap">
+  {
+    "imports": {
+      "almost-equal": "https://esm.sh/almost-equal@1.1.0",
+      "image-trim": "https://esm.sh/image-trim@1.0.0",
+      "transformation-matrix": "/node_modules/transformation-matrix/src/index.js"
+    }
+  }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      /* Capture/metrics box — unchanged for ink probes and FIXTURE_PROBE_CSS */
+      --fixture-capture-h: 48px;
+      /* Display-only vertical slack so ascenders/descenders are not clipped in preview */
+      --fixture-preview-pad-y: 4px;
+      --fixture-preview-stage-h: calc(var(--fixture-capture-h) + 2 * var(--fixture-preview-pad-y));
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #f4f4f5;
+      color: #111;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.97);
+      border-bottom: 1px solid #ddd;
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    header label { font-size: 13px; }
+    header select, header button {
+      font: inherit;
+      padding: 4px 8px;
+    }
+    #view-bar {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+    #view-controls {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px 10px;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      border: none;
+      font-size: 13px;
+    }
+    #view-controls legend {
+      padding: 0 4px 0 0;
+      font-weight: 600;
+    }
+    #view-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    #view-controls label.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #view-legend {
+      display: none;
+    }
+    #kbd-hint {
+      font-size: 11px;
+      line-height: 1.35;
+      color: #666;
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+    #kbd-hint kbd,
+    #view-controls kbd {
+      font: 10px/1.2 ui-monospace, Menlo, monospace;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: #f4f4f5;
+      border: 1px solid #d4d4d8;
+    }
+    #boot-error {
+      display: none;
+      margin: 0;
+      padding: 10px 14px;
+      background: #fef2f2;
+      border-bottom: 1px solid #fecaca;
+      color: #991b1b;
+      font: 13px/1.5 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    #boot-error.visible { display: block; }
+    #canvas-sanity-error {
+      display: none;
+      margin: 0 0 10px;
+      padding: 10px 14px;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      color: #92400e;
+      font: 13px/1.5 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    #canvas-sanity-error.visible { display: block; }
+    #canvas-raster-hint {
+      display: none;
+      margin: 0 0 10px;
+      padding: 8px 12px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      color: #0c4a6e;
+      font: 12px/1.45 system-ui, -apple-system, sans-serif;
+    }
+    #canvas-raster-hint.visible { display: block; }
+    #progress {
+      display: none;
+      margin: 0;
+      padding: 8px 14px;
+      background: #eff6ff;
+      border-bottom: 1px solid #bfdbfe;
+      font: 13px/1.4 ui-monospace, Menlo, monospace;
+    }
+    #progress.visible { display: block; }
+    main { padding: 14px; max-width: 960px; }
+    .fixture-wrap {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      overflow: visible;
+    }
+    .fixture-preview-row {
+      display: flex;
+      align-items: stretch;
+      width: 500px;
+      max-width: 100%;
+    }
+    .compare-stage {
+      position: relative;
+      display: block;
+      flex: 0 0 500px;
+      width: 500px;
+      min-width: 500px;
+      min-height: var(--fixture-preview-stage-h);
+      padding: var(--fixture-preview-pad-y) 0;
+      overflow: visible;
+      line-height: normal;
+    }
+    #capture-target {
+      width: 500px;
+      height: var(--fixture-capture-h);
+      min-height: var(--fixture-capture-h);
+      overflow: visible;
+      position: relative;
+      z-index: 0;
+      line-height: normal;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+    }
+    #view-canvas,
+    #svg-slot {
+      position: absolute;
+      left: 0;
+      top: var(--fixture-preview-pad-y);
+      width: 500px;
+      height: var(--fixture-capture-h);
+      pointer-events: none;
+      line-height: normal;
+      z-index: 1;
+      overflow: visible;
+    }
+    #view-canvas canvas.preview-canvas,
+    #svg-slot img.preview-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+    }
+    #view-canvas canvas.preview-canvas.crisp {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    .compare-stage.view-live #view-canvas,
+    .compare-stage.view-live #svg-slot {
+      visibility: hidden;
+    }
+    .compare-stage.view-svg #capture-target,
+    .compare-stage.view-svg #view-canvas {
+      visibility: hidden;
+    }
+    .compare-stage.view-canvas #capture-target,
+    .compare-stage.view-canvas #svg-slot {
+      visibility: hidden;
+    }
+    .compare-stage.view-canvas,
+    .compare-stage.view-diff {
+      width: 500px;
+      min-width: 500px;
+      min-height: var(--fixture-preview-stage-h);
+      overflow: visible;
+    }
+    .compare-stage.view-diff #svg-slot {
+      visibility: hidden;
+    }
+    .compare-stage.view-diff #view-canvas canvas.preview-canvas {
+      mix-blend-mode: difference;
+      opacity: 0.92;
+    }
+    #capture-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.82);
+      font: 600 14px/1.35 system-ui, -apple-system, sans-serif;
+      color: #1e40af;
+      pointer-events: none;
+    }
+    .compare-stage.capturing #capture-overlay {
+      display: flex;
+    }
+    /* While capturing: always show live fixture; hide stale canvas stack */
+    .compare-stage.capturing #capture-target {
+      visibility: visible !important;
+    }
+    .compare-stage.capturing #view-canvas,
+    .compare-stage.capturing #svg-slot {
+      visibility: hidden !important;
+    }
+    #ink-top-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      overflow: visible;
+    }
+    #ink-top-overlay[hidden] {
+      display: none;
+    }
+    .fixture-preview-row:has(.compare-stage.capturing) #ink-top-overlay {
+      visibility: hidden;
+    }
+    .ink-marker-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 0;
+      border-top-width: 1px;
+      border-top-style: solid;
+      opacity: 0.92;
+    }
+    .ink-marker-line--live { border-top-color: #16a34a; }
+    .ink-marker-line--canvas { border-top-color: #dc2626; }
+    .ink-marker-line--svg { border-top-color: #2563eb; }
+    #ink-marker-legend-slot {
+      width: 500px;
+      max-width: 100%;
+      margin-top: 6px;
+      padding: 4px 0;
+    }
+    #ink-marker-legend-slot[hidden] {
+      display: none;
+    }
+    .ink-legend-summary {
+      margin: 0;
+      font: 11px/1.35 ui-monospace, Menlo, monospace;
+      color: #111;
+      font-weight: 600;
+    }
+    #ink-compare-panel {
+      width: 500px;
+      max-width: 100%;
+      margin-top: 8px;
+    }
+    #ink-compare-panel[hidden] { display: none; }
+    table.ink-compare {
+      width: 100%;
+      border-collapse: collapse;
+      font: 13px/1.4 ui-monospace, Menlo, monospace;
+      background: #fff;
+    }
+    table.ink-compare th,
+    table.ink-compare td {
+      border: 1px solid #e5e7eb;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    table.ink-compare th { font-weight: 600; background: #f8fafc; }
+    table.ink-compare .stage-live { color: #16a34a; }
+    table.ink-compare .stage-svg { color: #2563eb; }
+    table.ink-compare .stage-canvas { color: #ea580c; }
+    .ink-delta-summary { margin: 6px 0 0; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+    .ink-delta-summary p { display: block; margin: 4px 0 0; }
+    pre.viewport-metrics {
+      margin: 0 0 8px;
+      font: 11px/1.4 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+      color: #334155;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: nowrap;
+      width: 100%;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+      border-top: 0 solid transparent;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0;
+      overflow: visible;
+    }
+    #result {
+      font: 12px/1.5 ui-monospace, Menlo, monospace;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font: 11px/1.4 ui-monospace, Menlo, monospace;
+      margin-top: 12px;
+      background: #fff;
+    }
+    table.matrix th, table.matrix td {
+      border: 1px solid #e5e7eb;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    table.matrix tr.pass td { background: #ecfdf5; }
+    table.matrix tr.fail td { background: #fef2f2; }
+    .hint { font-size: 12px; color: #555; margin: 8px 0 0; }
+    #viewport-check-panel {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    #viewport-check-panel #metrics {
+      margin: 0;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+      color: #111;
+    }
+    #viewport-check-panel #verdict {
+      margin: 8px 0 0;
+      font: 12px/1.35 ui-monospace, Menlo, monospace;
+      font-weight: 600;
+      color: #1e3a5f;
+    }
+    #viewport-check-panel #verdict.pass { color: #166534; }
+    #viewport-check-panel #verdict.fail { color: #991b1b; }
+    #verdict .ink-shift-banner {
+      display: block;
+      margin: 0 0 6px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font: 600 15px/1.35 system-ui, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    #verdict .ink-shift-banner--up {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fdba74;
+    }
+    #verdict .ink-shift-banner--down {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    #verdict .ink-shift-banner--match {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .lab-footer { margin-bottom: 12px; }
+    .radical-warning {
+      font: 12px/1.45 system-ui, sans-serif;
+      color: #9a3412;
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 0 0 12px;
+    }
+    #debug-panel {
+      font: 12px/1.5 ui-monospace, Menlo, monospace;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin: 0 0 12px;
+    }
+    #debug-panel[hidden] { display: none; }
+    #debug-panel summary {
+      cursor: pointer;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-weight: 600;
+      color: #334155;
+    }
+    #debug-panel .debug-panel-body {
+      margin-top: 8px;
+      white-space: pre-wrap;
+      color: #1e293b;
+    }
+    #debug-panel .debug-warn { color: #b45309; }
+  </style>
+</head>
+<body>
+  <p id="lab-build-stamp" class="lab-gate-hint" style="margin:0;padding:4px 14px;font-size:11px;color:#166534;background:#ecfdf5;border-bottom:1px solid #bbf7d0">
+    Lab build <strong>canvas-svg-viewport-v7</strong> — ink tops in #capture-target root px. Toggle Live / SVG / Canvas / Diff after run.
+  </p>
+  <p class="lab-gate-hint" style="margin:0;padding:6px 14px;font-size:12px;color:#475569;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+    Check = painted ink tops on compare-stage previews (#capture-target root px, bitmap scan). ↑ on screen = smaller Y · ΔY = stage − live (+ = ink further down).
+  </p>
+  <header>
+    <label>Recipe
+      <select id="recipe-select"></select>
+    </label>
+    <label>Draw path
+      <select id="lab-fork-select"></select>
+    </label>
+    <label>Decode
+      <select id="raster-patch-select"></select>
+    </label>
+    <label>Category
+      <select id="category-filter">
+        <option value="">All</option>
+      </select>
+    </label>
+    <label>Landmark
+      <select id="landmark-select" title="Probe target on mini fixture (Home/Products → Blocks nav)">
+        <option value="Home" selected>Home</option>
+        <option value="Products">Products</option>
+        <option value="Blocks">Blocks</option>
+        <option value="H">H</option>
+      </select>
+    </label>
+    <button type="button" id="run-one">Run recipe</button>
+    <button type="button" id="run-matrix">Run all recipes</button>
+    <button type="button" id="export-json" disabled>Export JSON</button>
+    <button type="button" id="visual-inspect-btn" title="Side-by-side PNGs + LLM prompt (no API)">Visual inspect</button>
+    <div id="view-bar">
+      <fieldset id="view-controls" disabled>
+        <legend>View</legend>
+        <label title="Ctrl+1"><input type="radio" name="view" value="live" checked /> Live <kbd>1</kbd></label>
+        <label title="Ctrl+2"><input type="radio" name="view" value="svg" /> SVG <kbd>2</kbd></label>
+        <label title="Ctrl+3"><input type="radio" name="view" value="canvas" /> Canvas <kbd>3</kbd></label>
+        <label class="diff-opt" title="Ctrl+4"><input type="radio" name="view" value="diff" /> Diff <kbd>4</kbd></label>
+      </fieldset>
+      <span id="view-legend">Run a recipe to compare views.</span>
+    </div>
+    <span id="kbd-hint" aria-label="Keyboard shortcuts">
+      <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>4</kbd> · <kbd>V</kbd> · run <kbd>Ctrl</kbd>+<kbd>↵</kbd> · all <kbd>Ctrl</kbd>+<kbd>⇧</kbd>+<kbd>↵</kbd>
+    </span>
+    <span id="status"></span>
+  </header>
+  <pre id="boot-error"></pre>
+  <div id="progress"></div>
+  <main>
+    <pre id="canvas-sanity-error"></pre>
+    <p id="canvas-raster-hint" hidden></p>
+    <p id="radical-warning" class="radical-warning" hidden>
+      <strong>Experimental recipe</strong> — may break layout or capture. Not for production.
+    </p>
+    <div class="fixture-wrap">
+      <div class="fixture-preview-row">
+        <div class="compare-stage view-live" id="compare-stage">
+          <div id="capture-target">
+            <div class="mini-nav-row" aria-label="Block + text row">
+              <span class="ink-block" data-ink-block aria-hidden="true"></span>
+              <nav class="mini-nav" data-landmark="Blocks" data-snapdom-landmark="Blocks" aria-label="Block row nav">
+                <a href="#" data-landmark-ink data-snapdom-landmark="Home" title="Blocks (Home)">██████</a>
+              </nav>
+            </div>
+          </div>
+          <div id="view-canvas" aria-hidden="true"></div>
+          <div id="svg-slot" aria-hidden="true"></div>
+          <div id="capture-overlay" hidden aria-live="polite">Capturing…</div>
+          <div id="ink-top-overlay" hidden aria-hidden="true"></div>
+        </div>
+      </div>
+      <div id="ink-marker-legend-slot" hidden aria-label="Ink top markers"></div>
+      <div id="viewport-check-panel" hidden aria-label="Viewport top compare">
+        <pre id="metrics" class="viewport-metrics"></pre>
+        <table class="ink-compare" id="ink-compare-table">
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th>Ink top Y (#capture-target px)</th>
+            </tr>
+          </thead>
+          <tbody id="ink-compare-tbody"></tbody>
+        </table>
+        <p class="ink-delta-summary" id="verdict" aria-live="polite"></p>
+        <pre id="ink-metrics-panel" class="hint" style="margin:6px 0 0;font:11px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap"></pre>
+        <p id="ink-scan-status" class="hint" style="margin:6px 0 0;font-size:12px;color:#555">
+          Parity check uses bitmap ink scan on compare-stage preview bands (native + image-trim fallback).
+          <span id="ink-metrics-rev" hidden></span>
+        </p>
+        <p class="hint" style="margin:4px 0 0;font-size:12px;color:#555">
+          Block row <code>██████</code> (U+2588×6). ↑ on screen = smaller Y · ΔY = stage − live (+ = ink further down).
+        </p>
+      </div>
+    </div>
+    <p class="hint lab-footer">
+      Headed Chrome · bitmap ink compare · <code>npm run debug:fo-fix-lab</code>
+    </p>
+    <details id="visual-inspect-panel" hidden>
+      <summary>Visual inspect (no API — attach PNGs + prompt in Cursor)</summary>
+      <div id="visual-inspect-body">
+        <p class="hint" style="margin:0 0 8px">Captures current recipe from compare stage. Optional CLI: <code>npm run debug:fo-llm-visual-compare</code></p>
+        <div id="visual-inspect-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px">Agent prompt</label>
+        <textarea id="visual-inspect-prompt" readonly rows="12" style="width:100%;font:11px/1.4 ui-monospace,Menlo,monospace"></textarea>
+        <button type="button" id="visual-inspect-copy" style="margin-top:6px">Copy prompt</button>
+      </div>
+    </details>
+    <pre id="result">Loading…</pre>
+    <details id="debug-panel" hidden>
+      <summary>Debug details</summary>
+      <div id="debug-panel-body" class="debug-panel-body"></div>
+    </details>
+    <div id="matrix-wrap"></div>
+  </main>
+  <script type="module">
+    /** @type {import('./fo-fix-recipes.js').FoFixRecipe[]} */
+    let FO_FIX_RECIPES = [];
+    /** @type {import('./fo-fix-recipes.js').RejectedHypothesis[]} */
+    let REJECTED_HYPOTHESES = [];
+    /** @type {(id?: string) => import('./fo-fix-recipes.js').FoFixRecipe | null} */
+    let getFoFixRecipe = () => null;
+    let listFoFixCategories = () => /** @type {string[]} */ ([]);
+    let filterFoFixRecipes = (_opts) => /** @type {import('./fo-fix-recipes.js').FoFixRecipe[]} */ ([]);
+    let resolveFoFixMatrixRecipes = (_opts) => /** @type {import('./fo-fix-recipes.js').FoFixRecipe[]} */ ([]);
+    let bestPromotableMatrixRow = (_rows) => null;
+    let matrixExcludesTextBypass = () => true;
+    let isFoFixRecipeActive = (_recipe, _opts) => true;
+    let FO_FIX_ACTIVE_COUNT = 0;
+    let FO_FIX_INACTIVE_COUNT = 0;
+
+    const params = new URLSearchParams(location.search);
+
+    /** Probe opts from URL (?dpr= & ?landmark= & ?scale=) for headed regression scripts. */
+    function probeOptsFromUrl() {
+      /** @type {{ dpr?: number, scale?: number, landmark?: string }} */
+      const opts = {};
+      const dprRaw = params.get('dpr');
+      const scaleRaw = params.get('scale');
+      const landmarkRaw =
+        params.get('landmark')?.trim() ||
+        landmarkSelect?.value?.trim() ||
+        FIXTURE_LANDMARK;
+      if (dprRaw != null) {
+        const d = Number(dprRaw);
+        if (Number.isFinite(d) && d > 0) opts.dpr = d;
+      }
+      if (scaleRaw != null) {
+        const s = Number(scaleRaw);
+        if (Number.isFinite(s) && s > 0) opts.scale = s;
+      }
+      opts.landmark =
+        typeof labRunner?.normalizeProbeLandmark === 'function'
+          ? labRunner.normalizeProbeLandmark(landmarkRaw)
+          : landmarkRaw || FIXTURE_LANDMARK;
+      return opts;
+    }
+
+    function syncLandmarkUrlParam(landmark) {
+      const label =
+        typeof labRunner?.normalizeProbeLandmark === 'function'
+          ? labRunner.normalizeProbeLandmark(landmark)
+          : landmark?.trim() || FIXTURE_LANDMARK;
+      const u = new URL(location.href);
+      u.searchParams.set('landmark', label);
+      history.replaceState(null, '', u);
+      params.set('landmark', label);
+      if (landmarkSelect) landmarkSelect.value = label;
+      return label;
+    }
+
+    function applyLandmarkFromUrl() {
+      const raw = params.get('landmark')?.trim();
+      const label =
+        typeof labRunner?.normalizeProbeLandmark === 'function'
+          ? labRunner.normalizeProbeLandmark(raw || FIXTURE_LANDMARK)
+          : raw || FIXTURE_LANDMARK;
+      if (landmarkSelect) {
+        const known = [...landmarkSelect.options].some((o) => o.value === label);
+        landmarkSelect.value = known ? label : FIXTURE_LANDMARK;
+      }
+      if (!raw || raw !== label) syncLandmarkUrlParam(label);
+      return label;
+    }
+
+    const labDebug = params.get('debug') === '1' || params.get('debugCap') === '1';
+    if (params.get('debugCap') === '1') window.__foFixLabDebugCap = true;
+    if (params.get('debugLh') === '1') window.__foFixLabDebugLh = true;
+    if (params.get('textOnly') === '1') {
+      window.__foFixLabTextOnly = true;
+      window.__foFixLabDebugLh = true;
+    }
+    const select = document.getElementById('recipe-select');
+    const labForkSelect = document.getElementById('lab-fork-select');
+    const rasterPatchSelect = document.getElementById('raster-patch-select');
+    const categoryFilter = document.getElementById('category-filter');
+    const landmarkSelect = document.getElementById('landmark-select');
+    const exportJsonBtn = document.getElementById('export-json');
+    const result = document.getElementById('result');
+    const status = document.getElementById('status');
+    const matrixWrap = document.getElementById('matrix-wrap');
+    const bootError = document.getElementById('boot-error');
+    const progressEl = document.getElementById('progress');
+    const compareStage = document.getElementById('compare-stage');
+    const canvasSlot = document.getElementById('view-canvas');
+    const svgSlot = document.getElementById('svg-slot');
+    const inkTopOverlay = document.getElementById('ink-top-overlay');
+    const inkMarkerLegendSlot = document.getElementById('ink-marker-legend-slot');
+    const inkComparePanel = document.getElementById('viewport-check-panel');
+    const inkCompareTbody = document.getElementById('ink-compare-tbody');
+    const inkDeltaSummary = document.getElementById('verdict');
+    const captureOverlay = document.getElementById('capture-overlay');
+    const canvasSanityError = document.getElementById('canvas-sanity-error');
+    const canvasRasterHint = document.getElementById('canvas-raster-hint');
+    const debugPanel = document.getElementById('debug-panel');
+    const debugPanelBody = document.getElementById('debug-panel-body');
+    const runOneBtn = document.getElementById('run-one');
+    const runMatrixBtn = document.getElementById('run-matrix');
+    const viewControls = document.getElementById('view-controls');
+    const viewLegend = document.getElementById('view-legend');
+    const radicalWarning = document.getElementById('radical-warning');
+    const viewRadios = () => /** @type {NodeListOf<HTMLInputElement>} */ (
+      viewControls.querySelectorAll('input[name="view"]')
+    );
+
+    /** @type {import('./fo-fix-lab-runner.js')} */
+    let labRunner;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').computeLandmarkInkMetrics} */
+    let computeLandmarkInkMetrics;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').applyLandmarkInkMetricsToRow} */
+    let applyLandmarkInkMetricsToRow;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').formatCanvasVsSvgLine} */
+    let formatCanvasVsSvgLine;
+    /** @type {typeof import('./fo-landmark-ink-metrics.mjs').formatStageVsLivePhrase} */
+    let formatStageVsLivePhraseFromModule;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').formatStageHigherOnScreenPhrase} */
+    let formatStageHigherOnScreenPhrase;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').formatLabRowStageYLine} */
+    let formatLabRowStageYLine;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').formatViewportCheckVerdict} */
+    let formatViewportCheckVerdict;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').formatViewportCheckMetrics} */
+    let formatViewportCheckMetrics;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').rootYToPreviewViewportStretch} */
+    let rootYToPreviewViewportStretch;
+    /** @type {typeof import('./fo-landmark-layout-metrics.mjs').UI_INK_ALIGNED_THRESHOLD_PX} */
+    let UI_INK_ALIGNED_THRESHOLD_PX;
+    const metricsPanel = document.getElementById('metrics');
+    const inkMetricsPanel = document.getElementById('ink-metrics-panel');
+    const verdictPanel = document.getElementById('verdict');
+    /** @type {typeof import('/dist/snapdom.mjs').snapdom} */
+    let snapdom;
+
+    /** @type {number | null} */
+    let baselineDeltaTop = null;
+
+    const VIEW_MODES = ['live', 'svg', 'canvas', 'diff'];
+    /** Ctrl/Cmd+digit → compare view (1=live … 4=diff). */
+    const VIEW_BY_DIGIT = /** @type {Record<string, 'live'|'svg'|'canvas'|'diff'>} */ ({
+      1: 'live',
+      2: 'svg',
+      3: 'canvas',
+      4: 'diff',
+    });
+    /** Mini fixture — block row (U+2588×6) at 1:1 CSS px. */
+    const FIXTURE_PROBE_CSS = { cssW: 500, cssH: 48 };
+    const FIXTURE_BLOCK_CHARS = '\u2588'.repeat(6);
+    const FIXTURE_LANDMARK = 'Home';
+    const autoRun = params.get('auto') === '1';
+
+    /** @param {string | null} raw */
+    function normalizeViewIntent(raw) {
+      if (VIEW_MODES.includes(raw || '')) return /** @type {'live'|'svg'|'canvas'|'diff'} */ (raw);
+      return null;
+    }
+
+    const initialViewIntent = normalizeViewIntent(params.get('view'));
+    let viewMode = initialViewIntent ?? 'live';
+    let hasCanvasPreview = false;
+    let hasSvgPreview = false;
+    /** @type {(() => void) | null} */
+    let revokeSvgPreviewUrl = null;
+    let isCapturing = false;
+    /** View mode before the current run (restored after capture). */
+    let viewBeforeCapture = 'live';
+    /** First successful mount honors ?view= when user has not changed view mid-session. */
+    let pendingInitialView = initialViewIntent;
+    /** @type {{ dpr: number, cssW: number, cssH: number, backingW: number, backingH: number }} */
+    let previewMeta = { dpr: 1, cssW: 0, cssH: 0, backingW: 0, backingH: 0 };
+
+    window.__foFixLab = {
+      done: false,
+      mode: null,
+      progress: null,
+      error: null,
+      view: viewMode,
+      lastCanvas: null,
+      lastSvg: null,
+      previewMeta,
+      inkMarkers: null,
+      canonicalComparableInk,
+      refreshInkMarkers: () => {
+        if (lastInkMarkerRow) applyInkMarkerRow(lastInkMarkerRow);
+      },
+      refreshLayoutMarkers: () => {
+        if (lastInkMarkerRow) applyInkMarkerRow(lastInkMarkerRow);
+      },
+    };
+
+    /** @type {{ liveTopPx?: number | null, canvasTopPx?: number | null, svgTopPx?: number | null, landmark?: string } | null} */
+    let lastInkMarkerRow = null;
+
+    /** Ink/layout metric display precision — keep in sync with fo-ink-metric-format.mjs */
+    const INK_METRIC_DECIMALS = 4;
+
+    /** @param {number | null | undefined} v */
+    function fmtInkNum(v) {
+      return Number.isFinite(v) ? v.toFixed(INK_METRIC_DECIMALS) : '—';
+    }
+
+    /** @param {number | null | undefined} v */
+    function fmtMarkerPx(v) {
+      return Number.isFinite(v) ? `${fmtInkNum(v)}px` : '—';
+    }
+
+    /** @param {number | null | undefined} v */
+    function fmtSignedDeltaPx(v) {
+      if (!Number.isFinite(v)) return '';
+      const n = fmtInkNum(v);
+      return v > 0 ? `+${n}px` : `${n}px`;
+    }
+
+    /** ΔY = stageTop − liveTop (− = stage higher on screen; matches verdict “Y −0.50”). */
+    function fmtDeltaY(v) {
+      if (!Number.isFinite(v)) return '—';
+      const n = fmtInkNum(v);
+      return v > 0 ? `+${n}` : n;
+    }
+
+    const INK_DELTA_Y_LEGEND = 'ΔY = stage − live (− = higher on screen)';
+
+    /**
+     * Canonical ink tops — thin adapter over computeLandmarkInkMetrics for UI/legend/marker ticks.
+     * @param {object | null | undefined} row
+     */
+    function canonicalComparableInk(row) {
+      if (!row) return null;
+      if (typeof computeLandmarkInkMetrics !== 'function') return null;
+      const m = computeLandmarkInkMetrics(row);
+      return {
+        landmark: m.landmark ?? row.landmark ?? FIXTURE_LANDMARK,
+        liveRoot: m.liveTop,
+        svgRoot: m.svgTop,
+        canvasRoot: m.canvasTop,
+        svgVsLive: m.deltaSvgVsLive,
+        canvasVsLive: m.deltaCanvasVsLive,
+        svgVsCanvas: m.deltaCanvasVsSvg,
+        canvasHigherVsSvgPx: m.canvasHigherVsSvgPx,
+        svgHigherOnScreenPx: m.svgHigherOnScreenPx,
+        canvasHigherOnScreenPx: m.canvasHigherOnScreenPx,
+        uiAligned: m.uiAligned,
+        inkUiAligned: m.inkUiAligned,
+        pass: m.pass,
+        inkPassThreshold: m.inkPassThreshold,
+        inkCheckThresholdPx: m.inkCheckThresholdPx,
+        metricMode: m.metricMode,
+        liveViewport:
+          row.liveBlockAnchorViewportTopPx ??
+          row.livePreviewViewportTopPx ??
+          null,
+        svgViewport:
+          row.svgPreviewBitmapViewportTopPx ??
+          row.svgBlockAnchorViewportTopPx ??
+          row.svgPreviewVisibleViewportTopPx ??
+          null,
+        canvasViewport:
+          row.canvasPreviewVisibleViewportTopPx ??
+          row.canvasPreviewBitmapViewportTopPx ??
+          row.canvasBlockAnchorViewportTopPx ??
+          row.canvasPreviewViewportTopPx ??
+          null,
+        blockAnchorCheck:
+          row.blockAnchorCheckReference === 'capture-target-root' ||
+          row.blockAnchorCheckReference === 'viewport-block-anchor',
+      };
+    }
+
+    /** Active ink stage for current view. */
+    function activeInkMarkerKey() {
+      if (viewMode === 'compare' || viewMode === 'diff') return 'compare';
+      if (viewMode === 'svg') return 'svg';
+      if (viewMode === 'canvas') return 'canvas';
+      return 'live';
+    }
+
+    /**
+     * @param {'SVG'|'Canvas'} label
+     * @param {number | null | undefined} higherOnScreenPx liveTop − stageTop (positive = stage higher on screen)
+     * @param {number} [matchThresholdPx]
+     * @param {{ ink?: boolean }} [options]
+     */
+    function formatStageVsLivePhrase(label, higherOnScreenPx, matchThresholdPx, options = { ink: true }) {
+      const eps =
+        Number.isFinite(matchThresholdPx) && matchThresholdPx > 0
+          ? matchThresholdPx
+          : (typeof UI_INK_ALIGNED_THRESHOLD_PX === 'number' ? UI_INK_ALIGNED_THRESHOLD_PX : 0.06);
+      if (typeof formatStageVsLivePhraseFromModule === 'function') {
+        return formatStageVsLivePhraseFromModule(label, higherOnScreenPx, eps, options);
+      }
+      if (typeof formatStageHigherOnScreenPhrase === 'function') {
+        return formatStageHigherOnScreenPhrase(label, higherOnScreenPx, eps, options);
+      }
+      if (!Number.isFinite(higherOnScreenPx) || Math.abs(higherOnScreenPx) < eps) {
+        const subject = options.ink ? `${label} ink` : label;
+        return `${subject} matches live on screen (Y ≈0)`;
+      }
+      const px = Math.abs(higherOnScreenPx).toFixed(2);
+      const deltaY = (-higherOnScreenPx).toFixed(2);
+      const ySuffix = higherOnScreenPx === 0 ? 'Y ≈0' : `Y ${higherOnScreenPx > 0 ? '-' : '+'}${Math.abs(Number(deltaY)).toFixed(2)}`;
+      const subject = options.ink ? `${label} ink` : label;
+      return higherOnScreenPx > 0
+        ? `${subject} ${px} px higher on screen than live (${ySuffix})`
+        : `${subject} ${px} px lower on screen than live (${ySuffix})`;
+    }
+
+    /**
+     * Logical CSS pixel size of preview bitmap content (before object-fit letterbox).
+     * @param {HTMLCanvasElement | HTMLImageElement | null} el
+     * @param {{ cssW: number, cssH: number }} fallback
+     */
+    function previewContentCssSize(el, fallback) {
+      if (el instanceof HTMLImageElement && el.naturalWidth > 0 && el.naturalHeight > 0) {
+        const root = document.getElementById('capture-target');
+        const rootW = root?.offsetWidth || fallback.cssW;
+        if (rootW > 0) {
+          const inferredDpr = el.naturalWidth / rootW;
+          if (Number.isFinite(inferredDpr) && inferredDpr > 0.25 && inferredDpr <= 8) {
+            return {
+              cssW: el.naturalWidth / inferredDpr,
+              cssH: el.naturalHeight / inferredDpr,
+            };
+          }
+        }
+        return { cssW: el.naturalWidth, cssH: el.naturalHeight };
+      }
+      if (el instanceof HTMLCanvasElement && el.width > 0 && el.height > 0) {
+        return {
+          cssW: previewMeta.cssW > 0 ? previewMeta.cssW : fallback.cssW,
+          cssH: previewMeta.cssH > 0 ? previewMeta.cssH : fallback.cssH,
+        };
+      }
+      return fallback;
+    }
+
+    /**
+     * Map capture-target Y through object-fit: contain on a preview element.
+     * @param {DOMRectReadOnly} elRect
+     * @param {number} topPx
+     * @param {number} intrinsicW
+     * @param {number} intrinsicH
+     */
+    function mapContainViewportY(elRect, topPx, intrinsicW, intrinsicH) {
+      const scale = Math.min(elRect.width / intrinsicW, elRect.height / intrinsicH);
+      const offsetY = (elRect.height - intrinsicH * scale) / 2;
+      return elRect.top + offsetY + topPx * scale;
+    }
+
+    /**
+     * Map #capture-target Y to viewport Y on compare-stage preview (canvas/img).
+     * Uses rootYToPreviewViewportStretch from fo-landmark-layout-metrics when loaded.
+     * @param {HTMLCanvasElement | HTMLImageElement | null} displayEl
+     * @param {number} topInRoot
+     */
+    function previewTopInRootToViewportY(displayEl, topInRoot) {
+      const root = document.getElementById('capture-target');
+      if (!displayEl || !root || !Number.isFinite(topInRoot)) return null;
+      if (typeof rootYToPreviewViewportStretch === 'function') {
+        return rootYToPreviewViewportStretch(displayEl, root, topInRoot);
+      }
+      const elRect = displayEl.getBoundingClientRect();
+      const rootH = root.offsetHeight || root.getBoundingClientRect().height;
+      if (!(rootH > 0) || !(elRect.height > 0)) return null;
+      return elRect.top + topInRoot * (elRect.height / rootH);
+    }
+
+    /** Stage key for positioning all markers on the visible preview layer. */
+    function activeMarkerStageKey() {
+      if ((viewMode === 'canvas' || viewMode === 'diff') && hasCanvasPreview) return 'canvas';
+      if (viewMode === 'svg' && hasSvgPreview) return 'svg';
+      return 'live';
+    }
+
+    /** Map each marker through its own preview layer (live DOM vs svg img vs canvas). */
+    function markerStageMapKey(markerKey) {
+      if (markerKey === 'canvas-bitmap' || (markerKey === 'canvas' && hasCanvasPreview)) return 'canvas';
+      if (markerKey === 'svg-bitmap' || (markerKey === 'svg' && hasSvgPreview)) return 'svg';
+      return 'live';
+    }
+
+    function inkMarkerOverlayRoot() {
+      return compareStage ?? document.getElementById('compare-stage');
+    }
+
+    /** Viewport Y → overlay top within compare stage (tick on visible ink). */
+    function viewportYToOverlayPx(viewportY) {
+      const root = inkMarkerOverlayRoot();
+      if (!root || !Number.isFinite(viewportY)) return viewportY;
+      return viewportY - root.getBoundingClientRect().top;
+    }
+
+    /**
+     * Map #capture-target Y to overlay top within compare stage.
+     * @param {number} topPx
+     * @param {string} [stageKey]
+     */
+    function captureTargetYToOverlayPx(topPx, stageKey = activeMarkerStageKey()) {
+      const overlayRoot = inkMarkerOverlayRoot();
+      if (!overlayRoot || !Number.isFinite(topPx)) return topPx;
+      const rootTop = overlayRoot.getBoundingClientRect().top;
+      const cssH = FIXTURE_PROBE_CSS.cssH;
+      if (!stageKey) stageKey = activeMarkerStageKey();
+      const root = document.getElementById('capture-target');
+
+      if (stageKey === 'canvas' && hasCanvasPreview) {
+        const canvas = canvasSlot.querySelector('canvas.preview-canvas');
+        if (canvas instanceof HTMLCanvasElement && root) {
+          const y = previewTopInRootToViewportY(canvas, topPx);
+          if (Number.isFinite(y)) return y - rootTop;
+        }
+      }
+
+      if (stageKey === 'svg' && hasSvgPreview) {
+        const img = svgSlot.querySelector('img.preview-svg');
+        if (img instanceof HTMLImageElement && root) {
+          const y = previewTopInRootToViewportY(img, topPx);
+          if (Number.isFinite(y)) return y - rootTop;
+        }
+      }
+
+      if (root) {
+        return root.getBoundingClientRect().top + topPx - rootTop;
+      }
+      return topPx;
+    }
+
+    /** @param {number | null | undefined} v */
+    function fmtLegendPx(v) {
+      return Number.isFinite(v) ? `${fmtInkNum(v)}px` : '—';
+    }
+
+    /** Multi-line legend for diff — same root px tops as #result / #metrics. */
+    function formatCompareLinesLegend(row) {
+      const c = canonicalComparableInk(row);
+      if (!c) return '';
+      const m =
+        row && typeof computeLandmarkInkMetrics === 'function'
+          ? computeLandmarkInkMetrics(row)
+          : null;
+      const eps = m?.inkCheckThresholdPx ?? UI_INK_ALIGNED_THRESHOLD_PX ?? 0.5;
+      const lines = [
+        `Live ${fmtInkNum(c.liveRoot)} · SVG ${fmtInkNum(c.svgRoot)} · Canvas ${fmtInkNum(c.canvasRoot)} (#capture-target root px)`,
+        `SVG ${formatStageVsLivePhrase('SVG', c.svgHigherOnScreenPx)} · Canvas ${formatStageVsLivePhrase('Canvas', c.canvasHigherOnScreenPx)}`,
+      ];
+      if (m && typeof formatCanvasVsSvgLine === 'function') {
+        const canvasVsSvg = formatCanvasVsSvgLine(m, eps);
+        if (canvasVsSvg) lines.push(canvasVsSvg);
+      }
+      return lines.join('\n');
+    }
+
+    /** One visible ink tick per preview view. */
+    function inkMarkersForView(mode, row) {
+      const c = canonicalComparableInk(row);
+      const live = c?.liveRoot ?? null;
+      const svgVisible = c?.svgRoot ?? null;
+      const canvas = c?.canvasRoot ?? null;
+      const cssH = FIXTURE_PROBE_CSS.cssH;
+
+      /** @param {{ key: string, cls: string, top: number | null, active?: boolean }} m */
+      const keep = (m) => Number.isFinite(m.top) && m.top >= -2 && m.top <= cssH + 2;
+
+      if (mode === 'live') {
+        return [{ key: 'live', cls: 'live', top: live, active: true }].filter(keep);
+      }
+      if (mode === 'svg') {
+        return [{ key: 'svg', cls: 'svg', top: svgVisible, active: true }].filter(keep);
+      }
+      if (mode === 'canvas') {
+        return [{ key: 'canvas', cls: 'canvas', top: canvas, active: true }].filter(keep);
+      }
+      if (mode === 'compare' || mode === 'diff') {
+        return [
+          { key: 'live', cls: 'live', top: live, active: false },
+          { key: 'svg', cls: 'svg', top: svgVisible, active: false },
+          { key: 'canvas', cls: 'canvas', top: canvas, active: false },
+        ].filter(keep);
+      }
+      return [];
+    }
+
+    /** One-line legend — same canonical tops/offsets as #result and #metrics. */
+    function formatInkLegendSummary(mode, row) {
+      if (mode === 'compare' || mode === 'diff') return formatCompareLinesLegend(row);
+      const c = canonicalComparableInk(row);
+      if (!c) return '';
+
+      if (mode === 'live') {
+        return `Live top ${fmtInkNum(c.liveRoot)} px (#capture-target root)`;
+      }
+      if (mode === 'svg') {
+        const phrase = formatStageVsLivePhrase('SVG', c.svgHigherOnScreenPx);
+        return `SVG top ${fmtInkNum(c.svgRoot)} px · ${phrase}`;
+      }
+      if (mode === 'canvas') {
+        return '';
+      }
+      return '';
+    }
+
+    /** Viewport Y for marker tick (object-fit mapped; matches measurePreviewMappedInkTop). */
+    function markerViewportTopPx(row, markerKey, topPx) {
+      const c = canonicalComparableInk(row);
+      if (markerKey === 'live' && Number.isFinite(c?.liveViewport)) return c.liveViewport;
+      if (markerKey === 'svg' && Number.isFinite(c?.svgViewport)) return c.svgViewport;
+      if (markerKey === 'canvas' && Number.isFinite(c?.canvasViewport)) return c.canvasViewport;
+      return null;
+    }
+
+    /** @param {string} cls @param {string} markerKey @param {number} topPx @param {number | null | undefined} viewportTop @param {{ active: boolean, zIndex: number }} opts */
+    function inkMarkerLine(cls, markerKey, topPx, viewportTop, { active, zIndex }) {
+      const line = document.createElement('div');
+      line.className = `ink-marker-line ink-marker-line--${cls}`;
+      const stageKey = markerStageMapKey(markerKey);
+      const y = Number.isFinite(viewportTop)
+        ? viewportYToOverlayPx(viewportTop)
+        : captureTargetYToOverlayPx(topPx, stageKey);
+      line.style.top = `${y}px`;
+      line.style.zIndex = String(zIndex);
+      line.setAttribute('data-ink-top-px', topPx.toFixed(INK_METRIC_DECIMALS));
+      line.setAttribute('data-ink-top-overlay-px', y.toFixed(INK_METRIC_DECIMALS));
+      line.setAttribute('data-ink-stage-map', stageKey);
+      if (Number.isFinite(viewportTop)) {
+        line.setAttribute('data-ink-viewport-top-px', viewportTop.toFixed(INK_METRIC_DECIMALS));
+      }
+      return line;
+    }
+
+    const INK_DISPLAY_DECIMALS = 2;
+
+    /** @param {string} line @param {object} m */
+    function inkShiftHigherPxForLine(line, m) {
+      if (line.startsWith('SVG')) return m.svgHigherOnScreenPx;
+      if (line.includes(' than SVG')) return m.canvasHigherVsSvgPx;
+      if (line.startsWith('Canvas')) return m.canvasHigherOnScreenPx;
+      return null;
+    }
+
+    /** @param {number | null | undefined} v */
+    function fmtDisplayDelta(v) {
+      if (!Number.isFinite(v)) return '—';
+      const n = v.toFixed(INK_DISPLAY_DECIMALS);
+      return v > 0 ? `+${n}` : n;
+    }
+
+    /** @param {object | null | undefined} row */
+    function renderLayoutComparePanel(row) {
+      const m =
+        row && typeof computeLandmarkInkMetrics === 'function'
+          ? computeLandmarkInkMetrics(row)
+          : null;
+      const c = canonicalComparableInk(row);
+      if (!inkComparePanel || !inkCompareTbody || !inkDeltaSummary) return;
+      if (!c || !m) {
+        inkComparePanel.hidden = true;
+        inkCompareTbody.replaceChildren();
+        inkDeltaSummary.textContent = '';
+        if (metricsPanel) {
+          metricsPanel.textContent = 'Run a recipe to compare live / SVG / canvas tops.';
+        }
+        window.__foFixLab.inkMarkers = null;
+        return;
+      }
+      if (metricsPanel && typeof formatViewportCheckMetrics === 'function') {
+        metricsPanel.textContent = formatViewportCheckMetrics(m);
+      }
+      if (inkMetricsPanel && typeof formatViewportCheckMetrics === 'function') {
+        const inkText = formatViewportCheckMetrics(m).replace('Ink scan: off', row?.inkScanActive ? 'Ink scan: active' : 'Ink scan: off');
+        inkMetricsPanel.textContent = inkText;
+      }
+      const stages = [
+        { label: 'Live', cls: 'stage-live', y: c.liveRoot },
+        { label: 'SVG', cls: 'stage-svg', y: c.svgRoot },
+        { label: 'Canvas', cls: 'stage-canvas', y: c.canvasRoot },
+      ];
+      inkCompareTbody.replaceChildren();
+      for (const s of stages) {
+        const tr = document.createElement('tr');
+        const tdStage = document.createElement('td');
+        tdStage.className = s.cls;
+        tdStage.textContent = s.label;
+        const tdY = document.createElement('td');
+        tdY.textContent = fmtInkNum(s.y);
+        tr.append(tdStage, tdY);
+        inkCompareTbody.appendChild(tr);
+      }
+      inkDeltaSummary.replaceChildren();
+      inkDeltaSummary.className = m.pass ? 'ink-delta-summary pass' : 'ink-delta-summary fail';
+      if (typeof formatViewportCheckVerdict === 'function') {
+        for (const line of formatViewportCheckVerdict(m).split('\n')) {
+          const p = document.createElement('p');
+          p.className = 'ink-shift-banner';
+          const higher = inkShiftHigherPxForLine(line, m);
+          const inkEps = m.inkCheckThresholdPx ?? 0.06;
+          if (Number.isFinite(higher)) {
+            if (Math.abs(higher) < inkEps) p.classList.add('ink-shift-banner--match');
+            else if (higher > 0) p.classList.add('ink-shift-banner--up');
+            else p.classList.add('ink-shift-banner--down');
+          }
+          p.textContent = line;
+          inkDeltaSummary.append(p);
+        }
+      } else {
+        const inkEps = m.inkCheckThresholdPx ?? 0.06;
+        for (const { label, higher } of [
+          { label: 'SVG', higher: m.svgHigherOnScreenPx },
+          { label: 'Canvas', higher: m.canvasHigherOnScreenPx },
+        ]) {
+          if (!Number.isFinite(higher)) continue;
+          const line = formatStageVsLivePhrase(label, higher, inkEps);
+          const p = document.createElement('p');
+          p.className = 'ink-shift-banner';
+          if (Math.abs(higher) < inkEps) p.classList.add('ink-shift-banner--match');
+          else if (higher > 0) p.classList.add('ink-shift-banner--up');
+          else p.classList.add('ink-shift-banner--down');
+          p.textContent = line;
+          inkDeltaSummary.append(p);
+        }
+      }
+      const mono = document.createElement('p');
+      mono.style.margin = '4px 0 0';
+      mono.style.font = '11px/1.4 ui-monospace, Menlo, monospace';
+      mono.style.fontWeight = '400';
+      mono.textContent =
+        `ΔY (stage−live): SVG ${fmtDeltaY(c.svgVsLive)} · Canvas ${fmtDeltaY(c.canvasVsLive)}` +
+        ` · ink aligned (ε ${m.inkCheckThresholdPx ?? UI_INK_ALIGNED_THRESHOLD_PX ?? 0.5}px): ${m.inkUiAligned ? 'yes' : 'no'}`;
+      inkDeltaSummary.append(mono);
+      inkComparePanel.hidden = false;
+      window.__foFixLab.inkMarkers = {
+        landmark: c.landmark,
+        liveLineY: c.liveRoot,
+        svgLineY: c.svgRoot,
+        canvasLineY: c.canvasRoot,
+        svgVsLive: c.svgVsLive,
+        canvasVsLive: c.canvasVsLive,
+        svgHigherOnScreenPx: c.svgHigherOnScreenPx,
+        canvasHigherOnScreenPx: c.canvasHigherOnScreenPx,
+        legendSummary: formatInkLegendSummary(viewMode, row),
+      };
+      if (viewLegend) {
+        viewLegend.textContent = '';
+        viewLegend.removeAttribute('title');
+      }
+    }
+
+    const debugInkMarkers =
+      params.get('debug') === '1' || params.get('debugInk') === '1';
+
+    function renderInkTopMarkers() {
+      const row = lastInkMarkerRow;
+      renderLayoutComparePanel(row);
+      if (!inkTopOverlay || !debugInkMarkers) {
+        if (inkTopOverlay) {
+          inkTopOverlay.hidden = true;
+          inkTopOverlay.setAttribute('aria-hidden', 'true');
+          inkTopOverlay.replaceChildren();
+        }
+        if (inkMarkerLegendSlot) {
+          inkMarkerLegendSlot.hidden = true;
+          inkMarkerLegendSlot.setAttribute('aria-hidden', 'true');
+        }
+        return;
+      }
+      if (!inkTopOverlay) return;
+      inkTopOverlay.replaceChildren();
+      if (inkMarkerLegendSlot) inkMarkerLegendSlot.replaceChildren();
+      const canon = canonicalComparableInk(row);
+      const placed = inkMarkersForView(viewMode, row);
+      if (!placed.length || !canon) {
+        inkTopOverlay.hidden = true;
+        inkTopOverlay.setAttribute('aria-hidden', 'true');
+        if (inkMarkerLegendSlot) {
+          inkMarkerLegendSlot.hidden = true;
+          inkMarkerLegendSlot.setAttribute('aria-hidden', 'true');
+        }
+        return;
+      }
+      for (const m of placed) {
+        const viewportTop = markerViewportTopPx(row, m.key, m.top);
+        const line = inkMarkerLine(m.cls, m.key, m.top, viewportTop, {
+          active: m.active !== false,
+          zIndex: m.active ? 3 : 2,
+        });
+        line.classList.add('debug-ink-line', `debug-ink-line--${m.cls}`);
+        if (m.active) line.classList.add('debug-ink-line--active');
+        line.setAttribute('data-ink-stage', m.key);
+        inkTopOverlay.appendChild(line);
+      }
+      if (inkMarkerLegendSlot) {
+        const summary = document.createElement('p');
+        summary.className = 'ink-legend-summary';
+        summary.textContent = formatInkLegendSummary(viewMode, row);
+        inkMarkerLegendSlot.appendChild(summary);
+        inkMarkerLegendSlot.hidden = false;
+        inkMarkerLegendSlot.setAttribute('aria-hidden', 'false');
+      }
+      inkTopOverlay.hidden = false;
+      inkTopOverlay.setAttribute('aria-hidden', 'false');
+      if (window.__foFixLab.inkMarkers) {
+        window.__foFixLab.inkMarkers.visibleMarkerKeys = placed.map((m) => m.key);
+      }
+    }
+
+    /**
+     * Map probe-time root px tops onto mounted preview viewports for marker overlay only.
+     * Ink metric fields (liveInkTopPx, svgPreviewVisibleTopPx, canvasPreviewVisibleTopPx, ΔY)
+     * stay authoritative from runFoFixProbe / syncProbeRowInkFromProbeBitmaps.
+     */
+    function syncMarkerViewportsFromMountedPreviews(row, root, displayEls = {}) {
+      if (!row || !root || typeof rootYToPreviewViewportStretch !== 'function') return row;
+      const c = canonicalComparableInk(row);
+      if (!c) return row;
+      const { svgImg = null, canvas = null } = displayEls;
+      if (svgImg instanceof HTMLImageElement && Number.isFinite(c.svgRoot)) {
+        const vp = rootYToPreviewViewportStretch(svgImg, root, c.svgRoot);
+        if (Number.isFinite(vp)) {
+          row.svgPreviewVisibleViewportTopPx = vp;
+          row.svgBlockAnchorViewportTopPx = vp;
+        }
+      }
+      if (canvas instanceof HTMLCanvasElement && Number.isFinite(c.canvasRoot)) {
+        const vp = rootYToPreviewViewportStretch(canvas, root, c.canvasRoot);
+        if (Number.isFinite(vp)) {
+          row.canvasPreviewVisibleViewportTopPx = vp;
+          row.canvasBlockAnchorViewportTopPx = vp;
+        }
+      }
+      return row;
+    }
+
+    /** Marker overlay viewport sync after mount — does not rewrite probe ink metrics. */
+    function enrichInkMarkersFromPreview(row) {
+      if (!row || !labRunner) return row;
+      const root = document.getElementById('capture-target');
+      const landmarkLabel =
+        row.landmark ??
+        params.get('landmark')?.trim() ??
+        FIXTURE_LANDMARK;
+      const resolved = labRunner.resolveLandmark?.(landmarkLabel) ?? landmarkLabel;
+      const el =
+        labRunner.findLandmarkInkElement?.(root, resolved) ??
+        labRunner.findLandmarkElement(root, resolved);
+      if (!root || !el) {
+        console.warn(
+          `[fo-fix-lab] landmark not found for marker viewport: ${landmarkLabel} (resolved: ${resolved})`,
+        );
+        return row;
+      }
+      const svgImg = svgSlot.querySelector('img.preview-svg');
+      const canvas = canvasSlot.querySelector('canvas.preview-canvas');
+      syncMarkerViewportsFromMountedPreviews(row, root, {
+        svgImg: svgImg instanceof HTMLImageElement ? svgImg : null,
+        canvas: canvas instanceof HTMLCanvasElement ? canvas : null,
+      });
+      return row;
+    }
+
+    /** @param {object | null | undefined} row */
+    async function applyInkMarkerRow(row) {
+      if (!row) {
+        clearInkTopMarkers();
+        return;
+      }
+      await waitForPreviewInkReady();
+      enrichInkMarkersFromPreview(row);
+      setInkTopMarkers(row);
+      if (result && row === (lastInkMarkerRow ?? window.__foFixLastResult)) {
+        result.textContent = fmtRow(row);
+        updateDebugPanel(row);
+      }
+    }
+
+    /** Refresh marker overlay viewports after CSS nudges — probe row ink fields stay authoritative. */
+    async function resyncComparableInkMetrics() {
+      const row = lastInkMarkerRow ?? window.__foFixLastResult;
+      if (!row) return null;
+      await applyInkMarkerRow(row);
+      if (window.__foFixLastResult && window.__foFixLastResult !== row) {
+        Object.assign(window.__foFixLastResult, row);
+      }
+      return {
+        liveVsCanvasTopPx: row.liveVsCanvasTopPx ?? null,
+        liveVsSvgTopPx: row.liveVsSvgTopPx ?? null,
+        liveTopPx: row.liveTopPx ?? null,
+        canvasTopPx: row.canvasTopPx ?? null,
+        markerCanvasVsLiveVisualPx: window.__foFixLab?.inkMarkers?.markerCanvasVsLiveVisualPx ?? null,
+      };
+    }
+    window.__foFixLab.resyncComparableInkMetrics = resyncComparableInkMetrics;
+
+    /** @param {{ liveTopPx?: number | null, canvasTopPx?: number | null, svgTopPx?: number | null, landmark?: string }} row */
+    function setInkTopMarkers(row) {
+      lastInkMarkerRow = row ?? null;
+      if (!row) {
+        clearInkTopMarkers();
+        return;
+      }
+      renderInkTopMarkers();
+    }
+
+    function clearInkTopMarkers() {
+      lastInkMarkerRow = null;
+      if (inkTopOverlay) {
+        inkTopOverlay.replaceChildren();
+        inkTopOverlay.hidden = true;
+        inkTopOverlay.setAttribute('aria-hidden', 'true');
+      }
+      if (inkMarkerLegendSlot) {
+        inkMarkerLegendSlot.replaceChildren();
+        inkMarkerLegendSlot.hidden = true;
+        inkMarkerLegendSlot.setAttribute('aria-hidden', 'true');
+      }
+      if (inkComparePanel) inkComparePanel.hidden = true;
+      if (inkCompareTbody) inkCompareTbody.replaceChildren();
+      if (inkDeltaSummary) inkDeltaSummary.replaceChildren();
+      window.__foFixLab.inkMarkers = null;
+    }
+
+    function syncViewRadios() {
+      for (const input of viewRadios()) {
+        input.checked = input.value === viewMode;
+      }
+    }
+
+    function updateViewLegend() {
+      if (viewLegend) {
+        viewLegend.textContent = '';
+        viewLegend.removeAttribute('title');
+      }
+    }
+
+    function setView(mode, { syncUrl = true } = {}) {
+      if (!VIEW_MODES.includes(mode)) mode = 'live';
+      if (mode === 'svg' && !hasSvgPreview) {
+        mode = hasCanvasPreview ? 'canvas' : 'live';
+      }
+      if (mode === 'canvas' && !hasCanvasPreview) {
+        mode = hasSvgPreview ? 'svg' : 'live';
+      }
+      if (mode === 'diff' && !hasCanvasPreview) mode = 'live';
+      if (isCapturing) mode = 'live';
+      viewMode = /** @type {'live'|'svg'|'canvas'|'diff'} */ (mode);
+      compareStage.classList.remove('view-live', 'view-svg', 'view-canvas', 'view-diff');
+      compareStage.classList.add(`view-${viewMode}`);
+      canvasSlot.setAttribute('aria-hidden', viewMode === 'canvas' || viewMode === 'diff' ? 'false' : 'true');
+      svgSlot.setAttribute('aria-hidden', viewMode === 'svg' ? 'false' : 'true');
+      syncViewRadios();
+      if (syncUrl) {
+        const u = new URL(location.href);
+        if (viewMode === 'live' && !params.get('view')) {
+          u.searchParams.delete('view');
+        } else {
+          u.searchParams.set('view', viewMode);
+        }
+        history.replaceState(null, '', u);
+      }
+      window.__foFixLab.view = viewMode;
+      updateViewLegend();
+      if (lastInkMarkerRow) renderInkTopMarkers();
+    }
+
+    function cycleView() {
+      if (!hasCanvasPreview && !hasSvgPreview) return;
+      const available = VIEW_MODES.filter((m) => {
+        if (m === 'live') return true;
+        if (m === 'svg') return hasSvgPreview;
+        if (m === 'canvas' || m === 'diff') return hasCanvasPreview;
+        return false;
+      });
+      const idx = Math.max(0, available.indexOf(viewMode));
+      setView(available[(idx + 1) % available.length]);
+    }
+
+    function beginCapture(label = 'Capturing…') {
+      viewBeforeCapture = viewMode;
+      isCapturing = true;
+      window.__foFixLab.capturing = true;
+      compareStage.classList.add('capturing');
+      captureOverlay.textContent = label;
+      captureOverlay.hidden = false;
+      setView('live', { syncUrl: false });
+      viewControls.disabled = true;
+      runOneBtn.disabled = true;
+      runMatrixBtn.disabled = true;
+    }
+
+    function teardownCaptureUi() {
+      isCapturing = false;
+      window.__foFixLab.capturing = false;
+      compareStage.classList.remove('capturing');
+      captureOverlay.hidden = true;
+      runOneBtn.disabled = false;
+      runMatrixBtn.disabled = false;
+      viewControls.disabled = !hasCanvasPreview && !hasSvgPreview;
+    }
+
+    function releaseSvgPreviewUrl() {
+      if (revokeSvgPreviewUrl) {
+        revokeSvgPreviewUrl();
+        revokeSvgPreviewUrl = null;
+      }
+    }
+
+    function clearProbePreviews() {
+      canvasSlot.replaceChildren();
+      svgSlot.replaceChildren();
+      releaseSvgPreviewUrl();
+      hasCanvasPreview = false;
+      hasSvgPreview = false;
+      window.__foFixLab.lastCanvas = null;
+      window.__foFixLab.lastSvg = null;
+      previewMeta = { dpr: 1, cssW: 0, cssH: 0, backingW: 0, backingH: 0 };
+      window.__foFixLab.previewMeta = previewMeta;
+      clearInkTopMarkers();
+      viewControls.disabled = true;
+      showCanvasSanityErrors([]);
+      setView('live', { syncUrl: false });
+      updateViewLegend();
+    }
+
+    /** @param {string} svgText @param {import('./fo-fix-recipes.js').FoFixRecipe | null} [recipe] */
+    function mountSvgPreview(svgText, recipe = null) {
+      releaseSvgPreviewUrl();
+      if (!svgText) {
+        svgSlot.replaceChildren();
+        hasSvgPreview = false;
+        window.__foFixLab.lastSvg = null;
+        return;
+      }
+      const { cssW, cssH } = FIXTURE_PROBE_CSS;
+      const recipeForUrl =
+        recipe ?? getFoFixRecipe(select.value) ?? { rasterPatch: 'none' };
+      const { url, revoke } = labRunner.buildRasterUrl(svgText, recipeForUrl);
+      const img = document.createElement('img');
+      img.className = 'preview-svg';
+      img.alt = 'Captured SVG preview';
+      img.src = url;
+      img.style.width = `${cssW}px`;
+      img.style.height = `${cssH}px`;
+      img.style.maxWidth = 'none';
+      img.style.maxHeight = 'none';
+      img.addEventListener('load', () => {
+        const row = lastInkMarkerRow ?? window.__foFixLastResult;
+        if (row) void applyInkMarkerRow(row);
+      }, { once: true });
+      svgSlot.replaceChildren(img);
+      revokeSvgPreviewUrl = revoke;
+      hasSvgPreview = true;
+      window.__foFixLab.lastSvg = svgText;
+      viewControls.disabled = !hasCanvasPreview && !hasSvgPreview;
+    }
+
+    /** Wait for compare-stage SVG img decode before ink resync (headed probes). */
+    function waitForPreviewInkReady() {
+      const svgImg = svgSlot.querySelector('img.preview-svg');
+      if (!(svgImg instanceof HTMLImageElement)) return Promise.resolve();
+      if (svgImg.complete && svgImg.naturalWidth > 0) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        svgImg.addEventListener('load', () => resolve(), { once: true });
+        svgImg.addEventListener(
+          'error',
+          () => reject(new Error('SVG preview failed to load')),
+          { once: true },
+        );
+      });
+    }
+
+    function cloneCanvas(source) {
+      if (!(source instanceof HTMLCanvasElement)) return null;
+      const copy = document.createElement('canvas');
+      copy.width = source.width;
+      copy.height = source.height;
+      copy.getContext('2d').drawImage(source, 0, 0);
+      if (source.__foFixRasterMeta) {
+        copy.__foFixRasterMeta = { ...source.__foFixRasterMeta };
+      }
+      return copy;
+    }
+
+    function isNearInteger(value, eps = 0.02) {
+      return Math.abs(value - Math.round(value)) <= eps;
+    }
+
+    function fixtureCssSize() {
+      const target = document.getElementById('capture-target');
+      const cssW = target.offsetWidth || target.getBoundingClientRect().width;
+      const cssH = target.offsetHeight || target.getBoundingClientRect().height;
+      return { cssW, cssH };
+    }
+
+    /** Preview + capture dims — always full 500×48 mini nav (Home + Products). */
+    function probeFixtureCssSize() {
+      const measured = fixtureCssSize();
+      return {
+        cssW: FIXTURE_PROBE_CSS.cssW,
+        cssH: FIXTURE_PROBE_CSS.cssH,
+        measured,
+      };
+    }
+
+    function inferProbeDpr(display, cssW, dprHint) {
+      let probeDpr = dprHint ?? window.devicePixelRatio ?? 1;
+      if (!(display instanceof HTMLCanvasElement) || cssW <= 0 || display.width <= 0) {
+        return probeDpr;
+      }
+      const inferred = display.width / cssW;
+      if (!Number.isFinite(inferred) || inferred <= 0.25 || inferred > 8) return probeDpr;
+      const tol = Math.max(2, Math.ceil(Math.max(probeDpr, inferred)));
+      const errReported = Math.abs(display.width - cssW * probeDpr);
+      const errInferred = Math.abs(display.width - cssW * inferred);
+      if (errInferred <= tol && errInferred + 0.5 < errReported) return inferred;
+      return probeDpr;
+    }
+
+    /** Matrix rows are sorted best-first; preview uses full-nav FO raster, not worst row. */
+    function matrixPreviewRow(rows) {
+      if (!Array.isArray(rows) || !rows.length) return null;
+      const fullNavRow = (row) => {
+        if (!row?.canvas) return false;
+        const recipe = getFoFixRecipe(row.recipeId);
+        return (labRunner?.expectedCanvasNavLandmarks?.(recipe) ?? 2) >= 2;
+      };
+      return (
+        rows.find((r) => r.recipeId === 'product-baseline' && r.canvas) ??
+        rows.find(fullNavRow) ??
+        rows[0]
+      );
+    }
+
+    /** @returns {string[]} */
+    function validateCanvasPreview(display, cssW, cssH, dpr) {
+      const errors = [];
+      if (!(display instanceof HTMLCanvasElement)) {
+        errors.push('Preview mount rejected: expected HTMLCanvasElement raster, not SVG/img/text.');
+        return errors;
+      }
+      const expW = Math.max(1, Math.round(cssW * dpr));
+      const expH = Math.max(1, Math.round(cssH * dpr));
+      const tol = Math.max(2, Math.ceil(dpr));
+      if (
+        Math.abs(display.width - expW) > tol ||
+        Math.abs(display.height - expH) > tol
+      ) {
+        errors.push(
+          `Canvas backing ${display.width}×${display.height} ≠ expected ~${expW}×${expH} ` +
+            `(fixture ${Math.round(cssW)}×${Math.round(cssH)} CSS px @ dpr=${dpr}).`,
+        );
+      }
+      const fixtureAspect = cssW / Math.max(1, cssH);
+      const backingAspect = display.width / Math.max(1, display.height);
+      if (Math.abs(fixtureAspect - backingAspect) / fixtureAspect > 0.12) {
+        errors.push(
+          `Aspect mismatch: backing ${backingAspect.toFixed(3)} vs fixture ${fixtureAspect.toFixed(3)}.`,
+        );
+      }
+      const styleW = parseFloat(display.style.width);
+      const styleH = parseFloat(display.style.height);
+      if (
+        (styleW > 0 && Math.abs(styleW - display.width) < 1 && display.width > cssW * 1.5) ||
+        (styleH > 0 && Math.abs(styleH - display.height) < 1 && display.height > cssH * 1.5)
+      ) {
+        errors.push(
+          'Canvas CSS size matches device pixels — preview would upscale/blur. Use fixture CSS px only.',
+        );
+      }
+      return errors;
+    }
+
+    function showCanvasSanityErrors(errors) {
+      if (!errors.length) {
+        canvasSanityError.textContent = '';
+        canvasSanityError.classList.remove('visible');
+        return;
+      }
+      canvasSanityError.textContent =
+        'Canvas preview problem:\n' + errors.map((e) => `• ${e}`).join('\n');
+      canvasSanityError.classList.add('visible');
+    }
+
+    /** @param {HTMLCanvasElement['__foFixRasterMeta'] | undefined} meta @param {import('./fo-fix-recipes.js').FoFixRecipe | null} [recipe] @param {number} [navInkCount] */
+    function showCanvasRasterHint(meta, recipe = null, navInkCount = null) {
+      if (!canvasRasterHint) return;
+      const expected =
+        recipe && labRunner?.expectedCanvasNavLandmarks
+          ? labRunner.expectedCanvasNavLandmarks(recipe)
+          : 2;
+      if (
+        navInkCount != null &&
+        navInkCount < expected &&
+        recipe?.radicalPatch &&
+        recipe.radicalPatch !== 'fillText-replace'
+      ) {
+        canvasRasterHint.textContent =
+          `Canvas shows ${navInkCount} of ${expected} nav links for this recipe. Switch to Live for the full nav.`;
+        canvasRasterHint.classList.add('visible');
+        canvasRasterHint.hidden = false;
+        return;
+      }
+      if (meta?.scaleDownUp && meta.probeScale > 0 && meta.probeScale < 1) {
+        const inv = 1 / meta.probeScale;
+        canvasRasterHint.textContent =
+          `Canvas was rasterized at ${Math.round(meta.probeScale * 100)}% scale then enlarged — preview may look soft.`;
+        canvasRasterHint.classList.add('visible');
+        canvasRasterHint.hidden = false;
+        return;
+      }
+      canvasRasterHint.textContent = '';
+      canvasRasterHint.classList.remove('visible');
+      canvasRasterHint.hidden = true;
+    }
+
+    function resolvePreviewViewAfterMount(recipe = null) {
+      const expectedNav =
+        recipe && labRunner?.expectedCanvasNavLandmarks
+          ? labRunner.expectedCanvasNavLandmarks(recipe)
+          : 2;
+      const canvasShowsFullNav = expectedNav >= 2;
+      if (autoRun && !params.get('view')) {
+        pendingInitialView = null;
+        return canvasShowsFullNav ? 'canvas' : 'live';
+      }
+      if (pendingInitialView) {
+        const intent = pendingInitialView;
+        pendingInitialView = null;
+        if ((intent === 'canvas' || intent === 'diff') && !canvasShowsFullNav) return 'live';
+        return intent;
+      }
+      if (viewBeforeCapture !== 'live') return viewBeforeCapture;
+      if (hasCanvasPreview && canvasShowsFullNav) return 'canvas';
+      if (hasSvgPreview && canvasShowsFullNav) return 'svg';
+      return 'live';
+    }
+
+    function mountCanvasPreview(sourceCanvas, { dpr, recipe = null, navInkCount = null } = {}) {
+      if (!sourceCanvas) {
+        hasCanvasPreview = false;
+        window.__foFixLab.lastCanvas = null;
+        showCanvasRasterHint(undefined);
+        if (!hasSvgPreview) clearProbePreviews();
+        else {
+          canvasSlot.replaceChildren();
+          showCanvasSanityErrors([]);
+          showCanvasRasterHint(undefined);
+          updateViewLegend();
+        }
+        return;
+      }
+
+      if (!(sourceCanvas instanceof HTMLCanvasElement)) {
+        showCanvasSanityErrors([
+          `Preview mount rejected: got <${sourceCanvas?.tagName?.toLowerCase() ?? '?'}> — ` +
+            'expected painted canvas from runFoFixProbe (not SVG data URL / text).',
+        ]);
+        return;
+      }
+
+      const { cssW, cssH, measured } = probeFixtureCssSize();
+      const meta = sourceCanvas.__foFixRasterMeta;
+
+      const display = cloneCanvas(sourceCanvas);
+      if (!display) {
+        showCanvasSanityErrors(['Failed to clone probe canvas for preview.']);
+        return;
+      }
+
+      const probeDpr = inferProbeDpr(display, cssW, dpr ?? meta?.dpr);
+
+      display.classList.add('preview-canvas');
+      if (isNearInteger(probeDpr)) display.classList.add('crisp');
+      display.style.width = `${cssW}px`;
+      display.style.height = `${cssH}px`;
+      display.style.maxWidth = 'none';
+      display.style.maxHeight = 'none';
+
+      const sanityErrors = validateCanvasPreview(display, cssW, cssH, probeDpr);
+      if (
+        measured.cssW > 0 &&
+        Math.abs(measured.cssW - FIXTURE_PROBE_CSS.cssW) > 2
+      ) {
+        sanityErrors.push(
+          `Live #capture-target measures ${Math.round(measured.cssW)}×${Math.round(measured.cssH)} CSS px — ` +
+            `expected ${FIXTURE_PROBE_CSS.cssW}×${FIXTURE_PROBE_CSS.cssH} mini nav.`,
+        );
+      }
+      showCanvasSanityErrors(sanityErrors);
+      showCanvasRasterHint(meta, recipe, navInkCount);
+
+      canvasSlot.replaceChildren(display);
+
+      previewMeta = {
+        dpr: probeDpr,
+        cssW,
+        cssH,
+        backingW: display.width,
+        backingH: display.height,
+      };
+      window.__foFixLab.previewMeta = previewMeta;
+      hasCanvasPreview = true;
+      window.__foFixLab.lastCanvas = display;
+      viewControls.disabled = !hasCanvasPreview && !hasSvgPreview;
+      setView(resolvePreviewViewAfterMount(recipe), { syncUrl: true });
+      const rowAfterCanvas = lastInkMarkerRow ?? window.__foFixLastResult;
+      if (rowAfterCanvas) {
+        requestAnimationFrame(() => {
+          void applyInkMarkerRow(rowAfterCanvas);
+        });
+      }
+    }
+
+    /** @param {EventTarget | null} target */
+    function isKeyboardShortcutBlocked(target) {
+      const t = /** @type {HTMLElement | null} */ (target);
+      if (!t) return false;
+      if (t.isContentEditable) return true;
+      const tag = t.tagName;
+      if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+      if (tag === 'INPUT') {
+        const input = /** @type {HTMLInputElement} */ (t);
+        const type = (input.type || 'text').toLowerCase();
+        if (type !== 'radio' && type !== 'checkbox' && type !== 'button') return true;
+      }
+      return false;
+    }
+
+    /** Mod key for lab shortcuts — Ctrl on all platforms (⌘+digit switches browser tabs). */
+    function viewModKeyActive(e) {
+      return e.ctrlKey && !e.metaKey && !e.altKey;
+    }
+
+    function actionModKeyActive(e) {
+      return (e.ctrlKey || e.metaKey) && !e.altKey;
+    }
+
+    function handleLabKeydown(e) {
+      if (isKeyboardShortcutBlocked(e.target)) return;
+
+      const key = e.key;
+      if (key.toLowerCase() === 'v' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        cycleView();
+        return;
+      }
+
+      if (viewModKeyActive(e) && !e.shiftKey) {
+        const mode = VIEW_BY_DIGIT[key];
+        if (mode) {
+          e.preventDefault();
+          pendingInitialView = null;
+          setView(mode);
+          return;
+        }
+      }
+
+      if (actionModKeyActive(e) && key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          if (!runMatrixBtn.disabled) runMatrixBtn.click();
+        } else if (!runOneBtn.disabled) {
+          runOneBtn.click();
+        }
+      }
+    }
+
+    function bindViewControls() {
+      for (const input of viewRadios()) {
+        input.addEventListener('change', () => {
+          if (input.checked) {
+            pendingInitialView = null;
+            setView(input.value);
+          }
+        });
+      }
+      document.addEventListener('keydown', handleLabKeydown, true);
+      syncViewRadios();
+      setView(viewMode, { syncUrl: false });
+      updateViewLegend();
+    }
+
+    function markDone(error = null) {
+      window.__foFixLab.done = true;
+      window.__foFixLab.error = error;
+      if (error) window.__foFixError = error;
+    }
+
+    function showBootError(message) {
+      bootError.textContent = message;
+      bootError.classList.add('visible');
+      result.textContent = message;
+      markDone(message);
+    }
+
+    function setProgress(text) {
+      progressEl.textContent = text;
+      progressEl.classList.add('visible');
+      window.__foFixLab.progress = text;
+    }
+
+    function clearProgress() {
+      progressEl.textContent = '';
+      progressEl.classList.remove('visible');
+      window.__foFixLab.progress = null;
+    }
+
+    async function ensureSnapdomBundle() {
+      const res = await fetch('/dist/snapdom.mjs', { method: 'HEAD' });
+      if (!res.ok) {
+        throw new Error(
+          `Missing /dist/snapdom.mjs (HTTP ${res.status}).\n` +
+            'Run: npm run compile\n' +
+            'Or use: npm run debug:fo-fix-lab (compile + headed Chrome runner).',
+        );
+      }
+    }
+
+    const RECIPE_BOOT_MIN = 10;
+
+    function dedupeRecipesById(list) {
+      const seen = new Set();
+      const out = [];
+      for (const r of list) {
+        if (!r?.id || seen.has(r.id)) continue;
+        seen.add(r.id);
+        out.push(r);
+      }
+      return out;
+    }
+
+    /** Recipe dropdown: active recipes + URL recipe/ids (never full archived list — matrix uses includeInactive separately). */
+    function filterRecipesForDropdown(category = '') {
+      const cat = (category || '').trim();
+      const base = cat
+        ? filterFoFixRecipes({ category: cat, includeInactive: false })
+        : FO_FIX_RECIPES.filter((r) => isFoFixRecipeActive(r));
+      const seen = new Set();
+      const out = [];
+      for (const r of base) {
+        if (!r?.id || seen.has(r.id)) continue;
+        seen.add(r.id);
+        out.push(r);
+      }
+      const urlRecipe = params.get('recipe');
+      const urlIds = getUrlIds();
+      const extraIds = new Set();
+      if (urlRecipe?.trim()) extraIds.add(urlRecipe.trim());
+      for (const id of urlIds ?? []) extraIds.add(id);
+      if (params.get('includeInactive') === '1') {
+        for (const r of FO_FIX_RECIPES) {
+          if (!extraIds.has(r.id) || seen.has(r.id)) continue;
+          seen.add(r.id);
+          out.push(r);
+        }
+      }
+      return out;
+    }
+
+    function recipesForDropdown(category = '') {
+      let list = dedupeRecipesById(filterRecipesForDropdown(category));
+      // Empty category filter → fall back to all active, never the full archived list.
+      if (!list.length && category) list = dedupeRecipesById(filterRecipesForDropdown(''));
+      return list;
+    }
+
+    function getUrlIds() {
+      const idsRaw = params.get('ids');
+      return idsRaw ? idsRaw.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+    }
+
+    function effectiveRecipeForRun(base) {
+      const recipe =
+        base ?? getFoFixRecipe(select.value) ?? { id: select.value, rasterPatch: 'none' };
+      if (labRunner?.resolveEffectiveLabRecipe) {
+        return labRunner.resolveEffectiveLabRecipe(recipe, {
+          fork: (labForkSelect?.value ?? '').trim(),
+          patch: (rasterPatchSelect?.value ?? '').trim(),
+        });
+      }
+      const fork = (labForkSelect?.value ?? '').trim();
+      const patch = (rasterPatchSelect?.value ?? '').trim();
+      const out = { ...recipe };
+      const decodeForkId = recipe?.labToCanvasOpts?.rasterOnlySvgPatch;
+      if (fork) out.rasterPatch = fork;
+      else if (decodeForkId) out.rasterPatch = 'lab-toCanvas';
+      else if (patch) out.rasterPatch = patch;
+      return out;
+    }
+
+    function syncRasterUrlParams() {
+      const u = new URL(location.href);
+      const fork = (labForkSelect?.value ?? '').trim();
+      const patch = (rasterPatchSelect?.value ?? '').trim();
+      if (fork) u.searchParams.set('fork', fork);
+      else u.searchParams.delete('fork');
+      if (patch && !fork) u.searchParams.set('patch', patch);
+      else u.searchParams.delete('patch');
+      history.replaceState(null, '', u);
+    }
+
+    function applyRecipeSelectionFromUrl() {
+      const urlRecipe = params.get('recipe');
+      if (
+        urlRecipe &&
+        getFoFixRecipe(urlRecipe) &&
+        [...select.options].some((o) => o.value === urlRecipe)
+      ) {
+        select.value = urlRecipe;
+      } else if ([...select.options].some((o) => o.value === 'product-baseline')) {
+        select.value = 'product-baseline';
+      }
+    }
+
+    async function boot() {
+      try {
+        await ensureSnapdomBundle();
+        /** Bust ES module cache on lab reload (headed dev sessions stay open a long time). */
+        const labModV = Date.now();
+        const [snapdomMod, , runnerMod, recipesMod, metricsMod, inkScanMod] = await Promise.all([
+          import('/dist/snapdom.mjs'),
+          import(`./fo-fix-monkeypatch.js?v=${labModV}`),
+          import(`./fo-fix-lab-runner.js?v=${labModV}`),
+          import(`./fo-fix-recipes.js?v=${labModV}`),
+          import(`./fo-landmark-ink-metrics.mjs?v=${labModV}`),
+          import(`./fo-ink-bounds-scan.mjs?v=${labModV}`),
+        ]);
+        const trimMod = await import('image-trim');
+        inkScanMod.registerImageTrimGetBorders(trimMod.getBorders);
+        await inkScanMod.ensureInkScanBackend('image-trim');
+        inkScanMod.ensureInkScanBackend('opencv', { timeoutMs: 120_000 }).catch((err) => {
+          console.warn('[fo-fix-lab] opencv preload:', err?.message || err);
+        });
+        snapdom = snapdomMod.snapdom;
+        window.snapdom = snapdom;
+        labRunner = runnerMod;
+        window.__foFixLabRunner = labRunner;
+        computeLandmarkInkMetrics = metricsMod.computeLandmarkInkMetrics;
+        applyLandmarkInkMetricsToRow = metricsMod.applyLandmarkInkMetricsToRow;
+        formatStageHigherOnScreenPhrase = metricsMod.formatStageHigherOnScreenPhrase;
+        formatStageVsLivePhraseFromModule = metricsMod.formatStageVsLivePhrase;
+        formatCanvasVsSvgLine = metricsMod.formatCanvasVsSvgLine;
+        formatLabRowStageYLine = metricsMod.formatLabRowStageYLineInk ?? metricsMod.formatLabRowStageYLine;
+        formatViewportCheckVerdict = metricsMod.formatViewportCheckVerdict;
+        formatViewportCheckMetrics = metricsMod.formatViewportCheckMetrics;
+        rootYToPreviewViewportStretch = metricsMod.rootYToPreviewViewportStretch;
+        UI_INK_ALIGNED_THRESHOLD_PX = metricsMod.UI_INK_ALIGNED_THRESHOLD_PX;
+        ({
+          FO_FIX_RECIPES,
+          REJECTED_HYPOTHESES,
+          getFoFixRecipe,
+          listFoFixCategories,
+          filterFoFixRecipes,
+          resolveFoFixMatrixRecipes,
+          bestPromotableMatrixRow,
+          matrixExcludesTextBypass,
+          isFoFixRecipeActive,
+          FO_FIX_ACTIVE_COUNT,
+          FO_FIX_INACTIVE_COUNT,
+        } = recipesMod);
+
+        window.__foFixLab.inkMetricsRev = 'canvas-svg-viewport-v7';
+        window.__foFixLab.canonicalComparableInk = canonicalComparableInk;
+        console.info('[fo-fix-lab] ink metrics', window.__foFixLab.inkMetricsRev, 'mod', labModV);
+        const parityHint = document.querySelector('#viewport-check-panel .hint');
+        const revEl = document.getElementById('ink-metrics-rev');
+        if (parityHint && window.__foFixLab.inkMetricsRev) {
+          parityHint.dataset.inkMetricsRev = window.__foFixLab.inkMetricsRev;
+        }
+        if (revEl && window.__foFixLab.inkMetricsRev) {
+          revEl.hidden = false;
+          revEl.textContent = ` · ink metrics ${window.__foFixLab.inkMetricsRev}`;
+        }
+
+        const recipeCount = FO_FIX_RECIPES.length;
+        console.info('[fo-fix-lab] FO_FIX_RECIPES.length =', recipeCount);
+        if (!Array.isArray(FO_FIX_RECIPES) || recipeCount < RECIPE_BOOT_MIN) {
+          const message =
+            `FO_FIX_RECIPES boot failure: expected hundreds of recipes, got ${recipeCount}. ` +
+            'Check fo-fix-recipes.js loads (syntax error or stale cache). Hard-refresh the lab page.';
+          console.error('[fo-fix-lab]', message);
+          throw new Error(message);
+        }
+
+        for (const cat of listFoFixCategories()) {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = cat;
+          categoryFilter.appendChild(opt);
+        }
+        const urlCategory = params.get('category');
+        if (urlCategory && [...categoryFilter.options].some((o) => o.value === urlCategory)) {
+          categoryFilter.value = urlCategory;
+        }
+
+        populateRecipeSelect(categoryFilter.value);
+        applyRecipeSelectionFromUrl();
+
+        labRunner.populateLabRasterSelects(labForkSelect, rasterPatchSelect, {
+          includeRecipeDefault: true,
+          fork: params.get('fork') ?? '',
+          patch: params.get('patch') ?? '',
+          defaultFork: '',
+          defaultPatch: '',
+        });
+        labForkSelect.addEventListener('change', () => syncRasterUrlParams());
+        rasterPatchSelect.addEventListener('change', () => syncRasterUrlParams());
+
+        if (labDebug) radicalWarning.hidden = false;
+
+        categoryFilter.addEventListener('change', () => {
+          populateRecipeSelect(categoryFilter.value);
+          applyRecipeSelectionFromUrl();
+          const u = new URL(location.href);
+          if (categoryFilter.value) u.searchParams.set('category', categoryFilter.value);
+          else u.searchParams.delete('category');
+          history.replaceState(null, '', u);
+        });
+
+        exportJsonBtn.addEventListener('click', exportMatrixJson);
+
+        const visualInspectPanel = document.getElementById('visual-inspect-panel');
+        const visualInspectStrip = document.getElementById('visual-inspect-strip');
+        const visualInspectPrompt = document.getElementById('visual-inspect-prompt');
+        const visualInspectCopy = document.getElementById('visual-inspect-copy');
+        const visualInspectBtn = document.getElementById('visual-inspect-btn');
+
+        async function loadVisualInspectPromptTemplate() {
+          try {
+            const res = await fetch('/__localtests__/fo-llm-visual-compare-prompt.md');
+            if (!res.ok) throw new Error(String(res.status));
+            return await res.text();
+          } catch {
+            return [
+              '# FO lab visual compare (attach live/svg/canvas PNGs)',
+              '',
+              'Recipe: {{RECIPE_A}}',
+              'Is SVG/canvas block row higher or lower on screen than live? (~px, include Y Δ)',
+            ].join('\n');
+          }
+        }
+
+        /** @param {'live'|'svg'|'canvas'} view */
+        async function captureVisualInspectThumb(view) {
+          setView(view, { syncUrl: false });
+          await new Promise((r) => setTimeout(r, view === 'svg' ? 420 : 320));
+          if (lastInkMarkerRow) applyInkMarkerRow(lastInkMarkerRow);
+          if (view === 'canvas') {
+            const c = canvasSlot.querySelector('canvas.preview-canvas');
+            if (c instanceof HTMLCanvasElement && c.width > 0) {
+              try {
+                return c.toDataURL('image/png');
+              } catch {
+                return null;
+              }
+            }
+            return null;
+          }
+          if (view === 'svg') {
+            const img = svgSlot.querySelector('img.preview-svg');
+            return img instanceof HTMLImageElement && img.src ? img.src : null;
+          }
+          const target = document.getElementById('capture-target');
+          if (target && typeof snapdom === 'function') {
+            try {
+              const c = await snapdom.toCanvas(target, { scale: 1, dpr: 1 });
+              if (c instanceof HTMLCanvasElement && c.width > 0) {
+                return c.toDataURL('image/png');
+              }
+            } catch {
+              /* fall through */
+            }
+          }
+          return null;
+        }
+
+        async function openVisualInspectPanel() {
+          const row = window.__foFixLastResult;
+          if (!row?.recipeId) {
+            status.textContent = 'Run a recipe first, then Visual inspect.';
+            return;
+          }
+          status.textContent = 'Visual inspect: capturing live / svg / canvas…';
+          visualInspectBtn.disabled = true;
+          try {
+            const thumbs = {};
+            for (const v of ['live', 'svg', 'canvas']) {
+              thumbs[v] = await captureVisualInspectThumb(v);
+            }
+            setView(viewMode, { syncUrl: false });
+            visualInspectStrip.replaceChildren();
+            for (const v of ['live', 'svg', 'canvas']) {
+              const fig = document.createElement('figure');
+              fig.style.margin = '0';
+              fig.style.textAlign = 'center';
+              const cap = document.createElement('figcaption');
+              cap.style.font = '11px ui-monospace,monospace';
+              cap.textContent = v;
+              fig.appendChild(cap);
+              if (thumbs[v]) {
+                const img = document.createElement('img');
+                img.alt = `${row.recipeId}-${v}`;
+                img.src = thumbs[v];
+                img.style.height = '96px';
+                img.style.width = 'auto';
+                img.style.border = '1px solid #ccc';
+                img.style.imageRendering = 'pixelated';
+                fig.insertBefore(img, cap);
+              } else {
+                const miss = document.createElement('p');
+                miss.style.font = '11px system-ui,sans-serif';
+                miss.style.color = '#64748b';
+                miss.textContent = '—';
+                fig.insertBefore(miss, cap);
+              }
+              visualInspectStrip.appendChild(fig);
+            }
+            const artifactDir = `__localtests__/artifacts/fo-llm-visual-compare/${row.recipeId.replace(/[^a-zA-Z0-9._-]+/g, '_')}`;
+            const hint = document.createElement('p');
+            hint.className = 'hint';
+            hint.style.margin = '8px 0 0';
+            hint.innerHTML = `Saved PNGs (CLI): <code>${artifactDir}/</code>live|svg|canvas.png · <code>npm run debug:fo-llm-visual-compare</code>`;
+            visualInspectStrip.appendChild(hint);
+            const template = await loadVisualInspectPromptTemplate();
+            const m = canonicalComparableInk(row);
+            const stripDesc = `**${row.recipeId}** — columns live, svg, canvas (in-page thumbs above).`;
+            const prompt = template
+              .replace('{{STRIP_DESCRIPTION}}', stripDesc)
+              .replace(/\{\{RECIPE_A\}\}/g, row.recipeId)
+              .replace(/\{\{RECIPE_B\}\}/g, row.recipeId);
+            const metricsNote = m
+              ? `\n\n## Layout tops (diagnostic only)\n\nLive ${fmtInkNum(m.liveRoot)} · SVG ${fmtInkNum(m.svgRoot)} · Canvas ${fmtInkNum(m.canvasRoot)}\n${formatStageVsLivePhrase('SVG', m.svgHigherOnScreenPx, undefined, { ink: false })} · ${formatStageVsLivePhrase('Canvas', m.canvasHigherOnScreenPx, undefined, { ink: false })}`
+              : '';
+            visualInspectPrompt.value = `${prompt}${metricsNote}`;
+            visualInspectPanel.hidden = false;
+            visualInspectPanel.open = true;
+            status.textContent = '';
+          } finally {
+            visualInspectBtn.disabled = false;
+          }
+        }
+
+        if (visualInspectBtn) {
+          visualInspectBtn.addEventListener('click', () => {
+            openVisualInspectPanel().catch((err) => {
+              status.textContent = String(err?.message || err);
+            });
+          });
+        }
+        if (visualInspectCopy && visualInspectPrompt) {
+          visualInspectCopy.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(visualInspectPrompt.value);
+              status.textContent = 'Prompt copied.';
+            } catch {
+              visualInspectPrompt.select();
+              document.execCommand('copy');
+              status.textContent = 'Prompt copied (fallback).';
+            }
+          });
+        }
+
+        result.textContent = 'Select a recipe and click Run.';
+        bindViewControls();
+        document.getElementById('run-one').addEventListener('click', runOne);
+        document.getElementById('run-matrix').addEventListener('click', () => {
+          const category = categoryFilter.value || undefined;
+          const includeInactive = params.get('includeInactive') === '1';
+          const includeTextBypass = params.get('includeTextBypass') === '1';
+          const excludeTextBypass =
+            params.get('excludeTextBypass') === '1' || params.get('noTextBypass') === '1';
+          runMatrix({ category, includeTextBypass, excludeTextBypass, includeInactive });
+        });
+
+        const matrix = params.get('matrix') === '1';
+        const limitRaw = params.get('limit');
+        const limit = limitRaw != null ? Number(limitRaw) : undefined;
+        const offsetRaw = params.get('offset');
+        const offset = offsetRaw != null ? Number(offsetRaw) : undefined;
+        const ids = getUrlIds();
+        const category = params.get('category') || undefined;
+        const includeInactive = params.get('includeInactive') === '1';
+        const includeTextBypass = params.get('includeTextBypass') === '1';
+        const excludeTextBypass =
+          params.get('excludeTextBypass') === '1' || params.get('noTextBypass') === '1';
+        const urlRecipe = params.get('recipe');
+        const calibrate = params.get('calibrate') === '1';
+        applyLandmarkFromUrl();
+        const calibrateLandmarks = (params.get('landmarks') || params.get('landmark') || FIXTURE_LANDMARK)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (calibrate && matrix) {
+          window.__foFixLab.mode = 'calibrate';
+          runCalibrate({
+            limit,
+            offset,
+            ids,
+            category,
+            landmarks: calibrateLandmarks,
+            includeTextBypass,
+            excludeTextBypass,
+            includeInactive,
+          });
+        } else if (matrix) {
+          window.__foFixLab.mode = 'matrix';
+          runMatrix({ limit, offset, ids, category, includeTextBypass, excludeTextBypass, includeInactive });
+        } else if (params.get('recipe') && autoRun) {
+          window.__foFixLab.mode = 'recipe';
+          runOne();
+        }
+
+        console.info(
+          `[fo-fix-lab] ${FO_FIX_RECIPES.length} recipes loaded (${FO_FIX_ACTIVE_COUNT} active, ${FO_FIX_INACTIVE_COUNT} inactive); dropdown ${select.options.length} options`,
+        );
+        console.info('[fo-fix-lab] rejected hypotheses:', REJECTED_HYPOTHESES);
+      } catch (err) {
+        const message = String(err?.stack || err);
+        showBootError(message);
+        console.error('[fo-fix-lab] boot failed:', err);
+      }
+    }
+
+    function matrixBypassOpts(category, ids) {
+      const includeInactive = params.get('includeInactive') === '1';
+      const includeTextBypass = params.get('includeTextBypass') === '1';
+      const excludeTextBypass =
+        params.get('excludeTextBypass') === '1' || params.get('noTextBypass') === '1';
+      const purgeBottomRaw = params.get('purgeBottom') || params.get('purgeBottomFraction');
+      const purgeBottomFraction =
+        purgeBottomRaw != null && purgeBottomRaw !== '' ? Number(purgeBottomRaw) : undefined;
+      const shardCountRaw = params.get('shardCount');
+      const shardIndexRaw = params.get('shardIndex');
+      const shardCount = shardCountRaw != null ? Number(shardCountRaw) : undefined;
+      const shardIndex = shardIndexRaw != null ? Number(shardIndexRaw) : undefined;
+      return {
+        excludeTextBypass: excludeTextBypass || undefined,
+        includeTextBypass: includeTextBypass || undefined,
+        includeInactive: includeInactive || undefined,
+        purgeBottomFraction: Number.isFinite(purgeBottomFraction) ? purgeBottomFraction : undefined,
+        shardCount: Number.isFinite(shardCount) ? shardCount : undefined,
+        shardIndex: Number.isFinite(shardIndex) ? shardIndex : undefined,
+        category,
+        ids,
+      };
+    }
+
+    /** @param {{ limit?: number, offset?: number, ids?: string[], category?: string }} [opts] */
+    function resolveMatrixRecipes(opts = {}) {
+      const { limit, offset, ids, category } = opts;
+      return resolveFoFixMatrixRecipes({
+        limit,
+        offset,
+        ids,
+        category,
+        ...matrixBypassOpts(category, ids),
+      });
+    }
+
+    function populateRecipeSelect(category = '') {
+      const prev = select.value;
+      select.replaceChildren();
+      const list = recipesForDropdown(category);
+      for (const r of list) {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        const inactiveSuffix =
+          params.get('includeInactive') === '1' && !isFoFixRecipeActive(r) ? ' [inactive]' : '';
+        opt.textContent = `${r.id} — ${r.label}${r.category ? ` [${r.category}]` : ''}${inactiveSuffix}`;
+        select.appendChild(opt);
+      }
+      select.dataset.recipeCount = String(list.length);
+      const urlRecipe = params.get('recipe');
+      if (urlRecipe && list.some((r) => r.id === urlRecipe)) {
+        select.value = urlRecipe;
+      } else if (prev && list.some((r) => r.id === prev)) {
+        select.value = prev;
+      } else if (list.some((r) => r.id === 'product-baseline')) {
+        select.value = 'product-baseline';
+      }
+    }
+
+    function exportMatrixJson() {
+      const rows = window.__foFixMatrix;
+      if (!Array.isArray(rows) || !rows.length) return;
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        baselineCanvasDeltaY: baselineDeltaTop,
+        deltaLegend: INK_DELTA_Y_LEGEND,
+        landmark: rows[0]?.landmark ?? FIXTURE_LANDMARK,
+        rows: rows.map((row) => {
+          const m = computeLandmarkInkMetrics(row);
+          return {
+            recipeId: row.recipeId,
+            liveInkTopPx: m.liveTop,
+            svgPreviewVisibleTopPx: m.svgTop,
+            canvasPreviewVisibleTopPx: m.canvasTop,
+            deltaSvgVsLive: m.deltaSvgVsLive,
+            deltaCanvasVsLive: m.deltaCanvasVsLive,
+            pass: m.pass,
+            dpr: row.dpr,
+          };
+        }),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `fo-fix-matrix-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function fmtSignedPx(v) {
+      if (v == null) return '—'
+      const n = fmtInkNum(v)
+      return v > 0 ? `+${n}px` : `${n}px`
+    }
+
+    function fmtRow(row) {
+      const c = canonicalComparableInk(row);
+      const m = typeof computeLandmarkInkMetrics === 'function' ? computeLandmarkInkMetrics(row) : null;
+      const inkEps = m?.inkCheckThresholdPx ?? UI_INK_ALIGNED_THRESHOLD_PX ?? 0.5;
+      const canvasVsSvgLine =
+        m && typeof formatCanvasVsSvgLine === 'function'
+          ? formatCanvasVsSvgLine(m, inkEps)
+          : null;
+      const lines = [
+        `Recipe: ${row.recipeId}`,
+        `Landmark: ${c?.landmark ?? row.landmark}`,
+        typeof formatLabRowStageYLine === 'function'
+          ? formatLabRowStageYLine(m)
+          : `Live Y: ${fmtInkNum(m?.liveTop ?? c?.liveRoot)} | SVG Y: ${fmtInkNum(m?.svgTop ?? c?.svgRoot)} | Canvas Y: ${fmtInkNum(m?.canvasTop ?? c?.canvasRoot)}`,
+        `SVG ΔY: ${fmtDeltaY(m?.deltaSvgVsLive ?? c?.svgVsLive)}`,
+        `Canvas ΔY: ${fmtDeltaY(m?.deltaCanvasVsLive ?? c?.canvasVsLive)}`,
+      ];
+      if (canvasVsSvgLine) lines.push(canvasVsSvgLine);
+      lines.push(
+        `Ink aligned (ε ${inkEps}px): ${m?.inkUiAligned ? 'yes' : 'no'}`,
+        `Ink pass: ${m?.pass ? 'yes' : 'no'}`,
+      );
+      if (Number.isFinite(row.bandScanCanvasPaintedTopInBorder)) {
+        lines.push(
+          `[debug] Band-scan canvas: ${fmtInkNum(row.bandScanCanvasPaintedTopInBorder)} px (probe band, not preview)`,
+        );
+      }
+      if (row.rasterForkWarning) {
+        lines.push(`Warning: ${row.rasterForkWarning}`)
+      }
+      return lines.join('\n')
+    }
+
+    /** @param {object | null | undefined} row */
+    function updateDebugPanel(row) {
+      if (!debugPanel || !debugPanelBody) return;
+      if (!row?.recipeId) {
+        debugPanel.hidden = true;
+        debugPanelBody.replaceChildren();
+        return;
+      }
+      const audit = row.rasterForkAudit;
+      const mInk =
+        typeof computeLandmarkInkMetrics === 'function' ? computeLandmarkInkMetrics(row) : null;
+      const lines = [
+        `Recipe: ${row.recipeId}`,
+        `Patch: ${audit?.patchId ?? row.textForkDebug?.patchId ?? '—'}`,
+        `Raster: ${audit?.rasterPatchUsed ?? '—'}`,
+      ];
+      if (audit?.patchId) {
+        const applied = audit.patchApplied ? 'yes' : audit.patchApplied === false ? 'no' : '?';
+        lines.push(`Patch applied: ${applied}`);
+        if (Number.isFinite(audit.foYDeltaPx)) {
+          lines.push(`Vertical shift: ${fmtInkNum(audit.foYDeltaPx)} px`);
+        }
+      }
+      if (mInk?.metricMode === 'ink' && Number.isFinite(mInk.liveTop)) {
+        lines.push('', 'Ink (#capture-target root px — same as stage table + #metrics):');
+        lines.push(
+          `  Live ${fmtInkNum(mInk.liveTop)} · SVG ${fmtInkNum(mInk.svgTop)} · Canvas ${fmtInkNum(mInk.canvasTop)}`,
+        );
+        if (typeof formatViewportCheckVerdict === 'function') {
+          for (const line of formatViewportCheckVerdict(mInk).split('\n')) {
+            lines.push(`  ${line}`);
+          }
+        }
+        if (baselineDeltaTop != null && row.recipeId !== 'product-baseline') {
+          lines.push(`  Baseline canvas ΔY: ${fmtDeltaY(baselineDeltaTop)}`);
+        }
+      }
+      debugPanelBody.replaceChildren();
+      const pre = document.createElement('pre');
+      pre.className = 'debug-panel-body';
+      pre.style.margin = '0';
+      pre.style.whiteSpace = 'pre-wrap';
+      pre.textContent = lines.join('\n');
+      debugPanelBody.appendChild(pre);
+      if (row.rasterForkWarning) {
+        const warn = document.createElement('p');
+        warn.className = 'debug-warn';
+        warn.textContent = `⚠ ${row.rasterForkWarning}`;
+        debugPanelBody.appendChild(warn);
+      }
+      debugPanel.hidden = false;
+      debugPanel.open = !!row.rasterForkWarning || audit?.patchApplied === false;
+    }
+
+    function renderMatrix(rows) {
+      const baselineRow = rows.find((r) => r.recipeId === 'product-baseline');
+      baselineDeltaTop = baselineRow
+        ? computeLandmarkInkMetrics(baselineRow).deltaCanvasVsLive
+        : null;
+      exportJsonBtn.disabled = !rows.length;
+      if (!matrixWrap) return;
+      const textOnlyMode = params.get('textOnly') === '1';
+      const deltaTitle = INK_DELTA_Y_LEGEND;
+
+      const table = document.createElement('table');
+      table.className = 'matrix';
+      table.innerHTML = `<thead><tr>
+        <th>Recipe</th>
+        <th title="${deltaTitle}">SVG ΔY</th>
+        <th title="${deltaTitle}">Canvas ΔY</th>
+        ${textOnlyMode ? '<th>Line height</th><th>Text patch</th>' : ''}
+        <th>Pass</th>
+      </tr></thead>`;
+      const tbody = document.createElement('tbody');
+      for (const row of rows) {
+        const m = computeLandmarkInkMetrics(row);
+        const tf = row.textForkDebug;
+        let forkCol = '';
+        if (textOnlyMode) {
+          const liveLh = tf?.liveLineHeightPx?.toFixed(1) ?? '—';
+          let forkLabel = '—';
+          if (tf?.patchId) {
+            if (tf.textCssNoOp) forkLabel = 'no-op (lh already correct)';
+            else if (tf.styleInjectChanged) forkLabel = `inject +${(tf.injectedLhRulesAdded || []).length}`;
+            else if (tf.svgStringChanged) forkLabel = 'bytes changed';
+            else forkLabel = 'unchanged';
+          }
+          forkCol = `<td>${liveLh}</td><td title="${tf?.preInlineLh ?? ''} → ${tf?.postInlineLh ?? ''}">${forkLabel}</td>`;
+        }
+        const tr = document.createElement('tr');
+        tr.className = m.pass ? 'pass' : 'fail';
+        tr.innerHTML = `<td>${row.recipeId}</td>
+          <td title="live ${fmtInkNum(m.liveTop)} · svg ${fmtInkNum(m.svgTop)}">${fmtDeltaY(m.deltaSvgVsLive)}</td>
+          <td title="live ${fmtInkNum(m.liveTop)} · canvas ${fmtInkNum(m.canvasTop)}">${fmtDeltaY(m.deltaCanvasVsLive)}</td>
+          ${forkCol}
+          <td>${m.pass ? '✓' : '✗'}</td>`;
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      const legend = document.createElement('p');
+      legend.className = 'matrix-delta-legend';
+      legend.style.cssText = 'margin:6px 0 0;font:11px/1.4 ui-monospace,Menlo,monospace;color:#64748b';
+      legend.textContent = INK_DELTA_Y_LEGEND;
+      matrixWrap.replaceChildren(table, legend);
+    }
+
+    function renderCalibrateMatrix(rows) {
+      if (!matrixWrap) return;
+      const table = document.createElement('table');
+      table.className = 'matrix';
+      table.innerHTML = `<thead><tr>
+        <th>Recipe</th>
+        <th>Landmark</th>
+        <th>Live top</th>
+        <th>SVG top</th>
+        <th>Canvas top</th>
+        <th>SVG ΔY</th>
+        <th>Canvas ΔY</th>
+        <th>Pass</th>
+      </tr></thead>`;
+      const tbody = document.createElement('tbody');
+      for (const row of rows) {
+        for (const lm of row.landmarks ?? []) {
+          const m = computeLandmarkInkMetrics(lm);
+          const tr = document.createElement('tr');
+          tr.className = m.pass ? 'pass' : 'fail';
+          tr.innerHTML = `<td>${row.recipeId}</td>
+            <td>${lm.landmark}</td>
+            <td>${fmtInkNum(m.liveTop)}</td>
+            <td>${fmtInkNum(m.svgTop)}</td>
+            <td>${fmtInkNum(m.canvasTop)}</td>
+            <td>${fmtDeltaY(m.deltaSvgVsLive)}</td>
+            <td>${fmtDeltaY(m.deltaCanvasVsLive)}</td>
+            <td>${m.pass ? '✓' : '✗'}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+      table.appendChild(tbody);
+      matrixWrap.replaceChildren(table);
+    }
+
+    async function runOne() {
+      if (!labRunner) {
+        markDone('FO fix lab runner not loaded');
+        return;
+      }
+      window.__foFixLab.done = false;
+      window.__foFixLab.error = null;
+      const recipe = effectiveRecipeForRun(getFoFixRecipe(select.value));
+      const recipeId = recipe?.id ?? select.value;
+      status.textContent = 'Running…';
+      setProgress(`Running recipe: ${recipeId}`);
+      beginCapture(`Capturing ${recipeId}…`);
+      let mounted = false;
+      try {
+        const probeOpts = probeOptsFromUrl();
+        const row = await labRunner.runFoFixProbe(recipe, probeOpts);
+        teardownCaptureUi();
+        mountSvgPreview(row.svgText, recipe);
+        const probeCanvas = row.canvas ?? labRunner.lastCanvas;
+        const root = document.getElementById('capture-target');
+        const probeLandmark = probeOpts.landmark ?? FIXTURE_LANDMARK;
+        const navInkCount = labRunner.countNavLandmarksWithCanvasInk(
+          probeCanvas,
+          root,
+          [probeLandmark],
+          row.dpr,
+        );
+        const expectedNav = labRunner.expectedCanvasNavLandmarks(recipe);
+        window.__foFixNavInkCount = {
+          recipeId: recipe.id,
+          count: navInkCount,
+          expected: expectedNav,
+        };
+        mountCanvasPreview(probeCanvas, { dpr: row.dpr, recipe, navInkCount });
+        await waitForPreviewInkReady();
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        await applyInkMarkerRow(row);
+        mounted = true;
+        window.__foFixLastResult = row;
+        markDone(null);
+      } catch (err) {
+        const message = String(err?.stack || err);
+        result.textContent = message;
+        markDone(message);
+      } finally {
+        if (isCapturing) teardownCaptureUi();
+        if (!mounted && hasCanvasPreview && viewBeforeCapture !== 'live') {
+          setView(viewBeforeCapture, { syncUrl: true });
+        }
+        status.textContent = '';
+        clearProgress();
+      }
+    }
+
+    async function runMatrix({
+      limit,
+      offset,
+      ids,
+      category,
+      includeTextBypass = false,
+      excludeTextBypass = false,
+      includeInactive = false,
+    } = {}) {
+      if (!labRunner) return;
+      window.__foFixLab.done = false;
+      window.__foFixLab.error = null;
+      const shardCountRaw = params.get('shardCount');
+      const shardIndexRaw = params.get('shardIndex');
+      const shardCount = shardCountRaw != null ? Number(shardCountRaw) : undefined;
+      const shardIndex = shardIndexRaw != null ? Number(shardIndexRaw) : undefined;
+
+      /** Total candidates before shard/offset/limit (after category/ids/bypass/inactive filters). */
+      let shardInfo = '';
+      if (Number.isFinite(shardCount) && shardCount > 1 && Number.isFinite(shardIndex)) {
+        const bypassOpts = matrixBypassOpts(category, ids);
+        const baseCandidates = resolveFoFixMatrixRecipes({
+          category,
+          ids,
+          excludeTextBypass: excludeTextBypass || undefined,
+          includeTextBypass: includeTextBypass || undefined,
+          includeInactive: includeInactive || undefined,
+          purgeBottomFraction: bypassOpts.purgeBottomFraction,
+        }).length;
+        const shardSelected = resolveFoFixMatrixRecipes({
+          category,
+          ids,
+          excludeTextBypass: excludeTextBypass || undefined,
+          includeTextBypass: includeTextBypass || undefined,
+          includeInactive: includeInactive || undefined,
+          purgeBottomFraction: bypassOpts.purgeBottomFraction,
+          shardCount,
+          shardIndex,
+        }).length;
+        shardInfo = ` · shard ${Math.floor(shardIndex) + 1}/${Math.floor(shardCount)}: ${shardSelected}/${baseCandidates}`;
+      }
+
+      const matrixRecipes = resolveMatrixRecipes({ limit, offset, ids, category });
+      const matrixTotal = matrixRecipes.length;
+      const bypassExcluded = matrixExcludesTextBypass(
+        matrixBypassOpts(category, ids),
+      );
+      const matrixLabel = `Running ${matrixTotal} recipe${matrixTotal === 1 ? '' : 's'}${shardInfo}…`;
+      status.textContent = matrixLabel;
+      setProgress(matrixLabel);
+      beginCapture(matrixLabel);
+      let mounted = false;
+      try {
+        const rows = await labRunner.runFoFixMatrix({
+          limit,
+          offset,
+          ids,
+          category,
+          excludeTextBypass: excludeTextBypass || undefined,
+          includeTextBypass: includeTextBypass || undefined,
+          includeInactive: includeInactive || undefined,
+          shardCount: Number.isFinite(shardCount) ? shardCount : undefined,
+          shardIndex: Number.isFinite(shardIndex) ? shardIndex : undefined,
+          ...probeOptsFromUrl(),
+          onProgress({ index, total, recipeId, phase, error }) {
+            if (phase === 'start') {
+              const line = `Matrix ${index + 1}/${total}: ${recipeId}…`;
+              setProgress(line);
+              captureOverlay.textContent = line;
+            } else if (phase === 'error') {
+              setProgress(`Matrix ${index + 1}/${total}: ${recipeId} failed — ${error}`);
+            }
+          },
+        });
+        teardownCaptureUi();
+        const previewRow = matrixPreviewRow(rows);
+        const previewRecipe = getFoFixRecipe(previewRow?.recipeId);
+        mountSvgPreview(previewRow?.svgText, previewRecipe);
+        const previewCanvas = previewRow?.canvas ?? labRunner.lastCanvas;
+        const root = document.getElementById('capture-target');
+        const navInkCount = previewRow
+          ? labRunner.countNavLandmarksWithCanvasInk(
+              previewCanvas,
+              root,
+              [FIXTURE_LANDMARK],
+              previewRow.dpr,
+            )
+          : null;
+        if (previewRow) {
+          window.__foFixNavInkCount = {
+            recipeId: previewRow.recipeId,
+            count: navInkCount,
+            expected: labRunner.expectedCanvasNavLandmarks(previewRecipe),
+          };
+        }
+        mountCanvasPreview(previewCanvas, {
+          dpr: previewRow?.dpr,
+          recipe: previewRecipe,
+          navInkCount,
+        });
+        if (previewRow) await applyInkMarkerRow(previewRow);
+        mounted = true;
+        const bestRow = bestPromotableMatrixRow(rows) ?? rows[0];
+        const bestM = bestRow ? computeLandmarkInkMetrics(bestRow) : null;
+        const bestCanvasDeltaY = bestM?.deltaCanvasVsLive;
+        let bestLine = `Best: ${bestRow?.recipeId} (canvas ΔY ${fmtDeltaY(bestCanvasDeltaY)})`;
+        if (rows[0] && bestRow?.recipeId !== rows[0].recipeId) {
+          const bypassM = computeLandmarkInkMetrics(rows[0]);
+          bestLine += ` · skipped text-bypass leader ${rows[0].recipeId} (canvas ΔY ${fmtDeltaY(bypassM.deltaCanvasVsLive)})`;
+        }
+        result.textContent = `Done — ${rows.length} recipes. ${bestLine}`;
+        updateDebugPanel(previewRow ?? bestRow ?? null);
+        renderMatrix(rows);
+        window.__foFixMatrix = rows;
+        markDone(null);
+      } catch (err) {
+        const message = String(err?.stack || err);
+        result.textContent = message;
+        markDone(message);
+      } finally {
+        if (isCapturing) teardownCaptureUi();
+        if (!mounted && hasCanvasPreview && viewBeforeCapture !== 'live') {
+          setView(viewBeforeCapture, { syncUrl: true });
+        }
+        status.textContent = '';
+        clearProgress();
+        populateRecipeSelect(categoryFilter.value);
+        applyRecipeSelectionFromUrl();
+      }
+    }
+
+    /** Preview row for calibrate matrix — best recipe, Home landmark ink markers. */
+    function calibratePreviewRow(rows) {
+      if (!Array.isArray(rows) || !rows.length) return null;
+      const best = rows[0];
+      const home =
+        best.landmarks?.find((lm) => lm.landmark === FIXTURE_LANDMARK) ?? best.landmarks?.[0] ?? null;
+      if (!home) return null;
+      return {
+        ...home,
+        recipeId: best.recipeId,
+        canvas: best.canvas,
+        svgText: best.svgText,
+        dpr: best.dpr,
+        scale: best.scale,
+      };
+    }
+
+    async function runCalibrate({
+      limit,
+      offset,
+      ids,
+      category,
+      landmarks = [FIXTURE_LANDMARK],
+      includeTextBypass = false,
+      excludeTextBypass = false,
+      includeInactive = false,
+    } = {}) {
+      if (!labRunner?.runFoFixCalibrateMatrix) {
+        throw new Error('runFoFixCalibrateMatrix missing from fo-fix-lab-runner.js');
+      }
+      window.__foFixLab.done = false;
+      window.__foFixLab.error = null;
+      const shardCountRaw = params.get('shardCount');
+      const shardIndexRaw = params.get('shardIndex');
+      const shardCount = shardCountRaw != null ? Number(shardCountRaw) : undefined;
+      const shardIndex = shardIndexRaw != null ? Number(shardIndexRaw) : undefined;
+      const matrixRecipes = resolveMatrixRecipes({ limit, offset, ids, category });
+      const matrixTotal = matrixRecipes.length;
+      const calLabel = `Calibrate (${matrixTotal} recipe${matrixTotal === 1 ? '' : 's'}, landmarks: ${landmarks.join(', ')})…`;
+      status.textContent = calLabel;
+      setProgress(calLabel);
+      beginCapture(calLabel);
+      let mounted = false;
+      try {
+        const rows = await labRunner.runFoFixCalibrateMatrix({
+          limit,
+          offset,
+          ids,
+          category,
+          landmarks,
+          excludeTextBypass: excludeTextBypass || undefined,
+          includeTextBypass: includeTextBypass || undefined,
+          includeInactive: includeInactive || undefined,
+          shardCount: Number.isFinite(shardCount) ? shardCount : undefined,
+          shardIndex: Number.isFinite(shardIndex) ? shardIndex : undefined,
+          ...probeOptsFromUrl(),
+          onProgress({ index, total, recipeId, phase, error }) {
+            if (phase === 'start') {
+              const line = `Calibrate ${index + 1}/${total}: ${recipeId}…`;
+              setProgress(line);
+              captureOverlay.textContent = line;
+            } else if (phase === 'error') {
+              setProgress(`Calibrate ${index + 1}/${total}: ${recipeId} failed — ${error}`);
+            }
+          },
+        });
+        teardownCaptureUi();
+        window.__foFixCalibrateMatrix = rows;
+        const previewRow = calibratePreviewRow(rows);
+        const previewRecipe = getFoFixRecipe(previewRow?.recipeId ?? rows[0]?.recipeId);
+        mountSvgPreview(previewRow?.svgText ?? rows[0]?.svgText, previewRecipe);
+        const previewCanvas = previewRow?.canvas ?? rows[0]?.canvas ?? labRunner.lastCanvas;
+        const root = document.getElementById('capture-target');
+        const navInkCount = previewRow
+          ? labRunner.countNavLandmarksWithCanvasInk(
+              previewCanvas,
+              root,
+              landmarks,
+              previewRow.dpr ?? rows[0]?.dpr,
+            )
+          : null;
+        if (previewRow) {
+          window.__foFixNavInkCount = {
+            recipeId: previewRow.recipeId,
+            count: navInkCount,
+            expected: labRunner.expectedCanvasNavLandmarks(previewRecipe),
+          };
+        }
+        mountCanvasPreview(previewCanvas, {
+          dpr: previewRow?.dpr ?? rows[0]?.dpr,
+          recipe: previewRecipe,
+          navInkCount,
+        });
+        if (previewRow) await applyInkMarkerRow(previewRow);
+        mounted = true;
+        const best = rows[0];
+        const baseline = rows.find((r) => r.recipeId === 'product-baseline');
+        result.textContent =
+          `Done — ${rows.length} recipes. Best: ${best?.recipeId} ` +
+          `(worst canvas gap ${fmtInkNum(best?.worstAbsDeltaTop)} px)` +
+          (baseline?.worstAbsDeltaTop != null
+            ? ` · baseline ${fmtInkNum(baseline.worstAbsDeltaTop)} px`
+            : '');
+        updateDebugPanel(previewRow ?? null);
+        renderCalibrateMatrix(rows);
+        markDone(null);
+      } catch (err) {
+        const message = String(err?.stack || err);
+        result.textContent = message;
+        markDone(message);
+      } finally {
+        if (isCapturing) teardownCaptureUi();
+        if (!mounted && hasCanvasPreview && viewBeforeCapture !== 'live') {
+          setView(viewBeforeCapture, { syncUrl: true });
+        }
+        status.textContent = '';
+        clearProgress();
+        populateRecipeSelect(categoryFilter.value);
+        applyRecipeSelectionFromUrl();
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

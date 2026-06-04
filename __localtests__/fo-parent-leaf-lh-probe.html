@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parent vs leaf line-height in FO raster</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px 14px 24px; font-family: system-ui, sans-serif; background: #f8fafc; color: #111; }
+    #capture-target {
+      width: 500px; max-width: 100%;
+      font: 600 16px system-ui, -apple-system, sans-serif;
+      background: #fff; border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Parent vs leaf line-height</h1>
+  <p class="hint">Param <code>mode=inherit|leaf-1.35|parent-1.35|leaf-21.6|parent-48|both-21.6</code></p>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { findLandmarkElement, getFoFixRecipe, runFoFixProbe } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const mode = (params.get('mode') || 'inherit').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function lhPx(cs) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lh = cs.lineHeight
+      if (lh && lh !== 'normal') {
+        const n = parseFloat(lh)
+        if (Number.isFinite(n) && n > 0) return { fs, lhPx: n, half: (n - fs) / 2 }
+      }
+      return { fs, lhPx: null, half: null }
+    }
+
+    function applyMode(nav, leaf) {
+      nav.style.lineHeight = ''
+      leaf.style.lineHeight = ''
+      switch (mode) {
+        case 'leaf-1.35':
+          leaf.style.lineHeight = '1.35'
+          break
+        case 'parent-1.35':
+          nav.style.lineHeight = '1.35'
+          break
+        case 'leaf-21.6':
+          leaf.style.lineHeight = '21.6px'
+          break
+        case 'parent-48':
+          nav.style.lineHeight = '48px'
+          break
+        case 'both-21.6':
+          nav.style.lineHeight = '21.6px'
+          leaf.style.lineHeight = '21.6px'
+          break
+        default:
+          break
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      const nav = root.querySelector('nav.mini-nav')
+      const leaf = findLandmarkElement(root, 'Home')
+      if (!nav || !leaf) throw new Error('fixture missing')
+      applyMode(nav, leaf)
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const leafM = lhPx(getComputedStyle(leaf))
+      const navM = lhPx(getComputedStyle(nav))
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const probe = await runFoFixProbe(recipe, { root, landmark: 'Home', dpr, scale: 1 })
+
+      return {
+        mode,
+        metrics: {
+          leafLineHeightComputed: getComputedStyle(leaf).lineHeight,
+          leafLhPx: roundPx(leafM.lhPx),
+          leafHalfLeading: roundPx(leafM.half),
+          parentLineHeightComputed: getComputedStyle(nav).lineHeight,
+          parentLhPx: roundPx(navM.lhPx),
+          leafHeightGbcr: roundPx(leaf.getBoundingClientRect().height),
+        },
+        threeWay: {
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+        },
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__parentLeafLhProbe = { ready: false, bootError: null, mode, run: runProbe }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error('Run npm run compile')
+        window.__parentLeafLhProbe.ready = true
+        status.textContent = `Ready mode=${mode}`
+      } catch (err) {
+        window.__parentLeafLhProbe.bootError = String(err?.message || err)
+      }
+    }
+    boot()
+  </script>
+</body>
+</html>

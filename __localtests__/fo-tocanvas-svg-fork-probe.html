@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>toCanvas raster SVG fork probe (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>experimentalRasterSvgPatch — product baseline vs raster fork patches</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const VARIANTS = [
+      { id: 'product-baseline', experimentalRasterSvgPatch: 'none' },
+      { id: 'fo-lh-pin', experimentalRasterSvgPatch: 'fo-lh-pin' },
+      { id: 'flex-center', experimentalRasterSvgPatch: 'flex-center' },
+      { id: 'viewbox-floor', experimentalRasterSvgPatch: 'viewbox-floor' },
+    ]
+
+    async function runVariant(variant) {
+      const snap = await snapdom(root, { dpr, scale })
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const captureMeta = parseCaptureMeta(svgText, root)
+      const canvas = await snap.toCanvas({
+        meta: captureMeta,
+        experimentalRasterSvgPatch: variant.experimentalRasterSvgPatch,
+      })
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return {
+        id: variant.id,
+        experimentalRasterSvgPatch: variant.experimentalRasterSvgPatch,
+        threeWay: {
+          livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+          svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        canvasBacking: canvas ? { width: canvas.width, height: canvas.height } : null,
+        captureMeta,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const rows = []
+      for (const variant of VARIANTS) {
+        rows.push(await runVariant(variant))
+      }
+
+      const baseline = rows.find((r) => r.id === 'product-baseline')
+      const baselineCanvas = baseline?.threeWay?.liveVsCanvasTopPx ?? null
+      const baselineSvg = baseline?.threeWay?.liveVsSvgTopPx ?? null
+
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        variants: rows,
+        baselineCanvasDeltaPx: baselineCanvas,
+        baselineSvgDeltaPx: baselineSvg,
+        comparisons: rows.map((row) => ({
+          id: row.id,
+          experimentalRasterSvgPatch: row.experimentalRasterSvgPatch,
+          canvasDeltaPx: row.threeWay?.liveVsCanvasTopPx ?? null,
+          svgDeltaPx: row.threeWay?.liveVsSvgTopPx ?? null,
+          svgVsCanvasPx: row.threeWay?.svgVsCanvasTopPx ?? null,
+          deltaFromBaselineCanvasPx:
+            baselineCanvas != null && row.threeWay?.liveVsCanvasTopPx != null
+              ? row.threeWay.liveVsCanvasTopPx - baselineCanvas
+              : null,
+          deltaFromBaselineSvgPx:
+            baselineSvg != null && row.threeWay?.liveVsSvgTopPx != null
+              ? row.threeWay.liveVsSvgTopPx - baselineSvg
+              : null,
+        })),
+        svgLegUnchanged:
+          rows.every(
+            (row) =>
+              baselineSvg == null ||
+              row.threeWay?.liveVsSvgTopPx == null ||
+              Math.abs(row.threeWay.liveVsSvgTopPx - baselineSvg) < 0.001,
+          ),
+      }
+    }
+
+    window.__foToCanvasSvgForkProbe = {
+      ready: false,
+      bootError: null,
+      run: runProbe,
+    }
+
+    runProbe()
+      .then((payload) => {
+        window.__foToCanvasSvgForkProbe.last = payload
+        const b = payload.baselineCanvasDeltaPx
+        const svgOk = payload.svgLegUnchanged ? 'svg leg unchanged' : 'svg leg CHANGED'
+        status.textContent =
+          b != null
+            ? `Ready — baseline canvasΔ=${b.toFixed(3)}px; ${svgOk}; ${payload.variants.length} variants.`
+            : `Ready — probe complete (${svgOk}).`
+      })
+      .catch((err) => {
+        window.__foToCanvasSvgForkProbe.bootError = String(err?.message || err)
+        status.textContent = `Boot failed: ${window.__foToCanvasSvgForkProbe.bootError}`
+      })
+      .finally(() => {
+        window.__foToCanvasSvgForkProbe.ready = true
+      })
+  </script>
+</body>
+</html>

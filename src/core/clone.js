@@ -25,6 +25,26 @@ import { isFirefox } from '../utils/browser.js'
 
 // helper implementations moved to ../utils/clone.helpers.js
 
+/**
+ * Build a hidden, layout-preserving spacer matching a node's unscaled box, used when a node is
+ * excluded/filtered in 'hide' mode. Forces at most one getBoundingClientRect (the inline form
+ * could read it twice per node in the hot path).
+ * @param {Element} node
+ * @returns {HTMLDivElement}
+ */
+function makeHideSpacer(node) {
+  const { width, height } = getUnscaledDimensions(node)
+  let w = width, h = height
+  if (!w || !h) {
+    const rect = node.getBoundingClientRect()
+    w = w || rect.width || 0
+    h = h || rect.height || 0
+  }
+  const spacer = document.createElement('div')
+  spacer.style.cssText = `display:inline-block;width:${w}px;height:${h}px;visibility:hidden;`
+  return spacer
+}
+
 export async function deepClone(node, sessionCache, options) {
   if (!node) throw new Error('Invalid node')
   const clonedAssignedNodes = new Set()
@@ -55,12 +75,7 @@ export async function deepClone(node, sessionCache, options) {
   }
   if (node.getAttribute('data-capture') === 'exclude') {
     if (options.excludeMode === 'hide') {
-      const spacer = document.createElement('div')
-      const { width, height } = getUnscaledDimensions(node)
-      const w = width || node.getBoundingClientRect().width || 0
-      const h = height || node.getBoundingClientRect().height || 0
-      spacer.style.cssText = `display:inline-block;width:${w}px;height:${h}px;visibility:hidden;`
-      return spacer
+      return makeHideSpacer(node)
     } else if (options.excludeMode === 'remove') {
       return null
     }
@@ -70,12 +85,7 @@ export async function deepClone(node, sessionCache, options) {
       try {
         if (node.matches?.(selector)) {
           if (options.excludeMode === 'hide') {
-            const spacer = document.createElement('div')
-            const { width, height } = getUnscaledDimensions(node)
-            const w = width || node.getBoundingClientRect().width || 0
-            const h = height || node.getBoundingClientRect().height || 0
-            spacer.style.cssText = `display:inline-block;width:${w}px;height:${h}px;visibility:hidden;`
-            return spacer
+            return makeHideSpacer(node)
           } else if (options.excludeMode === 'remove') {
             return null
           }
@@ -89,12 +99,7 @@ export async function deepClone(node, sessionCache, options) {
     try {
       if (!options.filter(node)) {
         if (options.filterMode === 'hide') {
-          const spacer = document.createElement('div')
-          const { width, height } = getUnscaledDimensions(node)
-          const w = width || node.getBoundingClientRect().width || 0
-          const h = height || node.getBoundingClientRect().height || 0
-          spacer.style.cssText = `display:inline-block;width:${w}px;height:${h}px;visibility:hidden;`
-          return spacer
+          return makeHideSpacer(node)
         } else if (options.filterMode === 'remove') {
           return null
         }
@@ -344,6 +349,7 @@ export async function deepClone(node, sessionCache, options) {
       }
     }
   }
+
   // #315: Preserve ::placeholder color for inputs/textareas showing placeholder text
   if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && !node.value && node.placeholder) {
     try {
@@ -353,11 +359,12 @@ export async function deepClone(node, sessionCache, options) {
         const uid = 'snapdom-ph-' + (Math.random() * 1e6 | 0)
         clone.classList.add(uid)
         const styleEl = document.createElement('style')
-        styleEl.textContent = `.${uid}::placeholder{color:${phColor}!important;opacity:${phStyle.opacity || '1'}!important;}`
+        styleEl.textContent = `.${uid}::placeholder{color:${phColor}!important;opacity:${phStyle.opacity || '1'}!important;-webkit-text-fill-color:${phColor}!important;}`
         clone.prepend(styleEl)
       }
     } catch { /* non-blocking */ }
   }
+
   if (node instanceof HTMLSelectElement) {
     pendingSelectValue = node.value
   }
@@ -490,7 +497,6 @@ export async function deepClone(node, sessionCache, options) {
   }
   if (pendingTextAreaValue !== null && clone instanceof HTMLTextAreaElement) {
     clone.textContent = pendingTextAreaValue
-
   }
   return clone
 }

@@ -1,0 +1,66 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-decode-timing.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "variantId": "upstream-triple-100ms",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "single-paint",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "pre-fonts-ready",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "pre-double-raf",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "pre-interval-100ms",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "post-fonts-ready",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "pre-fonts+raf",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      },
+      {
+        "variantId": "triple-paint-zero-interval",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "DECODE_TIMING_INVARIANT",
+    "implication": "fonts.ready / rAF / drawImageInterval timing does not explain ~2.8px plateau (beyond round-4 decode context)."
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "variants": [
+    {
+      "recipeId": "product-baseline",
+      "labToCanvasOpts": {
+        "vDriftFix": false,
+        "backingRound": "round"
+      },
+      "meta": {
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875,
+        "w0": 500,
+        "h0": 50
+      },
+      "rootGbcr": {
+        "x": 14,
+        "y": 92.875,
+        "width": 500,
+        "height": 50,
+        "top": 92.875,
+        "right": 514,
+        "bottom": 142.875,
+        "left": 14
+      },
+      "intrinsic": {
+        "naturalWidth": 500,
+        "naturalHeight": 50
+      },
+      "drawTrace": {
+        "refW": 500,
+        "refH": 50,
+        "outW": 500,
+        "outH": 50,
+        "backingRound": "round",
+        "backingW": 1000,
+        "backingH": 100,
+        "backingVsExactW": 0,
+        "backingVsExactH": 0,
+        "paintW": 500,
+        "paintH": 50,
+        "dw": 500,
+        "dh": 50,
+        "dx": 0,
+        "dy": 0,
+        "destRectCss": {
+          "x": 0,
+          "y": 0,
+          "w": 500,
+          "h": 50
+        },
+        "nudgeCssPx": {
+          "x": 0,
+          "y": 0
+        },
+        "nudgeDevicePx": {
+          "x": 0,
+          "y": 0
+        },
+        "vDriftFixActive": false
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      },
+      "ink": {
+        "liveTopInBorder": 14.203125,
+        "svgTopInBorder": 14.1953125,
+        "canvasTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 3.296875,
+        "svgVsCanvasTopPx": 3.3046875
+      },
+      "probeRow": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 3.296875
+      }
+    },
+    {
+      "recipeId": "vdrift-fix-001-ceil-nudge",
+      "rasterPatch": "lab-toCanvas",
+      "labToCanvasOpts": {
+        "vDriftFix": true,
+        "backingRound": "ceil"
+      },
+      "meta": {
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875,
+        "w0": 500,
+        "h0": 50
+      },
+      "rootGbcr": {
+        "x": 14,
+        "y": 92.875,
+        "width": 500,
+        "height": 50,
+        "top": 92.875,
+        "right": 514,
+        "bottom": 142.875,
+        "left": 14
+      },
+      "intrinsic": {
+        "naturalWidth": 500,
+        "naturalHeight": 50
+      },
+      "drawTrace": {
+        "refW": 500,
+        "refH": 50,
+        "outW": 500,
+        "outH": 50,
+        "backingRound": "ceil",
+        "backingW": 1000,
+        "backingH": 100,
+        "backingVsExactW": 0,
+        "backingVsExactH": 0,
+        "paintW": 500,
+        "paintH": 50,
+        "dw": 500,
+        "dh": 50,
+        "dx": 0,
+        "dy": -0.875,
+        "destRectCss": {
+          "x": 0,
+          "y": -0.875,
+          "w": 500,
+          "h": 50
+        },
+        "nudgeCssPx": {
+          "x": 0,
+          "y": -0.875
+        },
+        "nudgeDevicePx": {
+          "x": 0,
+          "y": -1.75
+        },
+        "vDriftFixActive": true
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      },
+      "ink": {
+        "liveTopInBorder": 14.203125,
+        "svgTopInBorder": 14.1953125,
+        "canvasTopInBorder": 16.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875,
+        "svgVsCanvasTopPx": 2.3046875
+      },
+      "probeRow": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875
+      }
+    },
+    {
+      "recipeId": "vdrift-fix-002-round-nudge",
+      "rasterPatch": "lab-toCanvas",
+      "labToCanvasOpts": {
+        "vDriftFix": true,
+        "backingRound": "round"
+      },
+      "meta": {
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875,
+        "w0": 500,
+        "h0": 50
+      },
+      "rootGbcr": {
+        "x": 14,
+        "y": 92.875,
+        "width": 500,
+        "height": 50,
+        "top": 92.875,
+        "right": 514,
+        "bottom": 142.875,
+        "left": 14
+      },
+      "intrinsic": {
+        "naturalWidth": 500,
+        "naturalHeight": 50
+      },
+      "drawTrace": {
+        "refW": 500,
+        "refH": 50,
+        "outW": 500,
+        "outH": 50,
+        "backingRound": "round",
+        "backingW": 1000,
+        "backingH": 100,
+        "backingVsExactW": 0,
+        "backingVsExactH": 0,
+        "paintW": 500,
+        "paintH": 50,
+        "dw": 500,
+        "dh": 50,
+        "dx": 0,
+        "dy": -0.875,
+        "destRectCss": {
+          "x": 0,
+          "y": -0.875,
+          "w": 500,
+          "h": 50
+        },
+        "nudgeCssPx": {
+          "x": 0,
+          "y": -0.875
+        },
+        "nudgeDevicePx": {
+          "x": 0,
+          "y": -1.75
+        },
+        "vDriftFixActive": true
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      },
+      "ink": {
+        "liveTopInBorder": 14.203125,
+        "svgTopInBorder": 14.1953125,
+        "canvasTopInBorder": 16.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875,
+        "svgVsCanvasTopPx": 2.3046875
+      },
+      "probeRow": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.296875
+      }
+    }
+  ],
+  "analysis": {
+    "baselineCanvasDelta": 3.296875,
+    "v001CanvasDelta": 2.296875,
+    "v002CanvasDelta": 2.296875,
+    "canvasDeltaReductionV001": 1,
+    "vDriftDyCss": -0.875,
+    "vDriftDyDevice": -1.75,
+    "gbcrFracY": 0.875,
+    "svgVsLiveBaseline": -0.0078125,
+    "svgVsLiveV001": -0.0078125,
+    "svgVsCanvasBaseline": 3.3046875,
+    "svgVsCanvasV001": 2.3046875,
+    "svgVsCanvasV002": 2.3046875,
+    "foRasterErrorAfterSubtractingNudge": 2.421875
+  },
+  "verdict": {
+    "mechanism": "INCONCLUSIVE",
+    "physicalShiftCssPx": -0.875,
+    "physicalShiftDevicePx": -1.75,
+    "gbcrFracY": 0.875,
+    "baselineLiveVsCanvasPx": 3.296875,
+    "v001LiveVsCanvasPx": 2.296875,
+    "canvasDeltaReductionPx": 1,
+    "trueFoRasterErrorPx": 2.421875,
+    "notes": [
+      "SVG FO ink ≈ live (svgΔ≈0): serialized FO layout is not the drift source.",
+      "vDriftFix sets drawImage destY=-0.875000 CSS px (= -gbcrFracY); device nudge ≈ -1.750000 px at dpr=2.",
+      "canvasΔ dropped by 1.000px vs baseline — matches |dy| nudge (not FO re-raster).",
+      "svg↔canvas gap changed by 1.000px (unexpected for pure nudge).",
+      "Estimated FO raster error if nudge removed: live↔canvas ≈ 2.422px (baseline 3.297 + dy -0.875)."
+    ]
+  },
+  "generatedAt": "2026-06-02T16:19:55.380Z",
+  "port": 8784
+}

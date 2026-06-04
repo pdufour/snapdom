@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>tc lh wave1 matrix probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { runFoFixProbeLandmarks } from './fo-fix-lab-runner.js'
+    import { FO_FIX_RECIPES_SHARD as core } from './fo-recipes-shards/recipes-core-control.js'
+    import { FO_FIX_RECIPES_SHARD as blh } from './fo-recipes-shards/recipes-tocanvas-text-baseline-wave1.js'
+    import { FO_FIX_RECIPES_SHARD as text } from './fo-recipes-shards/recipes-tocanvas-text-leaf-wave1.js'
+
+    const root = document.getElementById('capture-target')
+    const baseline = core.find((r) => r.id === 'product-baseline')
+    const RECIPES = [baseline, ...blh, ...text].filter(Boolean)
+
+    window.snapdom = snapdom
+    window.__tcLhWave1Probe = {
+      ready: true,
+      recipeIds: RECIPES.map((r) => r.id),
+      async probe(recipeId) {
+        const recipe = RECIPES.find((r) => r.id === recipeId)
+        if (!recipe) throw new Error(`missing ${recipeId}`)
+        await document.fonts.ready
+        const row = await runFoFixProbeLandmarks(recipe, { landmarks: ['Home'], dpr: 1, scale: 1 })
+        const lm = row.landmarks[0]
+        return {
+          recipeId,
+          liveVsSvgTopPx: lm.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: lm.liveVsCanvasTopPx ?? null,
+        }
+      },
+    }
+  </script>
+</body>
+</html>

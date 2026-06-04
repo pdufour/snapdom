@@ -1,0 +1,91 @@
+{
+  "probe": "fo-glyph-bounds",
+  "section": "research-round-6-letter-drift.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "rows": [
+      {
+        "label": "H",
+        "letterClass": "capital",
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "h",
+        "letterClass": "has-ascender",
+        "liveVsCanvasTopPx": 1.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "l",
+        "letterClass": "has-ascender",
+        "liveVsCanvasTopPx": 1.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "p",
+        "letterClass": "has-descender",
+        "liveVsCanvasTopPx": 5.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "g",
+        "letterClass": "has-descender",
+        "liveVsCanvasTopPx": 5.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "Hg",
+        "letterClass": "has-descender",
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "pg",
+        "letterClass": "has-descender",
+        "liveVsCanvasTopPx": 5.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      },
+      {
+        "label": "HOME",
+        "letterClass": "word-caps",
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "boxHeightPx": 56,
+        "rangeHeightInBorder": 19,
+        "halfLeadingLhFsPx": 2.8
+      }
+    ],
+    "canvasDeltaSpreadPx": 4,
+    "classMeans": {
+      "capital": 2.797,
+      "has-ascender": 1.797,
+      "has-descender": 5.047,
+      "word-caps": 2.797
+    },
+    "verdict": "LETTER_SHAPE_AFFECTS_DRIFT",
+    "implication": "Letter shape changes canvasΔ — check Range vs FO bitmap per class."
+  }
+}

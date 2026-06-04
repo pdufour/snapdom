@@ -1,0 +1,39 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-synthesis.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "known": [
+      "BITMAP_ONLY — svg≈live; canvas drifts ~½(lh−fs)",
+      "w7 FO y −2.8px closes strut class; integer residual ≈ Range subpixel",
+      "Snapdom decode adds 0px vs chromium-only on same SVG (round 5/7)",
+      "Active matrix 56 recipes: w7 best at |−0.203| — no row ≤0.06"
+    ],
+    "unknown": [
+      "Whether blackbox cap gate passes with w7 enabled on checkout (empirical)",
+      "Whether fractional ink scan can gate promotion without FO attr change",
+      "Blink FO paint-origin code path — filing vs workaround",
+      "Whether w15/w16 recipe shards add signal beyond w7 plateau",
+      "Checkout vs mini cap/Range offset — same 4.5px reconcile on both fixtures?"
+    ],
+    "top5Unknowns": [
+      "Whether blackbox cap gate passes with w7 enabled on checkout (empirical)",
+      "Whether fractional ink scan can gate promotion without FO attr change",
+      "Blink FO paint-origin code path — filing vs workaround",
+      "Whether w15/w16 recipe shards add signal beyond w7 plateau",
+      "Checkout vs mini cap/Range offset — same 4.5px reconcile on both fixtures?"
+    ],
+    "recommendedNextStep": "metric-reconcile — w7 does not pass blackbox cap gate on checkout",
+    "pauseFixWaves": true,
+    "refuted": [
+      "Snapdom decode as cause of w7 −0.203 ceiling"
+    ],
+    "newFindings": [
+      "w7 |-0.203| ≈ Range subpixel 0.203",
+      "First-ink row shift baseline→w7: 3px",
+      "Cap-model Δ shift baseline→w7: -3px (Range shift -3px)",
+      "Blackbox Home cap Δ: baseline -0.91px → w7 -1.91px (shift -1px)"
+    ]
+  }
+}

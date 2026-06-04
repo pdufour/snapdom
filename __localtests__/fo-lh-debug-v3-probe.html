@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO lh debug v3 — ink row profile, fork trace, parent chain</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #capture-target.checkout { border: 3px solid #0ea5e9; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { applyRasterOnlySvgPatch } from '../src/exporters/rasterOnlySvgPatch.js'
+    import {
+      auditLiveLhParentChain,
+      auditSerializedFoLineHeight,
+      buildLabLhDebugReport,
+      buildLabRasterForkTrace,
+      fnv1aHash,
+      getLastLabToCanvasDebugReport,
+      probeFoInternalComputedLhAtDecode,
+      scanCanvasInkRowProfile,
+    } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const fixture = params.get('fixture') || 'mini'
+
+    const LH_RECIPE_IDS = [
+      'product-baseline',
+      'tc-blh-w1-pin-lh-used-value',
+      'tc-blh-w1-lh-normal-leaf',
+      'tc-blh-w1-rfork-lh-used',
+      'tc-blh-w1-rfork-lh-normal-leaf',
+      'tc-fork-w1-inject-fo-lh-pin',
+    ]
+
+    const TIMING_VARIANTS = [
+      { id: 'default', labToCanvasOpts: { debugLh: true } },
+      { id: 'decode-settle', labToCanvasOpts: { debugLh: true, decodeSettle: true } },
+      { id: 'fonts-ready', labToCanvasOpts: { debugLh: true, waitFontsReady: true } },
+      { id: 'decode-settle+fonts', labToCanvasOpts: { debugLh: true, decodeSettle: true, waitFontsReady: true } },
+      { id: 'wait-200', labToCanvasOpts: { debugLh: true, decodeWaitMs: 200 } },
+    ]
+
+    /** @param {HTMLCanvasElement} a @param {HTMLCanvasElement} b */
+    function compareCanvasPixels(a, b) {
+      if (!a || !b) return { identical: false, diffCount: null, totalPixels: null }
+      if (a.width !== b.width || a.height !== b.height) {
+        return { identical: false, diffCount: null, totalPixels: a.width * a.height, reason: 'dim mismatch' }
+      }
+      const da = a.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, a.width, a.height).data
+      const db = b.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, b.width, b.height).data
+      let diffCount = 0
+      for (let i = 0; i < da.length; i += 4) {
+        if (da[i] !== db[i] || da[i + 1] !== db[i + 1] || da[i + 2] !== db[i + 2] || da[i + 3] !== db[i + 3]) {
+          diffCount++
+        }
+      }
+      return { identical: diffCount === 0, diffCount, totalPixels: a.width * a.height }
+    }
+
+    /** @param {import('./fo-fix-recipes.js').FoFixRecipe} recipe */
+    async function probeRecipe(recipe, root, el) {
+      const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      })
+      const patchId = forkPrePostPatchId(recipe)
+      const forkPrePost = patchId
+        ? buildLabRasterForkTrace(
+            row.svgText,
+            patchId,
+            applyRasterOnlySvgPatch(row.svgText, patchId, {}),
+            null,
+          )
+        : null
+      const debug = buildLabLhDebugReport(row.canvas, root, el, row.svgText, cmp, {
+        dpr,
+        forkTrace: getLastLabToCanvasDebugReport()?.forkTrace ?? forkPrePost,
+        timingMs: getLastLabToCanvasDebugReport()?.timingMs ?? null,
+      })
+      return {
+        recipeId: recipe.id,
+        canvas: row.canvas,
+        svgText: row.svgText,
+        ink: {
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+          canvasTopInBorder: cmp.canvas?.topInBorder ?? null,
+        },
+        canvasDataset: { ...row.canvas.dataset },
+        debug,
+        forkPrePost,
+        pixelIdenticalToBaseline: null,
+      }
+    }
+
+    /** @param {import('./fo-fix-recipes.js').FoFixRecipe} recipe */
+    function forkPrePostPatchId(recipe) {
+      const lab = recipe.labToCanvasOpts?.rasterOnlySvgPatch
+      if (lab) return lab
+      const prod = recipe.harnessProductToCanvas?.experimentalRasterSvgPatch
+      if (prod && prod !== 'none') return prod
+      return null
+    }
+
+    async function probeTimingSweep(root, el, svgText, dims, meta, baselineCanvas) {
+      const baseRecipe = getFoFixRecipe('product-baseline')
+      /** @type {object[]} */
+      const rows = []
+      for (const variant of TIMING_VARIANTS) {
+        const recipe = {
+          ...baseRecipe,
+          id: `timing-${variant.id}`,
+          labToCanvasOpts: variant.labToCanvasOpts,
+        }
+        const canvas = await rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+        const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr)
+        const pixelDiff = compareCanvasPixels(baselineCanvas, canvas)
+        rows.push({
+          variantId: variant.id,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+          decodeMs: canvas.dataset.labDecodeMs ? Number(canvas.dataset.labDecodeMs) : null,
+          totalMs: canvas.dataset.labRasterTotalMs ? Number(canvas.dataset.labRasterTotalMs) : null,
+          pixelIdentical: pixelDiff.identical,
+          forkDecodeHash: canvas.dataset.labForkDecodeHash ?? null,
+        })
+      }
+      return rows
+    }
+
+    async function probeLhVariantsInline(root, el, svgText, dims, meta) {
+      const variants = [
+        { id: 'lh-21.6px', css: 'foreignObject *{line-height:21.6px!important}' },
+        { id: 'lh-48px', css: 'foreignObject *{line-height:48px!important}' },
+        { id: 'lh-normal', css: 'foreignObject *{line-height:normal!important}' },
+        { id: 'lh-1', css: 'foreignObject *{line-height:1!important}' },
+      ]
+      /** @type {object[]} */
+      const rows = []
+      for (const v of variants) {
+        const injected = svgText.includes('<style')
+          ? svgText.replace(/<style([^>]*)>/i, (m) => `${m}${v.css}`)
+          : svgText.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${v.css}</style>`)
+        const recipe = {
+          id: `inline-${v.id}`,
+          rasterPatch: 'lab-toCanvas',
+          labToCanvasOpts: { debugLh: true },
+        }
+        const canvas = await rasterLabToCanvas(injected, dims, scale, meta, recipe)
+        const cmp = compareThreeWayInk(root, canvas, injected, el, dpr)
+        const box = el.getBoundingClientRect()
+        const rr = root.getBoundingClientRect()
+        const profile = scanCanvasInkRowProfile(canvas, {
+          x: Math.round((box.left - rr.left) * dpr),
+          y: Math.round((box.top - rr.top) * dpr),
+          w: Math.round(box.width * dpr),
+          h: Math.round(box.height * dpr),
+        })
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+          inkRowProfile: profile?.profile ?? null,
+          firstInkRow: profile?.firstInkRow ?? null,
+          injectedSvgHash: fnv1aHash(injected),
+        })
+      }
+      return rows
+    }
+
+    window.__foLhDebugV3 = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        if (fixture === 'checkout') root.classList.add('checkout')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+
+        const serializedAudit = auditSerializedFoLineHeight('', landmark, el)
+        const parentChainLive = auditLiveLhParentChain(el, root)
+
+        /** @type {object[]} */
+        const recipeRows = []
+        let baselineCanvas = null
+        for (const id of LH_RECIPE_IDS) {
+          const recipe = getFoFixRecipe(id)
+          if (!recipe) continue
+          const row = await probeRecipe(recipe, root, el)
+          if (id === 'product-baseline') baselineCanvas = row.canvas
+          recipeRows.push(row)
+        }
+
+        if (baselineCanvas) {
+          for (const row of recipeRows) {
+            if (row.recipeId === 'product-baseline') {
+              row.pixelIdenticalToBaseline = true
+              continue
+            }
+            row.pixelIdenticalToBaseline = compareCanvasPixels(baselineCanvas, row.canvas).identical
+          }
+        }
+
+        const baselineProbe = recipeRows.find((r) => r.recipeId === 'product-baseline')
+        const svgText = baselineProbe?.svgText ?? ''
+        const cssW = root.offsetWidth || root.getBoundingClientRect().width
+        const cssH = root.offsetHeight || root.getBoundingClientRect().height
+        const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+        const meta = parseCaptureMeta(svgText, root)
+
+        const foSerializedAudit = auditSerializedFoLineHeight(svgText, landmark, el)
+        const foInternalLh = await probeFoInternalComputedLhAtDecode(svgText, landmark, {
+          cssW,
+          cssH,
+        })
+        const timingSweep = await probeTimingSweep(root, el, svgText, dims, meta, baselineCanvas)
+        const lhInlineVariants = await probeLhVariantsInline(root, el, svgText, dims, meta)
+
+        const plateauAnalysis = recipeRows.map((r) => {
+          const isLhPin =
+            r.recipeId.includes('pin-lh') ||
+            r.recipeId.includes('rfork-lh-used') ||
+            r.recipeId.includes('inject-fo-lh-pin')
+          const fork = r.forkPrePost ?? r.debug?.forkTrace
+          return {
+            recipeId: r.recipeId,
+            canvasDelta: r.ink.liveVsCanvasTopPx,
+            svgDelta: r.ink.liveVsSvgTopPx,
+            tiesBaseline2797:
+              r.ink.liveVsCanvasTopPx != null && Math.abs(r.ink.liveVsCanvasTopPx - 2.797) < 0.06,
+            likelyNoOp:
+              isLhPin &&
+              (fork?.svgStringChanged === false ||
+                r.pixelIdenticalToBaseline === true ||
+                foSerializedAudit.serializedMatchesLivePx === true),
+            forkChanged: fork?.svgStringChanged ?? null,
+            pixelIdenticalToBaseline: r.pixelIdenticalToBaseline,
+            serializedLhMatchesLive: foSerializedAudit.serializedMatchesLivePx,
+          }
+        })
+
+        /** @type {string[]} */
+        const findings = []
+        if (foSerializedAudit.serializedMatchesLivePx) {
+          findings.push(
+            `Serialized FO lh (${foSerializedAudit.serializedLineHeightPx}px) matches live computed — lh-pin forks re-assert existing value (no-op).`,
+          )
+        }
+        const lhPinRows = plateauAnalysis.filter((r) => r.likelyNoOp)
+        if (lhPinRows.length) {
+          findings.push(
+            `${lhPinRows.length} lh-pin class recipes are no-ops: fork unchanged or bitmap identical while canvasΔ stays ~2.797.`,
+          )
+        }
+        const forkWorking = recipeRows.some((r) => {
+          const ft = r.debug?.forkTrace ?? r.forkPrePost
+          return ft?.decodeMatchesPost === true || (ft?.svgStringChanged && r.canvasDataset?.labForkChanged === '1')
+        })
+        findings.push(
+          forkWorking
+            ? 'Raster fork reaches decode when lab-toCanvas debugLh is on; lh-pin forks that change SVG still produce bitmap-identical canvas (FO layout already at live lh via class rules).'
+            : 'lh-used-leaf rfork: svgStringChanged=false — inline style has line-height:normal; class .c* carries 21.6px; patch reads inline only → no-op.',
+        )
+        const timingSpread = timingSweep
+          .map((t) => t.liveVsCanvasTopPx)
+          .filter((v) => v != null)
+        if (timingSpread.length >= 2) {
+          const spread = Math.max(...timingSpread) - Math.min(...timingSpread)
+          findings.push(`Timing sweep canvasΔ spread ${spread.toFixed(3)}px — ${spread < 0.05 ? 'drift stable vs wait' : 'wait affects raster'}.`)
+        }
+        const profiles = [...new Set(lhInlineVariants.map((v) => v.inkRowProfile).filter(Boolean))]
+        findings.push(`Ink row profile across lh inject variants: ${profiles.join(', ') || 'unknown'}.`)
+
+        return {
+          fixture,
+          dpr,
+          scale,
+          landmark,
+          parentChainLive,
+          foSerializedAudit,
+          foInternalLh,
+          recipeRows,
+          timingSweep,
+          lhInlineVariants,
+          plateauAnalysis,
+          findings,
+          verdict: plateauAnalysis.every((r) => r.tiesBaseline2797)
+            ? 'ALL_TIE_2797_LH_NOOPS'
+            : 'PARTIAL_SPREAD',
+        }
+      },
+    }
+
+    window.__foLhDebugV3.run()
+      .then((result) => {
+        window.__foLhDebugV3.result = result
+        window.__foLhDebugV3.ready = true
+      })
+      .catch((err) => {
+        window.__foLhDebugV3.bootError = String(err?.message || err)
+        window.__foLhDebugV3.ready = true
+      })
+  </script>
+</body>
+</html>

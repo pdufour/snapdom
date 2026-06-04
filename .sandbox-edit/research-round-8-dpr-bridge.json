@@ -1,0 +1,30 @@
+{
+  "probe": "fo-root-cause-probe",
+  "section": "dpr-sweep-bridge",
+  "generatedAt": "2026-06-03",
+  "landmark": "Home",
+  "productBaseline": "product-baseline",
+  "rows": [
+    {
+      "dpr": 1,
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "halfLeadingLhFsPx": 2.8,
+      "residualCanvasMinusHalfLeadingPx": -0.003
+    },
+    {
+      "dpr": 2,
+      "liveVsCanvasTopPx": 3.297,
+      "liveVsSvgTopPx": -0.008,
+      "halfLeadingLhFsPx": 2.8,
+      "residualCanvasMinusHalfLeadingPx": 0.497,
+      "dprStepSlackPx": 0.5
+    }
+  ],
+  "verdict": "DPR_ADDS_0_5PX_PER_STEP_NOT_LH_SCALE",
+  "implication": "Strut class (~2.8px) is dpr-invariant; +0.5px/dpr is blit/device-grid slack — do not tune FO y by dpr alone.",
+  "artifacts": [
+    ".sandbox-edit/root-cause-dpr1.json",
+    ".sandbox-edit/root-cause-dpr2.json"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "probe": "fo-glyph-bounds",
+  "section": "research-round-6-glyph-vs48.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "layout": {
+      "anchorHeightPx": 48,
+      "stretchMinHeightPx": 48,
+      "computedLhPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFsPx": 2.8000000000000007,
+      "overflow": "visible",
+      "parentAlignItems": "stretch"
+    },
+    "range": {
+      "topInBorder": 14.203125,
+      "bottomInBorder": 33.203125,
+      "heightInBorder": 19,
+      "slackAbovePx": 14.203125,
+      "slackBelowPx": 14.796875,
+      "rangeFillsStretchBox": false
+    },
+    "canvasScan": {
+      "bandRegionDev": {
+        "box": {
+          "top": 1,
+          "left": 1,
+          "width": 64.859375,
+          "height": 48
+        },
+        "leftCss": 1,
+        "topCss": 1,
+        "x": 5,
+        "y": 1,
+        "w": 28,
+        "h": 48,
+        "dpr": 1
+      },
+      "topInBorder": 17,
+      "integerTopInBorder": 17,
+      "fractionalTopInBorder": 18.75,
+      "bottomInBorder": 29,
+      "inkHeightInBorder": 12,
+      "bottomDeltaVsRangePx": -4.203
+    },
+    "threeWay": {
+      "liveVsCanvasTopPx": 2.796875,
+      "liveVsSvgTopPx": -0.0078125,
+      "livePaintedTopInBorder": 14.203125,
+      "canvasPaintedTopInBorder": 17,
+      "liveGlyphTopInBorder": 14.203125
+    },
+    "verdict": {
+      "stretch48NotSerializedLh": true,
+      "scanUsesFullElementHeight": true,
+      "topDriftMatchesHalfLeading": true,
+      "previewCutoffRisk": true,
+      "implication": "Canvas ink bottom sits above Range bottom — possible FO clip or preview crop."
+    }
+  }
+}

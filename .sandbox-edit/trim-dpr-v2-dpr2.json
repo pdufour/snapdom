@@ -1,0 +1,159 @@
+{
+  "fixture": "fo-lh-deep-probe-v2",
+  "section": "trim-dpr",
+  "trimModes": [
+    "none",
+    "leading-trim-both",
+    "text-box-trim-both",
+    "text-box-edge-auto"
+  ],
+  "dpr": 2,
+  "headed": true,
+  "generatedAt": "2026-06-02T16:32:09.013Z",
+  "rows": [
+    {
+      "section": "trim-dpr",
+      "trimMode": "none",
+      "dpr": 2,
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 3.297
+      },
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": 0.497,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "trim-dpr",
+      "trimMode": "leading-trim-both",
+      "dpr": 2,
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 3.297
+      },
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": 0.497,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "trim-dpr",
+      "trimMode": "text-box-trim-both",
+      "dpr": 2,
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 3.297
+      },
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": 0.497,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "trim-both"
+      },
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "trim-dpr",
+      "trimMode": "text-box-edge-auto",
+      "dpr": 2,
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 3.297
+      },
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": 0.497,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "trim-both"
+      },
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    }
+  ]
+}

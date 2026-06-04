@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vDrift root cause (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>vDriftFix — draw dest + three-way ink</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      parseCaptureMeta,
+      runFoFixProbe,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+    import { resolveLabHook } from './tocanvas-lab-hooks-registry.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const RECIPE_IDS = [
+      'product-baseline',
+      'vdrift-fix-001-ceil-nudge',
+      'vdrift-fix-002-round-nudge',
+    ]
+
+    /** Mirror fo-fix-toCanvas.js snapBackingPx / paint dims. */
+    function snapBackingPx(px, mode) {
+      const n = Number(px) || 1
+      if (mode === 'floor') return Math.max(1, Math.floor(n))
+      if (mode === 'ceil') return Math.max(1, Math.ceil(n))
+      if (mode === 'round') return Math.max(1, Math.round(n))
+      return Math.max(1, n)
+    }
+
+  async function decodeIntrinsic(url) {
+      const img = new Image()
+      img.loading = 'eager'
+      img.decoding = 'sync'
+      img.src = url
+      await img.decode()
+      return { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight }
+    }
+
+    function computeLabDrawTrace({ meta, labToCanvasOpts, dims, scale, dpr, natW, natH }) {
+      const backingRound = labToCanvasOpts?.backingRound ?? 'round'
+      const effectiveBackingRound =
+        backingRound === 'none' ? 'none' : backingRound || 'ceil'
+      const ctxScale = labToCanvasOpts?.ctxScale ?? true
+      const roundDraw = Boolean(labToCanvasOpts?.roundDrawImage)
+
+      const optW = dims.cssW
+      const optH = dims.cssH
+      const refW = Number.isFinite(meta?.w0) ? meta.w0 : natW
+      const refH = Number.isFinite(meta?.h0) ? meta.h0 : natH
+
+      let outW = Math.max(1, optW)
+      let outH = Math.max(1, optH)
+      outW *= scale
+      outH *= scale
+
+      const backingW = snapBackingPx(outW * dpr, effectiveBackingRound)
+      const backingH = snapBackingPx(outH * dpr, effectiveBackingRound)
+      const paintW = ctxScale ? backingW / dpr : backingW
+      const paintH = ctxScale ? backingH / dpr : backingH
+      const dw = roundDraw ? Math.max(1, Math.round(paintW)) : paintW
+      const dh = roundDraw ? Math.max(1, Math.round(paintH)) : paintH
+
+      let dx = 0
+      let dy = 0
+      if (
+        labToCanvasOpts?.vDriftFix &&
+        Number.isFinite(meta?.gbcrFracX) &&
+        Number.isFinite(meta?.gbcrFracY)
+      ) {
+        dx = -meta.gbcrFracX
+        dy = -meta.gbcrFracY
+      } else if (
+        labToCanvasOpts?.measuredDest === 'gbcr-frac' &&
+        Number.isFinite(meta?.gbcrFracX) &&
+        Number.isFinite(meta?.gbcrFracY)
+      ) {
+        dx = meta.gbcrFracX
+        dy = meta.gbcrFracY
+      }
+
+      const backingVsExactW = backingW - outW * dpr
+      const backingVsExactH = backingH - outH * dpr
+
+      return {
+        refW,
+        refH,
+        outW,
+        outH,
+        backingRound: effectiveBackingRound,
+        backingW,
+        backingH,
+        backingVsExactW,
+        backingVsExactH,
+        paintW,
+        paintH,
+        dw,
+        dh,
+        dx,
+        dy,
+        destRectCss: { x: dx, y: dy, w: dw, h: dh },
+        nudgeCssPx: { x: dx, y: dy },
+        nudgeDevicePx: ctxScale ? { x: dx * dpr, y: dy * dpr } : { x: dx, y: dy },
+        vDriftFixActive: Boolean(labToCanvasOpts?.vDriftFix),
+      }
+    }
+
+    async function probeRecipe(recipeId) {
+      const recipe = getFoFixRecipe(recipeId)
+      if (!recipe) throw new Error(`recipe not found: ${recipeId}`)
+      const hook = resolveLabHook(recipe.labHook, recipe)
+      const labToCanvasOpts = {
+        ...(hook.labToCanvasOpts ?? {}),
+        ...(recipe.labToCanvasOpts ?? {}),
+      }
+
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const el = findLandmarkElement(root, landmark)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const fixtureDims = { cssW: cssW * scale, cssH: cssH * scale }
+      const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr, fixtureDims)
+
+      const meta = parseCaptureMeta(probe.svgText, root)
+      const prefix = 'data:image/svg+xml;charset=utf-8,'
+      const rawUrl = probe.svgText.startsWith('<')
+        ? `${prefix}${encodeURIComponent(probe.svgText)}`
+        : probe.svgText
+      const intrinsic = await decodeIntrinsic(
+        probe.svgText.startsWith('<') ? rawUrl : svgFromDataUrl(probe.svgText) || rawUrl,
+      )
+
+      const drawTrace = computeLabDrawTrace({
+        meta,
+        labToCanvasOpts,
+        dims: fixtureDims,
+        scale,
+        dpr,
+        natW: intrinsic.naturalWidth,
+        natH: intrinsic.naturalHeight,
+      })
+
+      const svgVsCanvasTopPx =
+        cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+          ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+          : null
+
+      return {
+        recipeId,
+        rasterPatch: recipe.rasterPatch,
+        labToCanvasOpts: {
+          vDriftFix: labToCanvasOpts.vDriftFix ?? false,
+          backingRound: labToCanvasOpts.backingRound ?? 'round',
+        },
+        meta: {
+          gbcrLeft: meta.gbcrLeft,
+          gbcrTop: meta.gbcrTop,
+          gbcrFracX: meta.gbcrFracX,
+          gbcrFracY: meta.gbcrFracY,
+          w0: meta.w0,
+          h0: meta.h0,
+        },
+        rootGbcr: root.getBoundingClientRect(),
+        intrinsic,
+        drawTrace,
+        canvasBacking: {
+          width: probe.canvas.width,
+          height: probe.canvas.height,
+        },
+        ink: {
+          liveTopInBorder: cmp.live?.topInBorder ?? null,
+          svgTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx,
+        },
+        probeRow: {
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+        },
+      }
+    }
+
+    async function runAll() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      window.snapdom = snapdom
+
+      const variants = []
+      for (const id of RECIPE_IDS) {
+        status.textContent = `Probing ${id}…`
+        variants.push(await probeRecipe(id))
+      }
+
+      const baseline = variants.find((v) => v.recipeId === 'product-baseline')
+      const v001 = variants.find((v) => v.recipeId === 'vdrift-fix-001-ceil-nudge')
+      const v002 = variants.find((v) => v.recipeId === 'vdrift-fix-002-round-nudge')
+
+      const nudgeY = v001?.drawTrace?.dy ?? null
+      const canvasDeltaBaseline = baseline?.ink?.liveVsCanvasTopPx ?? null
+      const canvasDeltaV001 = v001?.ink?.liveVsCanvasTopPx ?? null
+      const impliedNudgeEffect =
+        canvasDeltaBaseline != null && canvasDeltaV001 != null
+          ? canvasDeltaBaseline - canvasDeltaV001
+          : null
+      const foRasterErrorEstimate =
+        canvasDeltaBaseline != null && nudgeY != null
+          ? canvasDeltaBaseline + nudgeY
+          : null
+
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        variants,
+        analysis: {
+          baselineCanvasDelta: canvasDeltaBaseline,
+          v001CanvasDelta: canvasDeltaV001,
+          v002CanvasDelta: v002?.ink?.liveVsCanvasTopPx ?? null,
+          canvasDeltaReductionV001: impliedNudgeEffect,
+          vDriftDyCss: nudgeY,
+          vDriftDyDevice: v001?.drawTrace?.nudgeDevicePx?.y ?? null,
+          gbcrFracY: v001?.meta?.gbcrFracY ?? null,
+          svgVsLiveBaseline: baseline?.ink?.liveVsSvgTopPx ?? null,
+          svgVsLiveV001: v001?.ink?.liveVsSvgTopPx ?? null,
+          svgVsCanvasBaseline: baseline?.ink?.svgVsCanvasTopPx ?? null,
+          svgVsCanvasV001: v001?.ink?.svgVsCanvasTopPx ?? null,
+          svgVsCanvasV002: v002?.ink?.svgVsCanvasTopPx ?? null,
+          foRasterErrorAfterSubtractingNudge: foRasterErrorEstimate,
+        },
+      }
+    }
+
+    window.__vdriftRootCauseProbe = {
+      ready: false,
+      bootError: null,
+      run: runAll,
+    }
+
+    ;(async () => {
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status})`)
+        window.__vdriftRootCauseProbe.ready = true
+        status.textContent = 'Ready — runner will invoke run().'
+      } catch (err) {
+        window.__vdriftRootCauseProbe.bootError = String(err?.message || err)
+        status.textContent = window.__vdriftRootCauseProbe.bootError
+      }
+    })()
+  </script>
+</body>
+</html>

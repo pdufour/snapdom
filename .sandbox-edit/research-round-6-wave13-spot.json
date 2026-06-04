@@ -1,0 +1,55 @@
+{
+  "probe": "fo-glyph-bounds",
+  "section": "research-round-6-wave13-spot.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "rows": [
+      {
+        "recipeId": "product-baseline",
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-viewbox-y-half-leading",
+        "liveVsCanvasTopPx": 5.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-leaf-translate-y-half-leading",
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-y-w7-minus-range-subpixel",
+        "liveVsCanvasTopPx": 0.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-settle100-w7-y",
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      }
+    ],
+    "shard": "recipes-tocanvas-fix-wave13.js",
+    "matrixCommitted": false,
+    "bestRow": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "liveVsCanvasTopPx": -0.203,
+      "liveVsSvgTopPx": -0.008,
+      "passesGate006": false
+    },
+    "noRowPassesGate": true
+  }
+}

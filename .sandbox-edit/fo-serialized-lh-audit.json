@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-06-02T16:36:02.278Z",
+  "fixture": "mini",
+  "dpr": 1,
+  "landmark": "Home",
+  "foSerializedAudit": {
+    "landmarkText": "Home",
+    "liveLineHeightPx": 21.6,
+    "liveFontSizePx": 16,
+    "liveHalfLeadingLhFsPx": 2.8,
+    "serializedLineHeightPx": 21.6,
+    "serializedMatchesLivePx": true,
+    "landmarkLeaf": {
+      "text": "Home",
+      "tag": "a",
+      "inlineLineHeight": null,
+      "inlineFontSize": null,
+      "matchesLandmark": true
+    },
+    "serializedLhSource": "class.c1",
+    "leafCount": 3,
+    "injectedLineHeightRules": [
+      "normal",
+      "21.6px"
+    ],
+    "svgHash": "ffb31b6e"
+  },
+  "parentChainLive": [
+    {
+      "tag": "a",
+      "id": null,
+      "className": "",
+      "lineHeightComputed": "21.6px",
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFsPx": 2.8,
+      "display": "flex",
+      "alignItems": "center",
+      "alignSelf": "auto",
+      "verticalAlign": "baseline",
+      "boxSizing": "border-box",
+      "borderBoxH": 48,
+      "contentBoxH": 48,
+      "paddingTop": 0,
+      "paddingBottom": 0
+    },
+    {
+      "tag": "nav",
+      "id": null,
+      "className": "mini-nav",
+      "lineHeightComputed": "21.6px",
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFsPx": 2.8,
+      "display": "flex",
+      "alignItems": "stretch",
+      "alignSelf": "auto",
+      "verticalAlign": "baseline",
+      "boxSizing": "border-box",
+      "borderBoxH": 48,
+      "contentBoxH": 48,
+      "paddingTop": 0,
+      "paddingBottom": 0
+    },
+    {
+      "tag": "div",
+      "id": "capture-target",
+      "className": "",
+      "lineHeightComputed": "21.6px",
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFsPx": 2.8,
+      "display": "block",
+      "alignItems": "normal",
+      "alignSelf": "auto",
+      "verticalAlign": "baseline",
+      "boxSizing": "border-box",
+      "borderBoxH": 50,
+      "contentBoxH": 48,
+      "paddingTop": 0,
+      "paddingBottom": 0
+    }
+  ],
+  "lhInlineVariants": [
+    {
+      "variantId": "lh-21.6px",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "inkRowProfile": "gradual-ramp",
+      "firstInkRow": 17,
+      "injectedSvgHash": "aa772f0f"
+    },
+    {
+      "variantId": "lh-48px",
+      "liveVsCanvasTopPx": 3.797,
+      "liveVsSvgTopPx": 0.297,
+      "inkRowProfile": "gradual-ramp",
+      "firstInkRow": 18,
+      "injectedSvgHash": "864ecdd0"
+    },
+    {
+      "variantId": "lh-normal",
+      "liveVsCanvasTopPx": 3.797,
+      "liveVsSvgTopPx": 0.297,
+      "inkRowProfile": "gradual-ramp",
+      "firstInkRow": 18,
+      "injectedSvgHash": "7a869f21"
+    },
+    {
+      "variantId": "lh-1",
+      "liveVsCanvasTopPx": 3.797,
+      "liveVsSvgTopPx": 0.297,
+      "inkRowProfile": "gradual-ramp",
+      "firstInkRow": 18,
+      "injectedSvgHash": "ece1611b"
+    }
+  ],
+  "findings": [
+    "Serialized FO lh (21.6px) matches live computed — lh-pin forks re-assert existing value (no-op).",
+    "3 lh-pin class recipes are no-ops: fork unchanged or bitmap identical while canvasΔ stays ~2.797.",
+    "lh-used-leaf rfork: svgStringChanged=false — inline style has line-height:normal; class .c* carries 21.6px; patch reads inline only → no-op.",
+    "Timing sweep canvasΔ spread 0.000px — drift stable vs wait.",
+    "Ink row profile across lh inject variants: gradual-ramp."
+  ]
+}

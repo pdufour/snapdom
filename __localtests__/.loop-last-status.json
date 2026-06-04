@@ -1,0 +1,51 @@
+{
+  "loopActive": false,
+  "loopDisabled": true,
+  "fixed": false,
+  "reason": "rank batch: 12 rank-* combos from matrix leaders; best |canvas vs live| 0.203 (svg-text family), fillText 0.797, baseline 2.797",
+  "timestamp": "2026-06-02T15:00:00.000Z",
+  "lastRecipeId": "rank-svg-text-blob-decode-interval",
+  "bestAbsDeltaPainted": 0.203,
+  "baselineAbsDeltaPainted": 2.797,
+  "bestRecipeId": "rank-svg-text-decode-interval",
+  "winnerBeatsBaseline": true,
+  "lastProbe": {
+    "recipeId": "rank-svg-text-decode-interval",
+    "deltaPainted": 0.203,
+    "vsBaseline": -2.594,
+    "beatsBaseline": true
+  },
+  "newRecipeIds": [
+    "rank-svg-text-decode-interval",
+    "rank-svg-text-baseline-css",
+    "rank-filltext-decode-interval",
+    "rank-svg-text-integer-viewbox",
+    "rank-svg-text-fonts-ready",
+    "rank-text-as-path-decode-interval",
+    "rank-svg-text-fonts-ready-interval",
+    "rank-filltext-fonts-ready-interval",
+    "rank-svg-text-decode-interval-raf",
+    "rank-svg-only-text-decode-interval",
+    "rank-filltext-integer-viewbox",
+    "rank-svg-text-blob-decode-interval"
+  ],
+  "batchIds": [
+    "product-baseline",
+    "rank-svg-text-decode-interval",
+    "rank-svg-text-baseline-css",
+    "rank-filltext-decode-interval",
+    "rank-svg-text-integer-viewbox",
+    "rank-svg-text-fonts-ready",
+    "rank-text-as-path-decode-interval",
+    "rank-svg-text-fonts-ready-interval",
+    "rank-filltext-fonts-ready-interval",
+    "rank-svg-text-decode-interval-raf",
+    "rank-svg-only-text-decode-interval",
+    "rank-filltext-integer-viewbox",
+    "rank-svg-text-blob-decode-interval"
+  ],
+  "totalRecipeCount": 504,
+  "note": "loops disabled; rank-* merges svg-text (~0.203) + fillText (~0.797) leaders with decode-interval/fonts-ready/int-viewbox; rank-svg-text-blob-decode-interval no canvas ink User stopped auto-open: fo-fix-lab requires --open-browser; npm debug:fo-fix-lab is --serve only.",
+  "crazyRadicalEverBeatBaseline": true,
+  "autoOpenBrowserDisabled": true
+}

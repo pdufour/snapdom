@@ -1,0 +1,177 @@
+{
+  "probe": "fo-bitmap-row-profile-probe",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "variants": {
+    "baseline": {
+      "recipeId": "product-baseline",
+      "threeWay": {
+        "liveVsCanvasTopPx": -0.0031250000000007105,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "livePaintedTopInBorder": 17.003125,
+        "canvasPaintedTopInBorder": 17
+      },
+      "rangeTopInBorder": 15.203,
+      "rowProfile": {
+        "profile": "gradual-ramp",
+        "firstInkRow": 17,
+        "firstInkRowCss": 18,
+        "rows": [
+          {
+            "row": 0,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 1,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 2,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 3,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 4,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 5,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 6,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 7,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 8,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 9,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 10,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 11,
+            "darkFraction": 0,
+            "isInkStart": false
+          }
+        ]
+      },
+      "rangeVsFirstInkRowPx": 2.797,
+      "canvasDeltaVsRangeFirstInkPx": 2.797
+    },
+    "w7": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "threeWay": {
+        "liveVsCanvasTopPx": -3.0031250000000007,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "livePaintedTopInBorder": 17.003125,
+        "canvasPaintedTopInBorder": 14
+      },
+      "rangeTopInBorder": 15.203,
+      "rowProfile": {
+        "profile": "gradual-ramp",
+        "firstInkRow": 14,
+        "firstInkRowCss": 15,
+        "rows": [
+          {
+            "row": 0,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 1,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 2,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 3,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 4,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 5,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 6,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 7,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 8,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 9,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 10,
+            "darkFraction": 0,
+            "isInkStart": false
+          },
+          {
+            "row": 11,
+            "darkFraction": 0,
+            "isInkStart": false
+          }
+        ]
+      },
+      "rangeVsFirstInkRowPx": -0.203,
+      "canvasDeltaVsRangeFirstInkPx": -0.203
+    }
+  },
+  "synthesis": {
+    "baselineCanvasDelta": -0.0031250000000007105,
+    "w7CanvasDelta": -3.0031250000000007,
+    "w7MinusBaselineFirstInkCssPx": -3,
+    "baselineProfile": "gradual-ramp",
+    "w7Profile": "gradual-ramp",
+    "rangeAlignsWithFirstInk": false
+  },
+  "port": 8765,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

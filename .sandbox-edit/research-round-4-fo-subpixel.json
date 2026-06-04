@@ -1,0 +1,70 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-fo-subpixel.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "roundingMode": "none",
+        "foAttrs": {
+          "x": "0",
+          "y": "0",
+          "width": "500",
+          "height": "50"
+        },
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "roundingMode": "floor",
+        "foAttrs": {
+          "x": "0",
+          "y": "0",
+          "width": "500",
+          "height": "50"
+        },
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "roundingMode": "ceil",
+        "foAttrs": {
+          "x": "0",
+          "y": "0",
+          "width": "500",
+          "height": "50"
+        },
+        "liveVsCanvasTopPx": 2.796875,
+        "deltaFromBaselinePx": 0
+      },
+      {
+        "roundingMode": "y-plus-1",
+        "foAttrs": {
+          "x": "0",
+          "y": "1",
+          "width": "500",
+          "height": "50"
+        },
+        "liveVsCanvasTopPx": 3.796875,
+        "deltaFromBaselinePx": 1
+      }
+    ],
+    "yPlus1MovesCanvasPx": 1,
+    "verdict": "FO_Y_SENSITIVE_BUT_NOT_2.8PX_FROM_1PX",
+    "implication": "1px FO y nudge does not fully explain 2.797px — drift is internal strut paint, not FO rect snap alone."
+  }
+}

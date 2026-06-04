@@ -1,0 +1,24 @@
+{
+  "count": 18,
+  "updatedAt": "2026-06-02T16:17:05.634Z",
+  "prune": {
+    "command": "npm run fo:prune",
+    "activeCountBefore": 48,
+    "ranked": 47,
+    "nDeactivate": 35,
+    "newlyDeactivatedThisRun": 30,
+    "denylistTotal": 16664
+  },
+  "top10MatrixRecipeIds": [
+    "loop-ai-b10-w01-025",
+    "loop-ai-b10-w01-035",
+    "loop-ai-b10-w34-009",
+    "loop-ai-b11-w04-041",
+    "loop-ai-b11-w04-042",
+    "loop-ai-b11-w04-045",
+    "loop-ai-b11-w04-046",
+    "loop-ai-b11-w04-049",
+    "loop-ai-b11-w73-058",
+    "loop-ai-b11-w73-068"
+  ]
+}

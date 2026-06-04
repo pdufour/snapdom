@@ -1,0 +1,73 @@
+{
+  "fixture": "mini-nav",
+  "sameCaptureSvg": true,
+  "recipeId": "product-baseline",
+  "landmark": "Home",
+  "landmarkText": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 500,
+    "cssH": 50
+  },
+  "svgBytes": 31009,
+  "captureMeta": null,
+  "pathA": {
+    "id": "inlineSvgMeasure",
+    "method": "measureSvgInkForElement",
+    "painted": {
+      "painted": {
+        "top": 15.1953125,
+        "topInBorder": 14.1953125
+      },
+      "cap": {
+        "top": 19.7265625,
+        "topInBorder": 18.7265625,
+        "halfLeading": 15
+      }
+    }
+  },
+  "pathB": {
+    "id": "decodeDrawCanvas",
+    "method": "runFoFixProbe raster (product decode + drawImage)",
+    "painted": {
+      "top": 17.5,
+      "topInBorder": 17.5
+    },
+    "canvas": {
+      "width": 1000,
+      "height": 100,
+      "styleWidth": "500px",
+      "styleHeight": "50px"
+    }
+  },
+  "delta": {
+    "svgVsCanvasTopInBorderPx": 3.3046875,
+    "svgVsCanvasTopPx": 3.3046875
+  },
+  "threeWay": {
+    "live": {
+      "topInBorder": 14.203125
+    },
+    "svgFromCompare": {
+      "topInBorder": 14.1953125
+    },
+    "canvasFromCompare": {
+      "topInBorder": 17.5
+    },
+    "liveVsSvgTopPx": -0.0078125,
+    "liveVsCanvasTopPx": 3.296875,
+    "compareSvgVsCanvasTopInBorderPx": 3.3046875
+  },
+  "pathDeltaMatchesThreeWay": true,
+  "verdict": "BITMAP_SHIFTS_VS_INLINE",
+  "interpretation": [
+    "Same-SVG path Δ (B−A) topInBorder=3.305px.",
+    "vs live: svgΔ=-0.008px canvasΔ=3.297px (three-way svg↔canvas 3.305px).",
+    "Large path A/B gap — FO→bitmap raster shifts ink vs inline serialized FO measurement.",
+    "SVG≈live but canvas drifts — path Δ tracks live↔canvas gap (bitmap stage, not FO serialization layout)."
+  ],
+  "headed": true,
+  "generatedAt": "2026-06-02T16:19:34.880Z",
+  "port": 8787
+}

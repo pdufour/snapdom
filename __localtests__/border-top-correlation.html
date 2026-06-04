@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>border-top correlation (mini vs checkout)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target { background: #fff; border: 1px solid #cbd5e1; }
+    .mini-nav { display: flex; align-items: stretch; min-height: 48px; width: 500px; font: 600 16px/1.35 system-ui; }
+    .mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    .checkout-header { display: flex; align-items: stretch; min-height: 56px; padding: 0 16px; gap: 24px; max-width: 720px; }
+    .checkout-logo { display: flex; align-items: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
+    nav.nav-links { display: flex; align-items: stretch; flex: 1; min-width: 0; }
+    nav.nav-links a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      text-decoration: none;
+      color: #0f172a;
+      font: 600 16px/1.35 system-ui;
+      border-top: 3px solid transparent;
+    }
+    #status { font: 12px ui-monospace, Menlo, monospace; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="capture-target"></div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe, runFoFixProbe, findLandmarkElement } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const fixture = (params.get('fixture') || 'mini').trim()
+    const borderMode = (params.get('borderTop') || 'native').trim().toLowerCase()
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const status = document.getElementById('status')
+    const root = document.getElementById('capture-target')
+
+    const NATIVE_BORDER = { mini: '0px', checkout: '3px' }
+
+    function mountFixture(name) {
+      if (name === 'checkout') {
+        root.innerHTML = `
+          <header class="checkout-header">
+            <div class="checkout-logo">Acme</div>
+            <nav class="nav-links" aria-label="Checkout nav">
+              <a href="#">Home</a>
+              <a href="#">Products</a>
+            </nav>
+          </header>`
+        root.style.maxWidth = '720px'
+        root.style.width = ''
+      } else {
+        root.innerHTML = `
+          <nav class="mini-nav" aria-label="Mini checkout nav">
+            <a href="#">Home</a>
+            <a href="#">Products</a>
+          </nav>`
+        root.style.width = '500px'
+        root.style.maxWidth = '100%'
+      }
+    }
+
+    function applyBorderTopOverride(navLinks) {
+      if (!navLinks?.length) return
+      const native = NATIVE_BORDER[fixture] || '0px'
+      let value = native
+      if (borderMode === '0' || borderMode === 'none') value = '0px'
+      else if (borderMode === '3') value = '3px'
+      else if (borderMode === 'native') value = native
+      else value = borderMode
+      for (const a of navLinks) {
+        if (value === '0px') {
+          a.style.borderTop = '0 solid transparent'
+        } else {
+          a.style.borderTop = `${parseFloat(value) || 0}px solid transparent`
+        }
+      }
+    }
+
+    function readLinkMetrics(el, rootEl) {
+      const cs = getComputedStyle(el)
+      const box = el.getBoundingClientRect()
+      const rootBox = rootEl.getBoundingClientRect()
+      return {
+        borderTopWidthPx: parseFloat(cs.borderTopWidth) || 0,
+        borderTopStyle: cs.borderTopStyle,
+        paddingTopPx: parseFloat(cs.paddingTop) || 0,
+        lineHeightPx: parseFloat(cs.lineHeight) || 0,
+        fontSizePx: parseFloat(cs.fontSize) || 0,
+        heightPx: box.height,
+        topInRootPx: box.top - rootBox.top,
+      }
+    }
+
+    async function runProbe() {
+      mountFixture(fixture)
+      const nav =
+        fixture === 'checkout'
+          ? root.querySelector('nav.nav-links')
+          : root.querySelector('nav.mini-nav')
+      const links = [...(nav?.querySelectorAll('a') || [])]
+      applyBorderTopOverride(links)
+
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const home = findLandmarkElement(root, landmark)
+      if (!home) throw new Error(`Landmark ${landmark} not found`)
+
+      const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+      if (!recipe?.id) throw new Error('product-baseline recipe missing')
+
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const metrics = readLinkMetrics(home, root)
+
+      return {
+        fixture,
+        borderTopMode: borderMode,
+        borderTopAppliedPx: metrics.borderTopWidthPx,
+        nativeBorderTopPx: parseFloat(NATIVE_BORDER[fixture]) || 0,
+        recipeId: recipe.id,
+        landmark,
+        dpr,
+        scale,
+        linkMetrics: metrics,
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+          pass: probe.pass,
+        },
+      }
+    }
+
+    async function boot() {
+      window.__borderTopCorrelationProbe = {
+        ready: false,
+        bootError: null,
+        run: runProbe,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        window.__borderTopCorrelationProbe.ready = true
+        status.textContent = `Ready fixture=${fixture} borderTop=${borderMode}`
+        if (params.get('auto') === '1') {
+          const payload = await runProbe()
+          window.__borderTopCorrelationProbe.lastReport = payload
+          status.textContent = 'Done (auto=1).'
+        }
+      } catch (err) {
+        window.__borderTopCorrelationProbe.bootError = String(err?.message || err)
+        status.textContent = window.__borderTopCorrelationProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__borderTopCorrelationProbe = window.__borderTopCorrelationProbe || {}
+      window.__borderTopCorrelationProbe.bootError = String(err?.message || err)
+      status.textContent = window.__borderTopCorrelationProbe.bootError
+    })
+  </script>
+</body>
+</html>

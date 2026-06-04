@@ -1,0 +1,36 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-modern-screenshot.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "snapdom": {
+      "liveVsCanvasTopPx": 2.796875,
+      "liveVsSvgTopPx": -0.0078125,
+      "svgVsCanvasTopPx": 2.805
+    },
+    "modernScreenshot": {
+      "liveVsCanvasTopPx": 2.797,
+      "error": null,
+      "canvasWidth": 500,
+      "canvasHeight": 50
+    },
+    "bothShowBitmapDrift": true,
+    "deltaBetweenEnginesPx": 0,
+    "verdict": "CLASS_WIDE_FO_RASTER_BUG",
+    "implication": "If both engines show ~2.8px, bug is Chromium FO class — not snapdom-specific."
+  }
+}

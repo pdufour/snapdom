@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO paint-origin autopsy</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    .fixture { margin-bottom: 24px; }
+    #capture-target-mini, #capture-target-noflex {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    #text-leaf { display: inline-block; padding: 12px; color: #111; }
+    #status { font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>FO paint-origin autopsy</h1>
+  <div class="fixture" id="fixture-mini">
+    <h2>Mini nav (flex stretch 48px)</h2>
+    <div id="capture-target-mini">
+      <nav class="mini-nav" aria-label="Mini nav">
+        <a href="#">Home</a>
+        <a href="#">Products</a>
+      </nav>
+    </div>
+  </div>
+  <div class="fixture" id="fixture-noflex" hidden>
+    <h2>Typography no-flex (21.6px line box)</h2>
+    <div id="capture-target-noflex">
+      <span id="text-leaf">Home</span>
+    </div>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { applyRasterOnlySvgPatch } from '../src/exporters/rasterOnlySvgPatch.js'
+    import {
+      auditSerializedFoLineHeight,
+      scanCanvasInkRowProfile,
+    } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      enrichRasterMetaFromTextLeaf,
+      findLandmarkElement,
+      measureCanvasInkBandRegion,
+      measureCanvasInkForElementDualScan,
+      measureLhStrutRangeFacts,
+      measureSvgInkForElement,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const fixtureId = (params.get('fixture') || 'all').trim()
+    const recipeIds = (params.get('recipes') || 'product-baseline,tc-fix-w7-rfork-fo-y-half-leading-meta')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function auditFoAttributes(svgText) {
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const fo = doc.querySelector('foreignObject')
+      if (!fo) return { error: 'no foreignObject' }
+      const attrs = {}
+      for (const a of fo.attributes) attrs[a.name] = a.value
+      return { foreignObject: attrs }
+    }
+
+    function foAfterPatch(svgText, recipe, meta) {
+      const patchId = recipe?.labToCanvasOpts?.rasterOnlySvgPatch
+      if (!patchId) return auditFoAttributes(svgText)
+      const patched = applyRasterOnlySvgPatch(svgText, patchId, { meta })
+      return auditFoAttributes(patched)
+    }
+
+    async function probeRecipe(root, el, recipeId) {
+      const recipe = getFoFixRecipe(recipeId)
+      const row = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const fixtureDims = { cssW, cssH }
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, fixtureDims, {
+        includeFractionalInkScan: true,
+      })
+      const strutFacts = measureLhStrutRangeFacts(el)
+      const meta = enrichRasterMetaFromTextLeaf(el, parseCaptureMeta(row.svgText, root))
+      const foBaseline = auditFoAttributes(row.svgText)
+      const foPatched = foAfterPatch(row.svgText, recipe, meta)
+      const region = measureCanvasInkBandRegion(row.canvas, root, el, dpr)
+      const ctx = row.canvas.getContext('2d', { willReadFrequently: true })
+      let rowProfile = null
+      let scanModes = null
+      if (ctx) {
+        try {
+          rowProfile = scanCanvasInkRowProfile(row.canvas, {
+            x: region.x,
+            y: region.y,
+            w: region.w,
+            h: region.h,
+          })
+        } catch {
+          /* tainted */
+        }
+      }
+      const dualScan = measureCanvasInkForElementDualScan(row.canvas, root, el, dpr)
+      const landmarkText = (el.textContent || '').trim()
+      const svgInline = measureSvgInkForElement(row.svgText, landmarkText, fixtureDims)
+
+      return {
+        recipeId,
+        threeWay: {
+          liveTopInBorder: cmp.live?.topInBorder ?? null,
+          svgTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasTopInBorderInteger: cmp.canvas?.integerTopInBorder ?? cmp.canvas?.topInBorder ?? null,
+          canvasTopInBorderFractionalThreshold:
+            dualScan.fractionalThreshold?.topInBorder ?? null,
+          canvasTopInBorderFractionalCom: dualScan.fractionalCom?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPxInteger: cmp.fractionalCanvasDelta?.integer ?? cmp.liveVsCanvasTopPx ?? null,
+          liveVsCanvasTopPxFractionalThreshold: cmp.fractionalCanvasDelta?.fractionalThreshold ?? null,
+          liveVsCanvasTopPxFractionalCom: cmp.fractionalCanvasDelta?.fractionalCom ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        strutFacts,
+        meta: {
+          lhStrutHalfLeadingPx: meta.lhStrutHalfLeadingPx ?? null,
+          lhStrutRangeSubpixelPx: meta.lhStrutRangeSubpixelPx ?? null,
+          lhStrutFoYAdjustPx: meta.lhStrutFoYAdjustPx ?? null,
+        },
+        foBaseline,
+        foPatched,
+        foYDelta:
+          foBaseline.foreignObject?.y != null && foPatched.foreignObject?.y != null
+            ? roundPx(parseFloat(foPatched.foreignObject.y) - parseFloat(foBaseline.foreignObject.y))
+            : null,
+        inkBand: region,
+        scanModes: scanModes
+          ? {
+              integerDeviceRow: scanModes.integer.integerRow,
+              fractionalThresholdDeviceRow: scanModes.fractionalThreshold.fractionalRow,
+              fractionalComDeviceRow: scanModes.fractionalCom.fractionalRow,
+              bandOriginDeviceY: region.y,
+            }
+          : null,
+        inkRowProfile: rowProfile
+          ? {
+              profile: rowProfile.profile,
+              firstInkRow: rowProfile.firstInkRow,
+              firstInkRowCss: rowProfile.firstInkRowCss,
+            }
+          : null,
+        svgInlineTopInBorder: svgInline?.painted?.topInBorder ?? null,
+        serializedLhAudit: auditSerializedFoLineHeight(row.svgText, landmarkText, el),
+        canvasBacking: row.canvas
+          ? { width: row.canvas.width, height: row.canvas.height, dpr }
+          : null,
+      }
+    }
+
+    async function probeFixture(id) {
+      const isMini = id === 'mini-nav'
+      document.getElementById('fixture-mini').hidden = !isMini && id !== 'all'
+      document.getElementById('fixture-noflex').hidden = isMini && id !== 'all'
+      if (id === 'all') {
+        document.getElementById('fixture-mini').hidden = false
+        document.getElementById('fixture-noflex').hidden = false
+      }
+
+      const root = document.getElementById(isMini ? 'capture-target-mini' : 'capture-target-noflex')
+      const el = isMini
+        ? findLandmarkElement(root, landmark)
+        : root.querySelector('#text-leaf')
+      if (!el) throw new Error(`Landmark "${landmark}" not found in ${id}`)
+
+      /** @type {object[]} */
+      const recipes = []
+      for (const recipeId of recipeIds) {
+        recipes.push(await probeRecipe(root, el, recipeId))
+      }
+      return {
+        fixtureId: id,
+        layout: isMini
+          ? 'flex stretch 48px mini nav'
+          : 'inline-block span; no flex; 21.6px typographic line box',
+        landmark,
+        dpr,
+        scale,
+        recipes,
+      }
+    }
+
+    async function runAutopsy() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      /** @type {object[]} */
+      const fixtures = []
+      if (fixtureId === 'all') {
+        fixtures.push(await probeFixture('mini-nav'))
+        fixtures.push(await probeFixture('typography-no-flex'))
+      } else if (fixtureId === 'typography-no-flex') {
+        fixtures.push(await probeFixture('typography-no-flex'))
+      } else {
+        fixtures.push(await probeFixture('mini-nav'))
+      }
+
+      return {
+        generatedAt: new Date().toISOString(),
+        dpr,
+        scale,
+        landmark,
+        fixtures,
+      }
+    }
+
+    window.__foPaintOriginAutopsy = { ready: false, bootError: null, run: runAutopsy }
+
+    runAutopsy()
+      .then((payload) => {
+        window.__foPaintOriginAutopsy.payload = payload
+        const w7 = payload.fixtures?.[0]?.recipes?.find(
+          (r) => r.recipeId === 'tc-fix-w7-rfork-fo-y-half-leading-meta',
+        )
+        const intD = w7?.threeWay?.liveVsCanvasTopPxInteger
+        const fracD = w7?.threeWay?.liveVsCanvasTopPxFractionalThreshold
+        document.getElementById('status').textContent =
+          intD != null
+            ? `Ready — w7 integer canvasΔ=${intD.toFixed(3)} fractional=${fracD?.toFixed(3) ?? '—'}`
+            : 'Ready — autopsy complete.'
+      })
+      .catch((err) => {
+        window.__foPaintOriginAutopsy.bootError = String(err?.message || err)
+        document.getElementById('status').textContent = `Boot failed: ${window.__foPaintOriginAutopsy.bootError}`
+      })
+      .finally(() => {
+        window.__foPaintOriginAutopsy.ready = true
+      })
+  </script>
+</body>
+</html>

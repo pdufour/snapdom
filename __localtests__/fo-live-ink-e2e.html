@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-live-ink e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  { "imports": { "image-trim": "https://esm.sh/image-trim@1.0.0" } }
+  </script>
+  <style>
+    .band-host { position: absolute; left: -9999px; top: 0; }
+    .band { position: relative; width: 100px; height: 80px; background: #fff; overflow: hidden; }
+    .ink-bar { position: absolute; left: 15px; width: 50px; height: 12px; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="band-host" class="band-host"></div>
+  <script type="module">
+    import {
+      INK_SCAN_CAP_CORE_DEFAULTS,
+      ensureInkScanBackend,
+      inkTopRowFromCanvasRegion,
+      registerImageTrimGetBorders,
+    } from './fo-ink-bounds-scan.mjs'
+
+    const params = new URLSearchParams(location.search)
+    const inkTop = Number(params.get('inkTop') ?? 40)
+    const BAND_W = 100
+    const BAND_H = 80
+    const BAR_H = 12
+    const SCAN_OPTS = {
+      mode: 'integer',
+      solidBand: true,
+      capCrest: true,
+      refineUpward: true,
+      ...INK_SCAN_CAP_CORE_DEFAULTS,
+    }
+
+    function mountLive(top) {
+      const host = document.getElementById('band-host')
+      host.replaceChildren()
+      const band = document.createElement('div')
+      band.className = 'band'
+      const bar = document.createElement('div')
+      bar.className = 'ink-bar'
+      bar.style.top = `${top}px`
+      bar.style.height = `${BAR_H}px`
+      band.appendChild(bar)
+      host.appendChild(band)
+      return band
+    }
+
+    function rasterizeLive(band, canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      const bandRect = band.getBoundingClientRect()
+      const bar = band.querySelector('.ink-bar')
+      const barRect = bar.getBoundingClientRect()
+      ctx.fillStyle = '#000'
+      ctx.fillRect(
+        barRect.left - bandRect.left,
+        barRect.top - bandRect.top,
+        barRect.width,
+        barRect.height,
+      )
+    }
+
+    function scanCanvas(canvas) {
+      const hit = inkTopRowFromCanvasRegion(
+        canvas.getContext('2d', { willReadFrequently: true }),
+        0, 0, BAND_W, BAND_H,
+        SCAN_OPTS,
+      )
+      return hit?.regionRow ?? hit?.row ?? null
+    }
+
+    window.__foLiveInkE2e = {
+      ready: false,
+      bootError: null,
+      inkTop,
+      async scan() {
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        await ensureInkScanBackend('auto')
+        const canvas = document.createElement('canvas')
+        canvas.width = BAND_W
+        canvas.height = BAND_H
+        rasterizeLive(mountLive(inkTop), canvas)
+        return scanCanvas(canvas)
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foLiveInkE2e.ready = true
+    } catch (e) {
+      window.__foLiveInkE2e.bootError = String(e?.message || e)
+      window.__foLiveInkE2e.ready = true
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-06-02T16:25:18.652Z",
+  "port": 8798,
+  "batch": "c",
+  "landmark": "Home",
+  "logFile": ".sandbox-edit/fix-w6-c.log",
+  "requestedIds": [
+    "product-baseline",
+    "tc-fix-w6-tc-natural-contain-draw",
+    "tc-fix-w6-combo-meta-ceil",
+    "vdrift-fix-001"
+  ],
+  "recipeIds": [
+    "vdrift-fix-001-ceil-nudge",
+    "product-baseline",
+    "tc-fix-w6-tc-natural-contain-draw",
+    "tc-fix-w6-combo-meta-ceil"
+  ],
+  "idNotes": {
+    "vdrift-fix-001": "No recipe with this id; ran vdrift-fix-001-ceil-nudge (active vDriftFix probe)."
+  },
+  "inkPassThresholdPx": 0.06,
+  "rows": [
+    {
+      "recipeId": "vdrift-fix-001-ceil-nudge",
+      "svgDelta": -0.008,
+      "canvasDelta": 1.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 1.797
+    },
+    {
+      "recipeId": "product-baseline",
+      "svgDelta": -0.008,
+      "canvasDelta": 2.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 2.797
+    },
+    {
+      "recipeId": "tc-fix-w6-tc-natural-contain-draw",
+      "svgDelta": -0.008,
+      "canvasDelta": 2.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 2.797
+    },
+    {
+      "recipeId": "tc-fix-w6-combo-meta-ceil",
+      "svgDelta": -0.008,
+      "canvasDelta": 2.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 2.797
+    }
+  ],
+  "baseline": {
+    "recipeId": "product-baseline",
+    "svgDelta": -0.008,
+    "canvasDelta": 2.797,
+    "stage": "raster",
+    "pass": false,
+    "absSvgDelta": 0.008,
+    "absCanvasDelta": 2.797
+  },
+  "best": {
+    "byAbsCanvasDelta": {
+      "recipeId": "vdrift-fix-001-ceil-nudge",
+      "svgDelta": -0.008,
+      "canvasDelta": 1.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 1.797
+    },
+    "byAbsSvgDelta": {
+      "recipeId": "vdrift-fix-001-ceil-nudge",
+      "svgDelta": -0.008,
+      "canvasDelta": 1.797,
+      "stage": "raster",
+      "pass": false,
+      "absSvgDelta": 0.008,
+      "absCanvasDelta": 1.797
+    }
+  },
+  "beatsBaselineAbsCanvas": true
+}

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium FO strut repro — filing minimal (no snapdom)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 16px; font: 14px/1.45 system-ui, sans-serif; background: #f8fafc; color: #0f172a; max-width: 96ch; }
+    h1 { font-size: 17px; margin: 0 0 8px; }
+    p, li { color: #475569; }
+    code { font-size: 12px; }
+    ol { margin: 0 0 16px; padding-left: 1.25rem; }
+    table { border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+    th, td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+    th { background: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Chromium bug repro — FO text bitmap omits half-leading strut</h1>
+  <p>
+    Minimal headed repro for filing. Attach <code>chromium-fo-strut-repro.svg</code> from this folder.
+    No snapdom, capture.js, or modern-screenshot.
+  </p>
+  <ol>
+    <li>Open <code>chrome://version</code> and copy the full version string.</li>
+    <li>Serve the repo root: <code>node __localtests__/local-http-server.mjs</code></li>
+    <li>Open this page via HTTP (ES modules): <code>/__localtests__/chromium-fo-only/chromium-fo-strut-repro.html?dpr=1</code></li>
+    <li>Optional: <code>?svg=file</code> loads the committed <code>.svg</code> instead of the inline builder.</li>
+    <li>Paste the JSON below into the bug (three-way ink @ dpr=1).</li>
+  </ol>
+  <table>
+    <thead><tr><th>Stage</th><th>Expected</th><th>Actual (headed Chrome @ dpr=1)</th></tr></thead>
+    <tbody>
+      <tr><td>Inline / serialized FO vs live</td><td>Sub-pixel match</td><td><strong>svgΔ ≈ 0 px</strong></td></tr>
+      <tr><td>FO decode bitmap vs live</td><td>Same as inline FO</td><td><strong>canvasΔ ≈ +2.797 px</strong></td></tr>
+      <tr><td>Half-leading (lh−fs)/2</td><td>Explains offset</td><td><strong>2.8 px</strong> for 16px / lh 1.35</td></tr>
+    </tbody>
+  </table>
+  <div id="fixture" style="width:500px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0">
+    <div style="display:flex;align-items:stretch;min-height:48px">
+      <a href="#" style="display:flex;align-items:center;padding:0 12px;text-decoration:none;color:#111">Home</a>
+    </div>
+  </div>
+  <p id="status">Running probe…</p>
+  <pre id="out" style="font:12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e2e8f0;padding:12px;border-radius:6px;overflow:auto"></pre>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      compareThreeWay,
+      foreignObjectYNudgePatch,
+      halfLeadingFromComputed,
+      probeChromiumFoOnly,
+      rasterSvgToCanvas,
+    } from './chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const useFileSvg = params.get('svg') === 'file'
+
+    async function run() {
+      const root = document.getElementById('fixture')
+      const el = root.querySelector('a')
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const half = halfLeadingFromComputed(el)
+
+      let svgText
+      if (useFileSvg) {
+        svgText = await fetch('./chromium-fo-strut-repro.svg').then((r) => r.text())
+      } else {
+        svgText = buildStaticMinimalNavFoSvg(cssW, cssH)
+      }
+
+      const base = await probeChromiumFoOnly({
+        root,
+        landmark: 'Home',
+        dpr,
+        buildSvg: () => svgText,
+      })
+
+      const w7Svg = foreignObjectYNudgePatch(svgText, -half)
+      const { canvas: w7Canvas } = await rasterSvgToCanvas(w7Svg, cssW, cssH, dpr)
+      const w7 = compareThreeWay(root, w7Canvas, w7Svg, el, dpr, { cssW, cssH })
+
+      const report = {
+        probe: 'chromium-fo-strut-repro-filing',
+        generatedAt: new Date().toISOString(),
+        chromeVersionHint: 'Copy full string from chrome://version',
+        userAgent: navigator.userAgent,
+        dpr,
+        reproFiles: {
+          svg: '__localtests__/chromium-fo-only/chromium-fo-strut-repro.svg',
+          html: '__localtests__/chromium-fo-only/chromium-fo-strut-repro.html',
+        },
+        svgSource: useFileSvg ? 'chromium-fo-strut-repro.svg' : 'buildStaticMinimalNavFoSvg',
+        typography: {
+          fontSizePx: parseFloat(getComputedStyle(el).fontSize),
+          lineHeightPx: parseFloat(getComputedStyle(el).lineHeight),
+          halfLeadingLhFsPx: half,
+        },
+        baseline: base.threeWay,
+        verdict: base.verdict,
+        w7Workaround: {
+          note: 'Lab-only — shifts foreignObject y by −½(lh−fs); documents mechanism, not an engine fix',
+          foreignObjectDeltaY: -half,
+          threeWay: w7,
+          canvasDeltaPx: w7.liveVsCanvasTopPx,
+        },
+        expected: 'FO inline/svg ink aligns with live (|svgΔ| < 0.15px)',
+        actual: `FO bitmap ink ~+${base.threeWay.liveVsCanvasTopPx?.toFixed(3)}px vs live (~½(lh−fs) strut)`,
+      }
+
+      document.getElementById('out').textContent = JSON.stringify(report, null, 2)
+      document.getElementById('status').textContent =
+        `${report.verdict} — canvasΔ=${base.threeWay.liveVsCanvasTopPx?.toFixed(3)}px · svgΔ=${base.threeWay.liveVsSvgTopPx?.toFixed(3)}px · w7→${w7.liveVsCanvasTopPx?.toFixed(3)}px`
+    }
+
+    run().catch((err) => {
+      document.getElementById('status').textContent = `Error: ${err.message}`
+    })
+  </script>
+</body>
+</html>

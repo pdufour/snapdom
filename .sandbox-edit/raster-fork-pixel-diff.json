@@ -1,0 +1,168 @@
+{
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 500,
+    "cssH": 50
+  },
+  "mechanism": "same-svg lab-toCanvas raster fork pixel diff",
+  "sameCaptureSvg": true,
+  "svgBytes": 31009,
+  "inlineFo": {
+    "foreignObjectBytes": 30728,
+    "inlineLineHeights": [
+      "normal",
+      "21.6px"
+    ],
+    "styleLineHeights": [
+      "normal",
+      "21.6px"
+    ],
+    "hasFlexAlignCenter": true,
+    "patchCssLhPinPresent": true,
+    "patchCssFlexCenterPresent": false
+  },
+  "baseline": {
+    "recipe": "lab-baseline-no-patch",
+    "canvasBacking": {
+      "width": 1000,
+      "height": 100
+    },
+    "ink": {
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.297,
+      "canvasTopInBorder": 17.5
+    },
+    "productBaselineProbeInk": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.296875
+    }
+  },
+  "patches": [
+    {
+      "patchId": "inject-fo-lh-pin",
+      "patchDiagnostics": {
+        "patchId": "inject-fo-lh-pin",
+        "svgStringChanged": true,
+        "bytesDelta": 45,
+        "patchedHasLhPin": true,
+        "patchedHasFlexCenter": false
+      },
+      "pixelDiff": {
+        "identical": true,
+        "diffCount": 0,
+        "totalPixels": 100000,
+        "diffFraction": 0
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 3.297,
+        "canvasTopInBorder": 17.5,
+        "deltaCanvasTopFromBaselinePx": 0
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      }
+    },
+    {
+      "patchId": "inject-flex-center",
+      "patchDiagnostics": {
+        "patchId": "inject-flex-center",
+        "svgStringChanged": true,
+        "bytesDelta": 163,
+        "patchedHasLhPin": true,
+        "patchedHasFlexCenter": true
+      },
+      "pixelDiff": {
+        "identical": false,
+        "diffCount": 100000,
+        "totalPixels": 100000,
+        "diffFraction": 1
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": -12.203,
+        "canvasTopInBorder": 2,
+        "deltaCanvasTopFromBaselinePx": -15.5
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      }
+    },
+    {
+      "patchId": "fo-y-nudge",
+      "patchDiagnostics": {
+        "patchId": "fo-y-nudge",
+        "svgStringChanged": true,
+        "bytesDelta": 0,
+        "patchedHasLhPin": true,
+        "patchedHasFlexCenter": false
+      },
+      "pixelDiff": {
+        "identical": false,
+        "diffCount": 7951,
+        "totalPixels": 100000,
+        "diffFraction": 0.07951
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 4.297,
+        "canvasTopInBorder": 18.5,
+        "deltaCanvasTopFromBaselinePx": 1
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      }
+    },
+    {
+      "patchId": "combo-lh-center",
+      "patchDiagnostics": {
+        "patchId": "combo-lh-center",
+        "svgStringChanged": true,
+        "bytesDelta": 208,
+        "patchedHasLhPin": true,
+        "patchedHasFlexCenter": true
+      },
+      "pixelDiff": {
+        "identical": false,
+        "diffCount": 100000,
+        "totalPixels": 100000,
+        "diffFraction": 1
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": -11.203,
+        "canvasTopInBorder": 3,
+        "deltaCanvasTopFromBaselinePx": -14.5
+      },
+      "canvasBacking": {
+        "width": 1000,
+        "height": 100
+      }
+    }
+  ],
+  "patchIds": [
+    "inject-fo-lh-pin",
+    "inject-flex-center",
+    "viewbox-int-floor",
+    "fo-y-nudge",
+    "root-height-48",
+    "combo-lh-center"
+  ],
+  "verdict": "LH_PIN_REDUNDANT_FLEX_CENTER_AFFECTS_BITMAP",
+  "interpretation": [
+    "Inline FO ink ≈ live (svgΔ -0.008px) — serialized layout already matches live.",
+    "inject-fo-lh-pin: bitmap identical to baseline (0/100000 pixels differ) — decode ignores injected CSS or CSS is redundant with inline FO.",
+    "inject-flex-center: 100000/100000 pixels differ (100.00%); canvas top Δ -15.500px vs baseline.",
+    "fo-y-nudge: 7951/100000 pixels differ (7.95%); canvas top Δ 1.000px vs baseline.",
+    "combo-lh-center: 100000/100000 pixels differ (100.00%); canvas top Δ -14.500px vs baseline."
+  ],
+  "headed": true,
+  "generatedAt": "2026-06-02T16:23:23.369Z",
+  "port": 8765
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium FO strut repro — BITMAP_ONLY</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 16px; font: 14px/1.45 system-ui, sans-serif; background: #f8fafc; color: #0f172a; max-width: 96ch; }
+    h1 { font-size: 17px; margin: 0 0 8px; }
+    p { color: #475569; margin: 0 0 12px; }
+    code { font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Chromium FO strut repro (engine-only)</h1>
+  <p>
+    Live flex+text fixture vs hand-built <code>chromium-fo-strut-repro.svg</code> rasterized with
+    <code>Image.decode()</code> → <code>drawImage</code>. No snapdom. Use <strong>headed</strong> Chrome;
+    open <code>chrome://version</code> and note the build when filing bugs.
+  </p>
+  <div id="fixture" style="width:500px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0">
+    <div style="display:flex;align-items:stretch;min-height:48px">
+      <a href="#" style="display:flex;align-items:center;padding:0 12px;text-decoration:none;color:#111">Home</a>
+    </div>
+  </div>
+  <p id="status">Running probe…</p>
+  <pre id="out" style="font:12px ui-monospace,Menlo,monospace;background:#fff;border:1px solid #e2e8f0;padding:12px;border-radius:6px;overflow:auto"></pre>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      compareThreeWay,
+      foreignObjectYNudgePatch,
+      halfLeadingFromComputed,
+      probeChromiumFoOnly,
+      rasterSvgToCanvas,
+    } from '../chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const useFileSvg = params.get('svg') === 'file'
+
+    async function run() {
+      const root = document.getElementById('fixture')
+      const el = root.querySelector('a')
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const half = halfLeadingFromComputed(el)
+
+      let svgText
+      if (useFileSvg) {
+        svgText = await fetch('./chromium-fo-strut-repro.svg').then((r) => r.text())
+      } else {
+        svgText = buildStaticMinimalNavFoSvg(cssW, cssH)
+      }
+
+      const base = await probeChromiumFoOnly({
+        root,
+        landmark: 'Home',
+        dpr,
+        buildSvg: () => svgText,
+      })
+
+      const w7Svg = foreignObjectYNudgePatch(svgText, -half)
+      const { canvas: w7Canvas } = await rasterSvgToCanvas(w7Svg, cssW, cssH, dpr)
+      const w7 = compareThreeWay(root, w7Canvas, w7Svg, el, dpr, { cssW, cssH })
+
+      const report = {
+        probe: 'chromium-fo-strut-repro',
+        generatedAt: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        dpr,
+        svgSource: useFileSvg ? 'fixtures/chromium-fo-strut-repro.svg' : 'buildStaticMinimalNavFoSvg',
+        typography: {
+          fontSizePx: parseFloat(getComputedStyle(el).fontSize),
+          lineHeightPx: parseFloat(getComputedStyle(el).lineHeight),
+          halfLeadingLhFsPx: half,
+        },
+        baseline: base.threeWay,
+        verdict: base.verdict,
+        w7Workaround: {
+          foreignObjectDeltaY: -half,
+          threeWay: w7,
+          canvasDeltaPx: w7.liveVsCanvasTopPx,
+        },
+        expected: 'FO inline/svg ink aligns with live (|svgΔ| < 0.15px)',
+        actual: `FO bitmap ink ~+${base.threeWay.liveVsCanvasTopPx?.toFixed(3)}px vs live (~½(lh−fs) strut)`,
+      }
+
+      document.getElementById('out').textContent = JSON.stringify(report, null, 2)
+      document.getElementById('status').textContent =
+        `${report.verdict} — canvasΔ=${base.threeWay.liveVsCanvasTopPx?.toFixed(3)}px · svgΔ=${base.threeWay.liveVsSvgTopPx?.toFixed(3)}px · w7→${w7.liveVsCanvasTopPx?.toFixed(3)}px`
+    }
+
+    run().catch((err) => {
+      document.getElementById('status').textContent = `Error: ${err.message}`
+    })
+  </script>
+</body>
+</html>

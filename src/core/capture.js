@@ -33,6 +33,7 @@ import {
   readTotalTransformMatrix,
   hasBBoxAffectingTransform,
 } from '../utils/transforms.helpers.js'
+import { captureInkMetaForRoot, captureLhStrutMetaForRoot } from '../utils/inkMeta.js'
 
 /**
  * @param {object} options
@@ -60,6 +61,23 @@ function hasPictureResolverPlugin(options) {
  * @param {Function} [options.filter] - Custom filter function
  * @param {boolean} [options.outerTransforms=false] - Normalize root by removing translate/rotate (keep scale/skew)
  * @param {boolean} [options.outerShadows=false] - Do not expand bleed for shadows/blur/outline on root (and strip root shadows visually)
+ * @param {boolean} [options.experimentalFoTextLayout=false] - Append global structural FO text-layout CSS (min-width:0, font-kerning, flex baseline)
+ * @param {boolean} [options.experimentalFoLeadingTrim=false] - Append leading-trim:both on foreignObject * at capture
+ * @param {boolean} [options.experimentalFoTextBoxEdgeAuto=false] - Append text-box-edge:auto on FO text leaves at capture
+ * @param {boolean} [options.experimentalFoPinLineHeightFromLive=false] - Pin FO text-leaf line-height to live used px from getComputedStyle
+ * @param {boolean} [options.experimentalFoPinLineHeightOnTextLeaf=false] - Alias for experimentalFoPinLineHeightFromLive
+ * @param {boolean} [options.experimentalFoTextLeafNormalize=false] - Pin text-leaf line-height, vertical-align, display from live getComputedStyle at inline
+ * @param {boolean} [options.experimentalFoFlexRowAlignCenter=false] - Inject FO CSS reinforcing align-items:center on flex containers
+ * @param {boolean} [options.experimentalFoChromiumText=false] - Wave-2: Chromium FO text block (no align-self:baseline)
+ * @param {boolean} [options.experimentalFoFlexRowCenter=false] - Wave-2: FO flex row align-items:center CSS bundle
+ * @param {boolean} [options.experimentalCaptureIntViewBox=false] - Wave-2: floor SVG viewBox before raster
+ * @param {boolean} [options.experimentalFoTextGeometric=false] - Wave-2: geometricPrecision + antialiased on FO *
+ * @param {boolean} [options.experimentalFoTextBaselineFix=false] - Pin text-leaf line-height to live px, vertical-align:baseline, display:inline on leaves
+ * @param {boolean} [options.experimentalFoTextLineHeightNormal=false] - line-height:normal on FO text leaves at serialize
+* @param {boolean} [options.experimentalFoNonEmptyLineHeightNormal=false] - line-height:normal on non-empty FO nodes (tc-fix-w7 capture parent lh)
+ * @param {boolean} [options.experimentalFoFlexTextLeafAlignStart=false] - align-self:flex-start on flex/grid text leaves at serialize
+ * @param {boolean} [options.experimentalCaptureInkMeta=false] - Store Range ink topInBorder fraction in options.meta (default false)
+ * @param {boolean} [options.experimentalRasterMetaInkAlign=false] - Alias bundle: capture ink meta + raster ink align
  * @returns {Promise<string>} Promise that resolves to an SVG data URL
  */
 export async function captureDOM(element, options) {
@@ -335,7 +353,8 @@ export async function captureDOM(element, options) {
       const svgNS = 'http://www.w3.org/2000/svg'
       // Safari workaround: pad only when root has bbox-affecting transforms (avoids edge clipping)
       const basePad = (isSafari() && hasTFBBox(state.element)) ? 1 : 0
-      const pad = limitDecimals(basePad)
+      const extraPad = !outerTransforms ? 1 : 0
+      const pad = limitDecimals(basePad + extraPad)
 
       const fo = document.createElementNS(svgNS, 'foreignObject')
       const vbMinX = limitDecimals(minX)
@@ -355,8 +374,75 @@ export async function captureDOM(element, options) {
       const foNormalize =
         'svg{overflow:visible;} foreignObject{overflow:visible;} ' +
         'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important;}'
+      // experimentalFoTextLayout: global structural FO rules (Chromium copy-css block + flex min-width:0).
+      // Default off — validate via __localtests__/fo-experimental-flags-probe.mjs before promotion.
+      const foExperimentalTextLayout = options.experimentalFoTextLayout
+        ? 'foreignObject *{box-sizing:border-box!important;min-width:0!important;min-height:0!important}' +
+          'foreignObject *{font-kerning:normal!important;font-synthesis:none!important}' +
+          'foreignObject *{align-self:baseline!important}'
+        : ''
+      // experimentalFoLeadingTrim / experimentalFoTextBoxEdgeAuto: CSS line-box edge probes.
+      // Default off — validate via __localtests__/fo-experimental-flags-probe.mjs before promotion.
+      const foExperimentalLeadingTrim = options.experimentalFoLeadingTrim
+        ? 'foreignObject *{leading-trim:both!important}'
+        : ''
+      const foTextLeafSelectors =
+        'foreignObject p,foreignObject span,foreignObject a,foreignObject li,' +
+        'foreignObject h1,foreignObject h2,foreignObject h3,foreignObject h4,foreignObject h5,foreignObject h6,' +
+        'foreignObject label,foreignObject button,foreignObject strong,foreignObject em,foreignObject small,foreignObject code'
+      const foExperimentalTextBoxEdgeAuto = options.experimentalFoTextBoxEdgeAuto
+        ? `${foTextLeafSelectors}{text-box-edge:auto!important}`
+        : ''
+      // experimentalFoFlexRowAlignCenter: reinforce align-items:center on flex containers in FO
+      // (inline display:flex via attribute selector + data-snapdom-flex-center from styles.js).
+      // Default off — validate via __localtests__/fo-flag-probe-capture.mjs before promotion.
+      const foExperimentalFlexRowAlignCenter = options.experimentalFoFlexRowAlignCenter
+        ? 'foreignObject div[style*="display:flex"],foreignObject div[style*="display: flex"],' +
+          'foreignObject div[style*="display:inline-flex"],foreignObject div[style*="display: inline-flex"]' +
+          '{align-items:center!important}' +
+          'foreignObject [data-snapdom-flex-center]{align-items:center!important}'
+        : ''
+      // Wave-2 flags — validate via __localtests__/fo-experimental-flags-matrix.mjs before promotion.
+      const foExperimentalChromiumText = options.experimentalFoChromiumText
+        ? 'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+          'foreignObject *{box-sizing:border-box!important;min-width:0!important}'
+        : ''
+      const foExperimentalFlexRowCenter = options.experimentalFoFlexRowCenter
+        ? 'foreignObject{display:flex!important;flex-direction:row!important;align-items:center!important}' +
+          'foreignObject *{display:flex!important;align-items:center!important}'
+        : ''
+      const foExperimentalTextGeometric = options.experimentalFoTextGeometric
+        ? 'foreignObject *{text-rendering:geometricPrecision!important;-webkit-font-smoothing:antialiased!important}'
+        : ''
+      // experimentalFoTextBaselineFix: FO fallback chain on text leaves (serialized px lh overrides normal).
+      // Default off — validate via __localtests__/fo-text-baseline-flags.mjs before promotion.
+      const foExperimentalTextBaselineFix = options.experimentalFoTextBaselineFix
+        ? `${foTextLeafSelectors}{vertical-align:baseline!important;line-height:normal!important;leading-trim:both!important}`
+        : ''
+      // experimentalFoTextLineHeightNormal: FO reinforce normal lh on text leaves only.
+      const foExperimentalTextLineHeightNormal = options.experimentalFoTextLineHeightNormal
+        ? `${foTextLeafSelectors}{line-height:normal!important}`
+        : ''
+      const foExperimentalNonEmptyLineHeightNormal =
+        options.experimentalFoNonEmptyLineHeightNormal
+          ? 'foreignObject *:not(:empty){line-height:normal!important}'
+          : ''
       styleTag.textContent =
-        (state.scrollbarCSS || '') + state.baseCSS + state.fontsCSS + foNormalize + state.classCSS
+        (state.scrollbarCSS || '') +
+        state.baseCSS +
+        state.fontsCSS +
+        foNormalize +
+        foExperimentalTextLayout +
+        foExperimentalLeadingTrim +
+        foExperimentalTextBoxEdgeAuto +
+        foExperimentalFlexRowAlignCenter +
+        foExperimentalChromiumText +
+        foExperimentalFlexRowCenter +
+        foExperimentalTextGeometric +
+        foExperimentalTextBaselineFix +
+        foExperimentalTextLineHeightNormal +
+        foExperimentalNonEmptyLineHeightNormal +
+        state.classCSS
       fo.appendChild(styleTag)
 
       const container = document.createElement('div')
@@ -376,7 +462,24 @@ export async function captureDOM(element, options) {
       const vbH = limitDecimals(vbH0 + pad * 2)
       const wantsSize = hasW || hasH
 
-      options.meta = { w0, h0, vbW, vbH, targetW: w, targetH: h }
+      const captureMeta = { w0, h0, vbW, vbH, targetW: w, targetH: h }
+      const captureRect = state.element.getBoundingClientRect()
+      const gbcrLeft = captureRect.left
+      const gbcrTop = captureRect.top
+      Object.assign(captureMeta, {
+        gbcrLeft,
+        gbcrTop,
+        gbcrFracX: gbcrLeft - Math.floor(gbcrLeft),
+        gbcrFracY: gbcrTop - Math.floor(gbcrTop),
+      })
+      // experimentalCaptureInkMeta: Range ink fraction vs cap-model on representative text leaf.
+      if (options.experimentalCaptureInkMeta === true) {
+        const inkMeta = captureInkMetaForRoot(state.element)
+        if (inkMeta) Object.assign(captureMeta, inkMeta)
+      }
+      const lhStrutMeta = captureLhStrutMetaForRoot(state.element)
+      if (lhStrutMeta) Object.assign(captureMeta, lhStrutMeta)
+      options.meta = captureMeta
 
       const svgOutW = (isSafari() && wantsSize)
         ? vbW
@@ -386,7 +489,12 @@ export async function captureDOM(element, options) {
         : limitDecimals(outH + pad * 2)
 
       const rootFontSize = parseFloat(getStyle(elDoc.documentElement)?.fontSize) || 16
-      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="0 0 ${vbW} ${vbH}" font-size="${rootFontSize}px">`
+      const intViewBox = options.experimentalCaptureIntViewBox === true
+      const vbX = intViewBox ? Math.floor(0) : 0
+      const vbY = intViewBox ? Math.floor(0) : 0
+      const vbWOut = intViewBox ? Math.floor(Number(vbW)) : vbW
+      const vbHOut = intViewBox ? Math.floor(Number(vbH)) : vbH
+      const svgHeader = `<svg xmlns="${svgNS}" width="${svgOutW}" height="${svgOutH}" viewBox="${vbX} ${vbY} ${vbWOut} ${vbHOut}" font-size="${rootFontSize}px">`
       const svgFooter = '</svg>'
       svgString = svgHeader + foString + svgFooter
       dataURL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text baseline / line-height probe (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text baseline / line-height — live vs FO vs canvas</h1>
+  <p class="hint">
+    Mini flex+text-leaf (<code>Home</code>): per-stage line-height, font-size, vertical-align,
+    half-leading <code>(lh−fs)/2</code>, Range ink top, and alphabetic baseline from
+    <code>measureText</code> font metrics. Tests whether canvas ink offset tracks half-leading
+    or <code>fontBoundingBoxAscent − actualBoundingBoxAscent</code>.
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      applySandboxFixtureSvgDims,
+      applySandboxInlineSvgDisplay,
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureLivePaintedInk,
+      runFoFixProbe,
+      getFoFixRecipe,
+    } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const lhPinned = params.get('lh')
+
+    /** Leaf-only line-height matrix — nav keeps stretch/min-height. */
+    const LH_VARIANTS = [
+      { id: 'lh-1', lineHeight: '1' },
+      { id: 'lh-1.2', lineHeight: '1.2' },
+      { id: 'lh-1.35', lineHeight: '1.35' },
+      { id: 'lh-normal', lineHeight: 'normal' },
+      { id: 'lh-48px', lineHeight: '48px' },
+    ]
+
+    function applyLeafLineHeight(lineHeight) {
+      for (const a of root.querySelectorAll('nav.mini-nav a')) {
+        a.style.lineHeight = ''
+      }
+      const el = findLandmarkElement(root, landmark)
+      if (el && lineHeight != null) el.style.lineHeight = lineHeight
+    }
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function relRect(el, container) {
+      const eb = el.getBoundingClientRect()
+      const cb = container.getBoundingClientRect()
+      return {
+        top: eb.top - cb.top,
+        left: eb.left - cb.left,
+        width: eb.width,
+        height: eb.height,
+      }
+    }
+
+    function measureLayoutLineBoxPx(style, el) {
+      if (!(el instanceof Element) || el.childElementCount > 0) return null
+      if (!(el.textContent || '').trim()) return null
+      const pad =
+        (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+      const h = el.getBoundingClientRect().height
+      if (h <= pad) return null
+      const content = h - pad
+      return el.scrollHeight <= content + 2 ? content : null
+    }
+
+    function resolveCssLineHeightPx(cs) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      return fs * 1.2
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      const layout = measureLayoutLineBoxPx(cs, el)
+      if (layout != null && layout > 0) return layout
+      return fs * 1.35
+    }
+
+    function glyphSample(el) {
+      const t = (el.textContent || '').trim()
+      if (!t) return 'Mg'
+      if (t.length === 1) return `${t}${t}`
+      return t[0] + t[t.length - 1]
+    }
+
+    function measureFontMetrics(cs, sample) {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return null
+      const fs = parseFloat(cs.fontSize) || 16
+      ctx.font = `${cs.fontStyle || 'normal'} ${cs.fontWeight || '400'} ${fs}px ${cs.fontFamily || 'sans-serif'}`
+      const m = ctx.measureText(sample)
+      const fontBoundingBoxAscent =
+        typeof m.fontBoundingBoxAscent === 'number' ? m.fontBoundingBoxAscent : null
+      const fontBoundingBoxDescent =
+        typeof m.fontBoundingBoxDescent === 'number' ? m.fontBoundingBoxDescent : null
+      const actualBoundingBoxAscent =
+        typeof m.actualBoundingBoxAscent === 'number' ? m.actualBoundingBoxAscent : null
+      const actualBoundingBoxDescent =
+        typeof m.actualBoundingBoxDescent === 'number' ? m.actualBoundingBoxDescent : null
+      const ascent =
+        fontBoundingBoxAscent != null ? fontBoundingBoxAscent : actualBoundingBoxAscent
+      const descent =
+        fontBoundingBoxDescent != null ? fontBoundingBoxDescent : actualBoundingBoxDescent
+      if (typeof ascent !== 'number' || typeof descent !== 'number') return null
+      return {
+        sample,
+        fontBoundingBoxAscent,
+        fontBoundingBoxDescent,
+        actualBoundingBoxAscent,
+        actualBoundingBoxDescent,
+        fontBoundingBoxAscentDelta:
+          fontBoundingBoxAscent != null && actualBoundingBoxAscent != null
+            ? fontBoundingBoxAscent - actualBoundingBoxAscent
+            : null,
+        ascent,
+        descent,
+        fontBoxHeightPx: ascent + descent,
+      }
+    }
+
+    /**
+     * @param {Element} el Text leaf
+     * @param {Element} inkRoot Coordinate root for topInBorder (live #capture-target or FO)
+     */
+    function measureStageTypography(el, inkRoot) {
+      const cs = getComputedStyle(el)
+      const box = relRect(el, inkRoot)
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const cssLineHeightPx = resolveCssLineHeightPx(cs)
+      let lineHeightPx = resolveLineHeightPx(cs, el)
+      const layoutLineBoxPx = measureLayoutLineBoxPx(cs, el)
+      if (layoutLineBoxPx != null && layoutLineBoxPx > 0) lineHeightPx = layoutLineBoxPx
+
+      const halfLeadingCssLhFs = (cssLineHeightPx - fontSizePx) / 2
+      const halfLeadingLhFs = (lineHeightPx - fontSizePx) / 2
+      const metrics = measureFontMetrics(cs, glyphSample(el))
+      const halfLeadingFontBox =
+        metrics?.fontBoxHeightPx != null
+          ? Math.max(0, (lineHeightPx - metrics.fontBoxHeightPx) / 2)
+          : null
+
+      const rangeInk = measureLivePaintedInk(el, inkRoot)
+      const paddingTopPx = parseFloat(cs.paddingTop) || 0
+      const borderTopPx = parseFloat(cs.borderTopWidth) || 0
+
+      let baselineFromMeasureTextInBorder = null
+      if (metrics) {
+        baselineFromMeasureTextInBorder =
+          paddingTopPx + (halfLeadingFontBox ?? 0) + metrics.ascent
+      }
+
+      return {
+        lineHeightComputed: cs.lineHeight,
+        cssLineHeightPx: roundPx(cssLineHeightPx),
+        lineHeightUsedPx: roundPx(lineHeightPx),
+        layoutLineBoxPx: roundPx(layoutLineBoxPx),
+        fontSizePx: roundPx(fontSizePx),
+        verticalAlign: cs.verticalAlign,
+        display: cs.display,
+        alignSelf: cs.alignSelf,
+        halfLeadingCssLhFsPx: roundPx(halfLeadingCssLhFs),
+        halfLeadingLhFsPx: roundPx(halfLeadingLhFs),
+        halfLeadingFontBoxPx: roundPx(halfLeadingFontBox),
+        paddingTopPx: roundPx(paddingTopPx),
+        borderTopPx: roundPx(borderTopPx),
+        borderBoxHeightPx: roundPx(box.height),
+        rangeInkTopInBorderPx: roundPx(rangeInk?.topInBorder ?? null),
+        rangeInkTopPx: roundPx(rangeInk?.top ?? null),
+        baselineFromMeasureTextInBorderPx: roundPx(baselineFromMeasureTextInBorder),
+        measureText: metrics
+          ? {
+              fontBoundingBoxAscent: roundPx(metrics.fontBoundingBoxAscent),
+              actualBoundingBoxAscent: roundPx(metrics.actualBoundingBoxAscent),
+              fontBoundingBoxAscentDelta: roundPx(metrics.fontBoundingBoxAscentDelta),
+              fontBoxHeightPx: roundPx(metrics.fontBoxHeightPx),
+            }
+          : null,
+      }
+    }
+
+    /**
+     * Mount captured SVG and return FO text leaf + metrics.
+     * @param {string} svgText
+     * @param {{ cssW: number, cssH: number }} fixtureDims
+     */
+    function measureFoStage(svgText, landmarkText, fixtureDims) {
+      const { cssW, cssH } = fixtureDims
+      const sized = applySandboxFixtureSvgDims(svgText, { cssW, cssH })
+      const div = document.createElement('div')
+      div.style.cssText =
+        'position:fixed;left:-10000px;top:0;visibility:hidden;' +
+        `width:${cssW}px;height:${cssH}px;overflow:hidden;box-sizing:border-box`
+      div.innerHTML = sized
+      document.body.appendChild(div)
+      try {
+        const svgEl = div.querySelector('svg')
+        if (svgEl) applySandboxInlineSvgDisplay(svgEl, { cssW, cssH })
+        const fo = div.querySelector('foreignObject')
+        if (!fo) return { error: 'no foreignObject in capture SVG' }
+        let leaf = null
+        for (const el of fo.querySelectorAll('*')) {
+          if (el.childElementCount > 0) continue
+          if ((el.textContent || '').trim() === landmarkText) {
+            leaf = el
+            break
+          }
+        }
+        if (!leaf) return { error: `FO text leaf "${landmarkText}" not found` }
+        return {
+          typography: measureStageTypography(leaf, fo),
+          foBoxHeightPx: roundPx(fo.getBoundingClientRect().height),
+        }
+      } finally {
+        div.remove()
+      }
+    }
+
+    function buildHypothesis(live, fo, canvasOffsetPx) {
+      const liveRange = live?.rangeInkTopInBorderPx
+      const liveHalfLhFs = live?.halfLeadingLhFsPx
+      const liveHalfFont = live?.halfLeadingFontBoxPx
+      const ascentDelta = live?.measureText?.fontBoundingBoxAscentDelta
+
+      const foRange = fo?.typography?.rangeInkTopInBorderPx
+      const foVsLiveRange =
+        foRange != null && liveRange != null ? roundPx(foRange - liveRange) : null
+
+      /** @type {Record<string, number | null>} */
+      const candidates = {
+        halfLeadingLhFs_live: liveHalfLhFs,
+        halfLeadingFontBox_live: liveHalfFont,
+        fontBoundingBoxAscentDelta_live: ascentDelta,
+        neg_halfLeadingLhFs: liveHalfLhFs != null ? -liveHalfLhFs : null,
+        neg_fontBoundingBoxAscentDelta:
+          ascentDelta != null ? -ascentDelta : null,
+        foVsLiveRangeInkTop: foVsLiveRange,
+        baselineMinusRange_live:
+          live?.baselineFromMeasureTextInBorderPx != null && liveRange != null
+            ? live.baselineFromMeasureTextInBorderPx - liveRange
+            : null,
+      }
+
+      const MATCH_EPS = 0.06
+      /** @type {{ id: string, value: number, deltaAbs: number }[]} */
+      const rows = []
+      if (canvasOffsetPx != null) {
+        for (const [id, value] of Object.entries(candidates)) {
+          if (value == null || !Number.isFinite(value)) continue
+          for (const sign of [1, -1]) {
+            const v = value * sign
+            const label = sign < 0 ? `${id} (negated)` : id
+            rows.push({
+              id: label,
+              value: roundPx(v),
+              deltaAbs: roundPx(Math.abs(canvasOffsetPx - v)),
+            })
+          }
+        }
+        rows.sort((a, b) => (a.deltaAbs ?? Infinity) - (b.deltaAbs ?? Infinity))
+      }
+
+      const best = rows[0] ?? null
+      const matches = rows.filter((r) => r.deltaAbs != null && r.deltaAbs <= MATCH_EPS)
+
+      return {
+        canvasOffsetPx: roundPx(canvasOffsetPx),
+        liveRangeInkTopInBorderPx: liveRange,
+        candidates,
+        correlation: {
+          matchEpsilonPx: MATCH_EPS,
+          rows: rows.slice(0, 12),
+          best,
+          matches,
+        },
+        question:
+          'Does canvasOffset ≈ (lineHeightPx−fontSizePx)/2 or fontBoundingBoxAscent delta?',
+        answer:
+          best?.id?.includes('halfLeadingLhFs') && (best.deltaAbs ?? 1) <= MATCH_EPS
+            ? 'halfLeadingLhFs'
+            : best?.id?.includes('fontBoundingBoxAscentDelta') && (best.deltaAbs ?? 1) <= MATCH_EPS
+              ? 'fontBoundingBoxAscentDelta'
+              : best
+                ? `closest:${best.id}`
+                : 'no_close_match',
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      if (lhPinned != null) applyLeafLineHeight(lhPinned)
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark "${landmark}" not found`)
+
+      const recipe = getFoFixRecipe('product-baseline')
+      status.textContent = 'Capture + FO raster (product-baseline)…'
+      globalThis.__foFixLabDebugCap = true
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const fixtureDims = { cssW, cssH }
+
+      const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, leaf, dpr, fixtureDims)
+      const liveTypo = measureStageTypography(leaf, root)
+      const foStage = measureFoStage(probe.svgText, landmark, fixtureDims)
+
+      const canvasInkTopInBorder = cmp.canvas?.topInBorder ?? null
+      const canvasOffsetPx = cmp.liveVsCanvasTopPx ?? null
+      const svgOffsetPx = cmp.liveVsSvgTopPx ?? null
+      const capModelTopInBorder = cmp.liveCapModel?.topInBorder ?? null
+      const liveRangeTop = liveTypo.rangeInkTopInBorderPx
+
+      const hypothesis = buildHypothesis(liveTypo, foStage, canvasOffsetPx)
+
+      const variantId =
+        LH_VARIANTS.find((v) => v.lineHeight === lhPinned)?.id ??
+        (lhPinned != null ? `lh-${lhPinned}` : 'default')
+
+      return {
+        id: variantId,
+        lineHeightPinned: lhPinned ?? liveTypo.lineHeightComputed,
+        fixture: 'fo-text-baseline-lh-probe',
+        purpose:
+          'Baseline/line-height decomposition for Home text leaf: live vs inline FO vs canvas ink.',
+        landmark,
+        recipeId: recipe.id,
+        dpr,
+        scale,
+        fixtureDims,
+        computedLineHeight: liveTypo.lineHeightComputed,
+        cssLineHeightPx: liveTypo.cssLineHeightPx,
+        lineHeightPx: liveTypo.lineHeightUsedPx,
+        halfLeadingCssLhFs: liveTypo.halfLeadingCssLhFsPx,
+        halfLeadingLhFs: liveTypo.halfLeadingLhFsPx,
+        fontBoundingBoxAscent: liveTypo.measureText?.fontBoundingBoxAscent ?? null,
+        topsInBorder: {
+          liveRangeTopInBorder: liveRangeTop,
+          capModelTopInBorder: roundPx(capModelTopInBorder),
+          inlineSvgTopInBorder: roundPx(cmp.svg?.topInBorder ?? null),
+          canvasTopInBorder: roundPx(canvasInkTopInBorder),
+        },
+        offsetsFromLiveRange: {
+          capModelOffsetPx:
+            liveRangeTop != null && capModelTopInBorder != null
+              ? roundPx(capModelTopInBorder - liveRangeTop)
+              : null,
+          inlineSvgOffsetPx: roundPx(svgOffsetPx),
+          canvasOffsetPx: roundPx(canvasOffsetPx),
+        },
+        canvasDeltaPx: roundPx(canvasOffsetPx),
+        stages: {
+          live: liveTypo,
+          fo: foStage.error ? { error: foStage.error } : foStage.typography,
+          canvas: {
+            inkTopInBorderPx: roundPx(canvasInkTopInBorder),
+            inkTopPx: roundPx(cmp.canvas?.top ?? null),
+            offsetFromLiveRangePx: roundPx(canvasOffsetPx),
+            note: 'Typography N/A on bitmap; ink from canvas dark-pixel band scan.',
+          },
+        },
+        inkOffsetsFromLiveRangePx: {
+          fo: foStage.error
+            ? null
+            : roundPx(
+                foStage.typography?.rangeInkTopInBorderPx != null &&
+                  liveTypo.rangeInkTopInBorderPx != null
+                  ? foStage.typography.rangeInkTopInBorderPx - liveTypo.rangeInkTopInBorderPx
+                  : null,
+              ),
+          inlineSvg: roundPx(svgOffsetPx),
+          canvas: roundPx(canvasOffsetPx),
+        },
+        threeWay: {
+          liveRangeTopInBorder: liveRangeTop,
+          capModelTopInBorder: roundPx(capModelTopInBorder),
+          foRangeTopInBorder: foStage.typography?.rangeInkTopInBorderPx ?? null,
+          svgRangeTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasInkTopInBorder: roundPx(canvasInkTopInBorder),
+        },
+        hypothesis,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__foTextBaselineLhProbe = {
+        ready: false,
+        done: false,
+        bootError: null,
+        run: runProbe,
+        lhVariants: LH_VARIANTS,
+        landmark,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__foTextBaselineLhProbe.ready = true
+        status.textContent = 'Ready — CLI invokes run().'
+        if (params.get('auto') === '1') {
+          const payload = await runProbe()
+          window.__foTextBaselineLhProbe.lastReport = payload
+          window.__foTextBaselineLhProbe.payload = payload
+          window.__foTextBaselineLhProbe.done = true
+          status.textContent = `Done — hypothesis: ${payload.hypothesis?.answer ?? '—'}`
+        }
+      } catch (err) {
+        window.__foTextBaselineLhProbe.bootError = String(err?.message || err)
+        window.__foTextBaselineLhProbe.done = true
+        status.textContent = window.__foTextBaselineLhProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__foTextBaselineLhProbe = window.__foTextBaselineLhProbe || {}
+      window.__foTextBaselineLhProbe.bootError = String(err?.message || err)
+      status.textContent = window.__foTextBaselineLhProbe.bootError
+    })
+  </script>
+</body>
+</html>

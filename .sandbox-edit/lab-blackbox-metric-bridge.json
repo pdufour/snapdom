@@ -1,0 +1,261 @@
+{
+  "probe": "lab-blackbox-metric-bridge",
+  "generatedAt": "2026-06-03T07:35:31.314Z",
+  "headed": true,
+  "landmark": "Home",
+  "rootCause": {
+    "summary": "0.19 vs 0.91 is not one bug: mini lab (dpr=1) cap-model reads −0.1875 while checkout blackbox (dpr=2) reads −0.91; same recipes do not move checkout. Lab UI block-anchor preview on checkout canvas is still wrong (+3.09); cap-model (deltaTopCapModel) matches blackbox (−0.908).",
+    "disconnectFormula": "blackbox Δ = canvasCapInk.topInBorder − liveCapInkRelBorder.top (integer band scan on #cap-content canvas @ capture DPR). Lab leaders used syncProbeRowBlockAnchorCheck preview Δ on fo-fix-lab #view-canvas (stretch + Range-heavy live) — unrelated to gate.",
+    "factors": [
+      {
+        "id": "fixture-dpr",
+        "detail": "fo-fix-lab mini-nav @ dpr=1: best cap-model |Δ|≈0.1875 (w7, drift-039). checkout-example @ dpr=2: paint.canvas.vs-border.top −0.91 unchanged for all patches."
+      },
+      {
+        "id": "live-reference",
+        "detail": "Gate live = capInkRelBorder (≈5.16px in border). Range visible ink ≈3.5px; layout GBCR top ≈27.25px — using Range or block-anchor max-candidate shrinks or inverts Δ vs cap."
+      },
+      {
+        "id": "canvas-path",
+        "detail": "Gate scans exported canvas in cap overlay coords. Lab preview re-scans probe bitmap in #view-canvas; scanning raw checkout canvas without preview slot mapping gives +3.09px false Δ."
+      },
+      {
+        "id": "product",
+        "detail": "Not a promotable src/ fix: structural patches close mini cap-model sub-px only; checkout FO raster class error (~0.91px) persists."
+      }
+    ]
+  },
+  "labMetricFix": {
+    "applied": true,
+    "files": [
+      "__localtests__/fo-fix-lab-runner.js",
+      "__localtests__/fo-drift-matrix-batch.mjs"
+    ],
+    "changes": [
+      "Always store blackboxAlignedCanvasVsLivePx / deltaTopCapModel on probe rows",
+      "Rank drift batches by cap-model canvas Δ (same family as paint.canvas.vs-border.top)",
+      "syncProbeRowBlockAnchorCheck: use measurePreviewMappedInkTop for preview canvas scan"
+    ],
+    "correctedBatchHomeO0L30": {
+      "rankingMetric": "capModelCanvasVsLive (blackboxAlignedCanvasVsLivePx)",
+      "bestRecipeId": "tc-fix-drift-039-capture-line-height-normal-important",
+      "bestAbsCapDeltaMiniDpr1": 0.1875,
+      "baselineAbsCapDeltaMiniDpr1": 1.1875,
+      "note": "Corrected ranking on mini fixture only; does not imply checkout blackbox improvement"
+    }
+  },
+  "blackboxGate": {
+    "engine": "Chrome headed dpr=2",
+    "home": { "paintCanvasVsBorderTop": -0.91 },
+    "products": { "paintCanvasVsBorderTop": -0.91 },
+    "navInkParityHomeProducts": 0,
+    "allInkGateFailures": {
+      "Home": -0.91,
+      "Products": -0.91,
+      "Checkout": -0.16,
+      "Email Address": -0.43,
+      "Promo Code": 0.07
+    }
+  },
+  "checkoutDpr2": [
+    {
+      "recipeId": "product-baseline",
+      "fixture": "checkout-example",
+      "dpr": 2,
+      "landmark": "Home",
+      "blackbox": {
+        "paintCanvasVsBorderTop": -0.91,
+        "paintCapVsBorderTop": 0.25,
+        "paintRangeVsBorderTop": 0,
+        "capLiveInBorder": 5.16,
+        "canvasCompareInBorder": 4.25
+      },
+      "labCapModel": {
+        "deltaTopCapModel": -0.908,
+        "liveCapTopInBorder": 5.158,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labRangeVisible": {
+        "liveVsCanvasTopPx": 0.75,
+        "liveRangeTopInBorder": 3.5,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": 3.092,
+        "liveTopInRoot": 32.408,
+        "canvasTopInRoot": 35.5,
+        "liveInBorder": 5.158,
+        "canvasInBorder": 8.25,
+        "checkReference": "viewport-block-anchor",
+        "inkScanActive": true
+      },
+      "layoutGbcr": {
+        "layoutTopInRoot": 27.25
+      },
+      "liveReferenceBreakdown": {
+        "measureLiveBlockAnchorTopInRoot": 32.408,
+        "capModelTopInRoot": 32.408,
+        "rangeTopInRoot": 30.75,
+        "layoutPaintedTopInRoot": 27.25,
+        "blockAnchorUsesMaxCandidate": true
+      },
+      "reconcile": {
+        "blackboxMinusLabCap": -0.002,
+        "blackboxMinusLabPreview": -4.002,
+        "capMinusRangeLiveInBorder": 1.658
+      }
+    },
+    {
+      "recipeId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "fixture": "checkout-example",
+      "dpr": 2,
+      "landmark": "Home",
+      "blackbox": {
+        "paintCanvasVsBorderTop": -0.91,
+        "paintCapVsBorderTop": 0.25,
+        "paintRangeVsBorderTop": 0,
+        "capLiveInBorder": 5.16,
+        "canvasCompareInBorder": 4.25
+      },
+      "labCapModel": {
+        "deltaTopCapModel": -0.908,
+        "liveCapTopInBorder": 5.158,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labRangeVisible": {
+        "liveVsCanvasTopPx": 0.75,
+        "liveRangeTopInBorder": 3.5,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": 3.092,
+        "liveTopInRoot": 32.408,
+        "canvasTopInRoot": 35.5,
+        "liveInBorder": 5.158,
+        "canvasInBorder": 8.25,
+        "checkReference": "viewport-block-anchor",
+        "inkScanActive": true
+      },
+      "layoutGbcr": {
+        "layoutTopInRoot": 27.25
+      },
+      "liveReferenceBreakdown": {
+        "measureLiveBlockAnchorTopInRoot": 32.408,
+        "capModelTopInRoot": 32.408,
+        "rangeTopInRoot": 30.75,
+        "layoutPaintedTopInRoot": 27.25,
+        "blockAnchorUsesMaxCandidate": true
+      },
+      "reconcile": {
+        "blackboxMinusLabCap": -0.002,
+        "blackboxMinusLabPreview": -4.002,
+        "capMinusRangeLiveInBorder": 1.658
+      }
+    },
+    {
+      "recipeId": "tc-fix-drift-039-capture-line-height-normal-important",
+      "fixture": "checkout-example",
+      "dpr": 2,
+      "landmark": "Home",
+      "blackbox": {
+        "paintCanvasVsBorderTop": -0.91,
+        "paintCapVsBorderTop": 0.25,
+        "paintRangeVsBorderTop": 0,
+        "capLiveInBorder": 5.16,
+        "canvasCompareInBorder": 4.25
+      },
+      "labCapModel": {
+        "deltaTopCapModel": -0.908,
+        "liveCapTopInBorder": 5.158,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labRangeVisible": {
+        "liveVsCanvasTopPx": 0.75,
+        "liveRangeTopInBorder": 3.5,
+        "canvasInkTopInBorder": 4.25
+      },
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": 3.092,
+        "liveTopInRoot": 32.408,
+        "canvasTopInRoot": 35.5,
+        "liveInBorder": 5.158,
+        "canvasInBorder": 8.25,
+        "checkReference": "viewport-block-anchor",
+        "inkScanActive": true
+      },
+      "layoutGbcr": {
+        "layoutTopInRoot": 27.25
+      },
+      "liveReferenceBreakdown": {
+        "measureLiveBlockAnchorTopInRoot": 32.408,
+        "capModelTopInRoot": 32.408,
+        "rangeTopInRoot": 30.75,
+        "layoutPaintedTopInRoot": 27.25,
+        "blockAnchorUsesMaxCandidate": true
+      },
+      "reconcile": {
+        "blackboxMinusLabCap": -0.002,
+        "blackboxMinusLabPreview": -4.002,
+        "capMinusRangeLiveInBorder": 1.658
+      }
+    }
+  ],
+  "miniLabDpr1": [
+    {
+      "recipeId": "product-baseline",
+      "fixture": "fo-fix-lab.html",
+      "dpr": 1,
+      "landmark": "Home",
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": -1.1875,
+        "canvasHigherPx": 1.1875
+      },
+      "bitmapProbe": {
+        "liveVsCanvasTopPx": -1.1875,
+        "deltaTopCapModel": -1.1875
+      }
+    },
+    {
+      "recipeId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "fixture": "fo-fix-lab.html",
+      "dpr": 1,
+      "landmark": "Home",
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": -0.1875,
+        "canvasHigherPx": 0.1875
+      },
+      "bitmapProbe": {
+        "liveVsCanvasTopPx": -0.1875,
+        "deltaTopCapModel": -0.1875
+      }
+    },
+    {
+      "recipeId": "tc-fix-drift-039-capture-line-height-normal-important",
+      "fixture": "fo-fix-lab.html",
+      "dpr": 1,
+      "landmark": "Home",
+      "labBlockAnchorPreview": {
+        "deltaCanvasVsLive": -0.1875,
+        "canvasHigherPx": 0.1875
+      },
+      "bitmapProbe": {
+        "liveVsCanvasTopPx": -0.1875,
+        "deltaTopCapModel": -0.1875
+      }
+    }
+  ],
+  "disconnectQuantified": {
+    "miniPreviewAbsW7": 0.1875,
+    "checkoutBlackboxAbs": 0.91,
+    "checkoutCapModelBaseline": -0.908,
+    "checkoutCapModelW7": -0.908,
+    "checkoutPreviewW7": 3.092,
+    "blackboxUnchangedByLabLeaders": true
+  },
+  "promotionGuidance": {
+    "useForBlackboxAlignment": "row.blackboxAlignedCanvasVsLivePx / deltaTopCapModel after runFoFixProbe; verify on checkout structure report before src/ promotion",
+    "doNotRankFrom": "syncProbeRowBlockAnchorCheck preview delta alone (mini fixture or unmounted checkout canvas)",
+    "doNotPromoteToSrc": "Recipes that only improve mini dpr=1 cap-model to ~0.19px while checkout stays −0.91px"
+  },
+  "srcChanged": false
+}

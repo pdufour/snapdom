@@ -1,0 +1,29 @@
+FO active-only headed matrix run
+================================
+status: COMPLETE
+finishedAt: 2026-06-03T00:13:50Z (local)
+
+activeRecipeCount: 56
+  (isFoFixRecipeActive + excludeTextBypass + product-baseline prepend)
+  indexHalfCapacity: 16767 (FO_FIX_DEACTIVATED_FROM_INDEX)
+  denylistIds: 16713 (fo-fix-deactivated-ids.json)
+  forceActiveIds: product-baseline, tc-fix-w7-rfork-fo-y-half-leading-meta, tc-reg-lock-w7-half-leading-meta, tc-reg-lock-src-mirror-w7, src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta
+
+scopeNote: NOT ~10k (denylist pruned index-half) — current index-active promotable set is 56 recipes.
+
+command: npm run test:fo-matrix-active
+  (= npm run compile && node __localtests__/fo-fix-matrix-active-chunked.mjs --chunk 500 --out __localtests__/.matrix-active-full.log)
+
+flags: --matrix --no-text-bypass --active-only (chunked runner; headed Chrome)
+
+result:
+  bestPromotable: src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta
+  bestCanvasDeltaPx: -0.203 (Home @ dpr=1, integer ink scan)
+  baselineCanvasDeltaPx: +2.797
+  gate0.06: NOT_FIXED — w7 ties at 0.203px (Range subpixel vs integer scan)
+
+log: __localtests__/.matrix-active-full.log
+
+monitor (rerun):
+  tail -f __localtests__/.matrix-active-chunked-runner.log
+  tail -f __localtests__/.matrix-active-full.log

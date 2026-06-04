@@ -1,0 +1,50 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-w7-residual-scan.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "halfLeadingLhFsPx": 2.8,
+    "rangeSubpixelPx": 0.203,
+    "halfLeadingFsMinusRangeSubpixelPx": 2.597,
+    "baseline": {
+      "integerCanvasDelta": 2.797,
+      "fractionalThreshold": 1.909,
+      "fractionalCom": 4.547
+    },
+    "w7": {
+      "integerCanvasDelta": -0.203,
+      "fractionalThreshold": -1.091,
+      "fractionalCom": 1.547,
+      "canvasIntegerTopInBorder": 14,
+      "canvasIntegerDeviceRow": 14,
+      "liveRangeTopInBorder": 14.203,
+      "rangeMinusIntegerCanvasTop": 0.203
+    },
+    "math": {
+      "expectedFoYNudgePx": -2.8,
+      "baselineMinusHalfLeading": -0.003,
+      "w7ResidualMatchesRangeSubpixel": true,
+      "w7PassesGateAtFractionalThreshold": false
+    },
+    "verdict": "W7_RESIDUAL_IS_INTEGER_SCAN_VS_RANGE_SUBPIXEL",
+    "implication": "w7 FO y −2.8px lands canvas integer ink row at 14px vs live Range 14.203px → reported −0.203px; fractional scan may close gate without new paint fix."
+  }
+}

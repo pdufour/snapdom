@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vdrift GBCR sweep</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target { background: #fff; border: 1px solid #cbd5e1; }
+    .mini-nav { display: flex; align-items: stretch; min-height: 48px; width: 500px; font: 600 16px/1.35 system-ui; }
+    .mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    #status { font: 12px ui-monospace, Menlo, monospace; margin-top: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      compareThreeWayInk,
+      diagnoseCanvasInkMiss,
+      findLandmarkElement,
+      parseCaptureMeta,
+      runFoFixProbeLandmarks,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const THREE_WAY_RECIPES = (params.get('recipes') ||
+      'product-baseline,vdrift-fix-001-ceil-nudge,vdrift-fix-002-round-nudge')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const landmarks = (params.get('landmarks') || 'Home,Products')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || window.devicePixelRatio || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const sweepStep = Math.max(0.0625, Number(params.get('sweepStep')) || 0.125)
+    const sweepMax = Math.max(0, Number(params.get('sweepMax')) || 0.875)
+    const status = document.getElementById('status')
+    const root = document.getElementById('capture-target')
+
+    function snapBackingPx(px, mode) {
+      const n = Number(px) || 1
+      if (mode === 'floor') return Math.max(1, Math.floor(n))
+      if (mode === 'ceil') return Math.max(1, Math.ceil(n))
+      if (mode === 'round') return Math.max(1, Math.round(n))
+      return Math.max(1, n)
+    }
+
+    /** @param {import('./fo-fix-recipes.js').FoFixRecipe} recipe @param {ReturnType<typeof parseCaptureMeta>} meta */
+    function expectedDrawDest(recipe, meta) {
+      const opts = recipe.labToCanvasOpts ?? {}
+      let dx = 0
+      let dy = 0
+      if (
+        opts.vDriftFix &&
+        Number.isFinite(meta?.gbcrFracX) &&
+        Number.isFinite(meta?.gbcrFracY)
+      ) {
+        dx = -meta.gbcrFracX
+        dy = -meta.gbcrFracY
+      } else if (
+        opts.measuredDest === 'gbcr-frac' &&
+        Number.isFinite(meta?.gbcrFracX) &&
+        Number.isFinite(meta?.gbcrFracY)
+      ) {
+        dx = meta.gbcrFracX
+        dy = meta.gbcrFracY
+      }
+      return { dx, dy, vDriftFix: !!opts.vDriftFix, measuredDest: opts.measuredDest ?? null }
+    }
+
+    /** @param {import('./fo-fix-recipes.js').FoFixRecipe} recipe @param {{ rootTranslateY?: number }} [opts] */
+    async function probeRecipe(recipe, opts = {}) {
+      const savedTransform = root.style.transform
+      const savedTransformOrigin = root.style.transformOrigin
+      root.style.transformOrigin = 'top left'
+      root.style.transform = opts.rootTranslateY
+        ? `translateY(${opts.rootTranslateY}px)`
+        : ''
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      try {
+        const snap = await window.snapdom(root, { dpr, scale })
+        const rawUrl = snap.toRaw()
+        const svgText = svgFromDataUrl(rawUrl)
+        const cssW = root.offsetWidth || root.getBoundingClientRect().width
+        const cssH = root.offsetHeight || root.getBoundingClientRect().height
+        const fixtureDims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+        const captureMeta = parseCaptureMeta(svgText, root)
+        const labOpts = recipe.labToCanvasOpts ?? {}
+        const backingRound = labOpts.backingRound ?? 'round'
+        const effectiveBackingRound =
+          backingRound === 'none' ? 'none' : backingRound || 'ceil'
+        const outW = fixtureDims.cssW
+        const outH = fixtureDims.cssH
+        const backingW = snapBackingPx(outW * dpr, effectiveBackingRound)
+        const backingH = snapBackingPx(outH * dpr, effectiveBackingRound)
+
+        const probe = await runFoFixProbeLandmarks(recipe, { root, landmarks, dpr, scale })
+        const canvas = probe.canvas
+        const rasterMeta = canvas?.__foFixRasterMeta ?? null
+        const drawDest = expectedDrawDest(recipe, captureMeta)
+
+        const landmarkRows = landmarks.map((name) => {
+          const el = findLandmarkElement(root, name)
+          const cmp = compareThreeWayInk(root, canvas, probe.svgText, el, dpr, fixtureDims)
+          const inkDiag = diagnoseCanvasInkMiss(canvas, root, el, dpr, {
+            svgText: probe.svgText,
+            fixtureDims,
+            svgFallback: true,
+          })
+          const svgVsCanvasTopPx =
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null
+          return {
+            landmark: name,
+            liveVsSvg: cmp.liveVsSvgTopPx ?? null,
+            liveVsCanvas: cmp.liveVsCanvasTopPx ?? null,
+            svgVsCanvas: svgVsCanvasTopPx,
+            inkProbe: inkDiag.inkProbe ?? (inkDiag.miss ? inkDiag.reason : 'readable-canvas'),
+            livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+            svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+            canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+          }
+        })
+
+        return {
+          recipeId: recipe.id,
+          rootTranslateY: opts.rootTranslateY ?? 0,
+          rasterPatch: recipe.rasterPatch ?? 'none',
+          labToCanvasOpts: labOpts,
+          captureMeta: {
+            gbcrLeft: captureMeta.gbcrLeft,
+            gbcrTop: captureMeta.gbcrTop,
+            gbcrFracX: captureMeta.gbcrFracX,
+            gbcrFracY: captureMeta.gbcrFracY,
+            w0: captureMeta.w0,
+            h0: captureMeta.h0,
+          },
+          raster: {
+            gbcrFracY: captureMeta.gbcrFracY,
+            gbcrFracX: captureMeta.gbcrFracX,
+            drawImageDy: drawDest.dy,
+            drawImageDx: drawDest.dx,
+            drawDest,
+            backingRound,
+            effectiveBackingRound,
+            expectedBackingW: backingW,
+            expectedBackingH: backingH,
+            actualBackingW: canvas?.width ?? null,
+            actualBackingH: canvas?.height ?? null,
+            __foFixRasterMeta: rasterMeta,
+          },
+          worstAbsCanvasDelta: probe.worstAbsDeltaTop,
+          landmarks: landmarkRows,
+        }
+      } finally {
+        root.style.transform = savedTransform
+        root.style.transformOrigin = savedTransformOrigin
+      }
+    }
+
+    function buildSweepOffsets(step, max) {
+      /** @type {number[]} */
+      const offsets = []
+      for (let y = 0; y <= max + step * 0.001; y += step) {
+        offsets.push(Math.round(y * 1000) / 1000)
+      }
+      return offsets
+    }
+
+    async function runThreeWay() {
+      /** @type {Awaited<ReturnType<typeof probeRecipe>>[]} */
+      const rows = []
+      for (const id of THREE_WAY_RECIPES) {
+        status.textContent = `Three-way: ${id}…`
+        const recipe = getFoFixRecipe(id)
+        if (!recipe) throw new Error(`recipe not found: ${id}`)
+        rows.push(await probeRecipe(recipe))
+      }
+      return { recipes: THREE_WAY_RECIPES, landmarks, rows }
+    }
+
+    async function runGbcrSweep() {
+      const baselineRecipe = getFoFixRecipe('product-baseline')
+      if (!baselineRecipe) throw new Error('product-baseline recipe not found')
+      const offsets = buildSweepOffsets(sweepStep, sweepMax)
+      /** @type {Awaited<ReturnType<typeof probeRecipe>>[]} */
+      const rows = []
+      for (const rootTranslateY of offsets) {
+        status.textContent = `GBCR sweep translateY=${rootTranslateY}px (product-baseline)…`
+        rows.push(await probeRecipe(baselineRecipe, { rootTranslateY }))
+      }
+      return {
+        recipeId: 'product-baseline',
+        sweepStep,
+        sweepMax,
+        offsets,
+        rows,
+      }
+    }
+
+    async function runAll() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const threeWay = await runThreeWay()
+      const gbcrSweep = await runGbcrSweep()
+      return {
+        fixture: 'mini',
+        dpr,
+        scale,
+        threeWay,
+        gbcrSweep,
+      }
+    }
+
+    async function boot() {
+      window.__vdriftGbcrSweep = { done: false, error: null, payload: null }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error('dist/snapdom.mjs missing — run npm run build')
+        window.__vdriftGbcrSweep.payload = await runAll()
+        status.textContent = 'Done.'
+        window.__vdriftGbcrSweep.done = true
+      } catch (err) {
+        window.__vdriftGbcrSweep.error = String(err?.stack || err)
+        status.textContent = window.__vdriftGbcrSweep.error
+        window.__vdriftGbcrSweep.done = true
+      }
+    }
+
+    boot()
+  </script>
+</body>
+</html>

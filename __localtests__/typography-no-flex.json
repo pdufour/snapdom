@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-06-02T16:13:56.806Z",
+  "headed": true,
+  "fixture": "typography-no-flex",
+  "layout": "single #text-leaf inline-block span; no display:flex ancestor",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "recipe": {
+    "id": "product-baseline"
+  },
+  "threeWay": {
+    "livePaintedTopInBorder": 13,
+    "svgTopInBorder": 13,
+    "canvasTopInBorder": 16.5,
+    "liveVsSvgTopPx": 0,
+    "liveVsCanvasTopPx": 3.5,
+    "svgVsCanvasTopPx": 3.5
+  },
+  "canvasBacking": {
+    "width": 1000,
+    "height": 96
+  },
+  "flexStretchBaseline": {
+    "fixture": "mini-nav-flex-stretch",
+    "landmark": "Home",
+    "dpr": 2,
+    "scale": 1,
+    "canvasDelta": 3.296875,
+    "svgDelta": -0.0078125
+  },
+  "evaluation": {
+    "thresholdPx": 0.5,
+    "canvasDeltaPx": 3.5,
+    "absCanvasDeltaPx": 3.5,
+    "verdict": "GENERIC_FO_RASTER_BUG",
+    "flexCoupledConfirmed": false,
+    "genericFoRaster": true,
+    "interpretation": [
+      "No-flex single-line text: canvasΔ=3.5px (|Δ|=3.5px).",
+      "|canvasΔ| ≥ 0.5px without flex parent — generic FO text raster offset, not flex-coupling alone.",
+      "Mini-nav flex-stretch baseline (reference): canvasΔ=3.297px."
+    ]
+  },
+  "researchSummary": [
+    "Headed probe on port 8780: no-flex single-line Home text shows canvasΔ≈3.5px with svgΔ≈0 — bitmap-only FO raster offset.",
+    "Verdict GENERIC_FO_RASTER_BUG (|canvasΔ|≥0.5px without flex); flex-coupling alone is not required.",
+    "Flex-stretch mini-nav baseline still shows similar canvasΔ≈3.297px — drift is not flex-exclusive."
+  ],
+  "researchPort": 8780
+}

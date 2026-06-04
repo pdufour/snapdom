@@ -1,0 +1,286 @@
+{
+  "fixture": "mini",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "baselineInk": {
+    "liveVsCanvasTopPx": 2.797,
+    "liveVsSvgTopPx": -0.008,
+    "svgVsCanvasTopPx": 2.805,
+    "liveTopInBorder": 14.203,
+    "canvasTopInBorder": 17,
+    "svgTopInBorder": 14.195
+  },
+  "textBoxAudit": {
+    "liveComputed": {
+      "lineHeight": "",
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFs": 2.8
+    },
+    "rangeUnionPx": {
+      "top": 27.203,
+      "bottom": 46.203,
+      "left": 25,
+      "right": 69.859,
+      "width": 44.859,
+      "height": 19
+    },
+    "gbcrInRoot": {
+      "top": 1,
+      "height": 48
+    },
+    "rangeTopInBorder": 26.203,
+    "foSerializedAudit": {
+      "landmarkText": "Home",
+      "liveLineHeightPx": 21.6,
+      "liveFontSizePx": 16,
+      "liveHalfLeadingLhFsPx": 2.8,
+      "serializedLineHeightPx": 21.6,
+      "serializedMatchesLivePx": true,
+      "landmarkLeaf": {
+        "text": "Home",
+        "tag": "a",
+        "inlineLineHeight": null,
+        "inlineFontSize": null,
+        "matchesLandmark": true
+      },
+      "serializedLhSource": "class.c1",
+      "leafCount": 3,
+      "injectedLineHeightRules": [
+        "normal",
+        "21.6px"
+      ],
+      "svgHash": "ffb31b6e"
+    },
+    "foInternalLh": {
+      "lineHeightComputed": "21.6px",
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "halfLeadingLhFsPx": 2.8,
+      "borderBoxH": 48,
+      "display": "flex",
+      "alignItems": "center",
+      "verticalAlign": "baseline"
+    },
+    "liveVsFoInlineTopPx": -0.008,
+    "mirrorVsLiveTopPx": 0
+  },
+  "incrementalLadder": [
+    {
+      "stepId": "block-text",
+      "liveVsCanvasTopPx": 3,
+      "liveVsSvgTopPx": 0,
+      "bitmapOnly": true,
+      "lineHeightPx": 21.6,
+      "gbcrHeight": 45.594,
+      "halfLeadingLhFs": 2.8
+    },
+    {
+      "stepId": "flex-center",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": 0,
+      "bitmapOnly": true,
+      "lineHeightPx": 21.6,
+      "gbcrHeight": 21.594,
+      "halfLeadingLhFs": 2.8
+    },
+    {
+      "stepId": "flex-stretch",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "bitmapOnly": true,
+      "lineHeightPx": 21.6,
+      "gbcrHeight": 48,
+      "halfLeadingLhFs": 2.8
+    },
+    {
+      "stepId": "mini-nav",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "bitmapOnly": true,
+      "lineHeightPx": 21.6,
+      "gbcrHeight": 48,
+      "halfLeadingLhFs": 2.8
+    }
+  ],
+  "halfLeadingCorrelation": {
+    "landmarkRows": [
+      {
+        "landmark": "Home",
+        "liveVsCanvasTopPx": 2.797,
+        "halfLeadingLhFs": 2.8,
+        "residual": -0.003
+      },
+      {
+        "landmark": "Products",
+        "liveVsCanvasTopPx": 2.797,
+        "halfLeadingLhFs": 2.8,
+        "residual": -0.003
+      }
+    ],
+    "pearsonR": null
+  },
+  "lhSweep": [
+    {
+      "variantId": "lh-1.35",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": 0,
+      "halfLeadingResidual": -0.003
+    },
+    {
+      "variantId": "lh-normal",
+      "error": "The source image cannot be decoded."
+    },
+    {
+      "variantId": "lh-1",
+      "error": "The source image cannot be decoded."
+    },
+    {
+      "variantId": "lh-21.6px",
+      "error": "The source image cannot be decoded."
+    },
+    {
+      "variantId": "lh-48px",
+      "error": "The source image cannot be decoded."
+    }
+  ],
+  "cssReachability": [
+    {
+      "variantId": "control",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "pixelDiffFromBaseline": 0,
+      "pixelIdentical": true,
+      "redDominant": 0,
+      "dark": 151,
+      "redBackgroundVisible": false,
+      "forkReachesDecode": false,
+      "lhWrongButForkWorks": false
+    },
+    {
+      "variantId": "red-bg-text-leaf",
+      "liveVsCanvasTopPx": -14.203,
+      "liveVsSvgTopPx": -0.008,
+      "pixelDiffFromBaseline": 7469,
+      "pixelIdentical": false,
+      "redDominant": 3071,
+      "dark": 151,
+      "redBackgroundVisible": true,
+      "forkReachesDecode": true,
+      "lhWrongButForkWorks": false
+    },
+    {
+      "variantId": "lh-1-important",
+      "liveVsCanvasTopPx": 3.797,
+      "liveVsSvgTopPx": -0.008,
+      "pixelDiffFromBaseline": 686,
+      "pixelIdentical": false,
+      "redDominant": 0,
+      "dark": 151,
+      "redBackgroundVisible": false,
+      "forkReachesDecode": true,
+      "lhWrongButForkWorks": true
+    },
+    {
+      "variantId": "lh-21.6-important",
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": -0.008,
+      "pixelDiffFromBaseline": 0,
+      "pixelIdentical": true,
+      "redDominant": 0,
+      "dark": 151,
+      "redBackgroundVisible": false,
+      "forkReachesDecode": false,
+      "lhWrongButForkWorks": false
+    },
+    {
+      "variantId": "lh-normal-important",
+      "liveVsCanvasTopPx": 3.797,
+      "liveVsSvgTopPx": -0.008,
+      "pixelDiffFromBaseline": 686,
+      "pixelIdentical": false,
+      "redDominant": 0,
+      "dark": 151,
+      "redBackgroundVisible": false,
+      "forkReachesDecode": true,
+      "lhWrongButForkWorks": true
+    }
+  ],
+  "foGeometry": [
+    {
+      "label": "baseline",
+      "patchId": null,
+      "liveVsCanvasTopPx": 2.797,
+      "pixelDiffFromBaseline": 0,
+      "error": null
+    },
+    {
+      "label": "fo-height-linebox",
+      "patchId": "fo-height-linebox",
+      "liveVsCanvasTopPx": 2.797,
+      "pixelDiffFromBaseline": 14000,
+      "error": null
+    },
+    {
+      "label": "clip-content-48",
+      "patchId": "clip-content-48",
+      "liveVsCanvasTopPx": 2.797,
+      "pixelDiffFromBaseline": 3109,
+      "error": null
+    },
+    {
+      "label": "fo-height-21.6",
+      "patchId": null,
+      "liveVsCanvasTopPx": 2.797,
+      "pixelDiffFromBaseline": 14000,
+      "error": null
+    }
+  ],
+  "upstreamComparison": {
+    "note": "modern-screenshot / html-to-image Chromium FO CSS block mirrored in experimentalFoChromiumText; wave matrices tied 2.797.",
+    "snapdomExperimentalFlagsTiedPlateau": true,
+    "handBuiltStaticCanvasDelta": 2.797,
+    "handBuiltFixtureCanvasDelta": -10.203
+  },
+  "engineLimits": {
+    "snapdomBitmapOnly": true,
+    "handBuiltStaticBitmapOnly": true,
+    "handBuiltFixtureBitmapOnly": true,
+    "cssForkChangesBitmap": true,
+    "lhPinNoOpDespiteCorrectLh": true,
+    "plateauPx": 2.797
+  },
+  "minimalReproDom": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"492\" height=\"50\" viewBox=\"0 0 492 50\"><foreignObject width=\"100%\" height=\"100%\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"margin:0;padding:0;box-sizing:border-box;width:492px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0\"><div style=\"display:flex;align-items:stretch;min-height:48px;box-sizing:bor…",
+  "findings": [
+    "BITMAP_ONLY @ dpr=1: svgΔ=-0.008 canvasΔ=2.797 (GBCR nudge off).",
+    "Canvas offset ≈ half-leading (lh−fs)/2=2.800px within 0.05px — strut paint origin hypothesis.",
+    "Decode-time CSS reaches FO bitmap paint (red background visible) — fork path works; wrong lh values are not the blocker.",
+    "Incremental ladder: full mini-nav stretch matches flex-center (2.797) — stretch cross-size is not the trigger; block-only text is ~3.0px class.",
+    "Hand-built static FO (no snapdom) reproduces BITMAP_ONLY — engine/Chromium FO class bug, not capture serialization.",
+    "modern-screenshot Chromium block already wired as experimentalFoChromiumText — prior matrices tied 2.797; upstream CSS alone insufficient."
+  ],
+  "rootCauseVerdict": "LIKELY_CHROMIUM_FO_STRUT_PAINT",
+  "winningHypothesis": "Chromium FO→bitmap text paint drops ~½(line-height−font-size) strut above the glyph box while inline FO DOM and serialized markup keep correct lh — fix must restack strut/leading-trim at decode without drawImage nudges.",
+  "nextExperiments": [
+    {
+      "rank": 1,
+      "recipeId": "tc-research-w1-leading-trim-both-edges",
+      "rationale": "Global leading-trim: both + text-box-trim: trim-both on FO text leaves at decode (structural, matches CSS inline box)."
+    },
+    {
+      "rank": 2,
+      "recipeId": "tc-research-w1-fo-linebox-clip-overflow",
+      "rationale": "Clip FO to used line box (overflow:hidden + height from meta lineHeightPx) — fo-height-linebox showed pixel diff; tune from layout meta not 48px."
+    },
+    {
+      "rank": 3,
+      "recipeId": "tc-research-w1-strut-neutralize-flex-center",
+      "rationale": "On flex text leaves: align-items:center on FO + pin lh to used px (removes 48px stretch context in FO only) — validate svgΔ stays <0.15."
+    }
+  ],
+  "cdpDuringLayout": null,
+  "generatedAt": "2026-06-02T16:41:36.032Z",
+  "port": 8799,
+  "headed": true
+}

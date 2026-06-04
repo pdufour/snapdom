@@ -1,0 +1,374 @@
+{
+  "probe": "chromium-fo-only-round8-matrix",
+  "section": "research-round-8-chromium-matrix",
+  "generatedAt": "2026-06-03T00:35:59.433Z",
+  "dpr": 1,
+  "usesSnapdom": false,
+  "usesCaptureJs": false,
+  "landmark": "Home",
+  "matrix": [
+    {
+      "variantId": "lh-1",
+      "pageId": "variant-lh-1",
+      "variant": {
+        "label": "line-height: 1",
+        "lineHeight": "1",
+        "alignItems": "stretch",
+        "foDeltaY": 0
+      },
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "threeWay": {
+        "live": {
+          "top": 15.5,
+          "topInBorder": 14.5
+        },
+        "svg": {
+          "top": 15.5,
+          "topInBorder": 14.5
+        },
+        "canvas": {
+          "top": 19,
+          "topInBorder": 18
+        },
+        "liveVsCanvasTopPx": 3.5,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 3.5,
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true,
+      "glyphMetrics": {
+        "boxHeightPx": 48,
+        "boxWidthPx": 68.859375,
+        "rangeTopInBorder": 14.5,
+        "rangeBottomInBorder": 33.5,
+        "rangeHeightInBorder": 19,
+        "computedLhPx": 16,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 0,
+        "slackAboveRangePx": 14.5,
+        "slackBelowRangePx": 14.5,
+        "rangeFillsStretchBox": false
+      },
+      "canvasInkExtents": {
+        "topInBorder": 18,
+        "bottomInBorder": 30,
+        "inkHeightInBorder": 12,
+        "scanBandWidthDev": 28,
+        "scanRegionHeightDev": 48
+      },
+      "foDeltaY": 0,
+      "halfLeadingLhFsPx": 0,
+      "canvasDeltaPx": 3.5,
+      "svgDeltaPx": 0,
+      "canvasDeltaVsHalfLeading": 3.5
+    },
+    {
+      "variantId": "lh-135",
+      "pageId": "variant-lh-135",
+      "variant": {
+        "label": "line-height: 1.35 (canonical nav)",
+        "lineHeight": "1.35",
+        "alignItems": "stretch",
+        "foDeltaY": 0
+      },
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "threeWay": {
+        "live": {
+          "top": 15.203125,
+          "topInBorder": 14.203125
+        },
+        "svg": {
+          "top": 15.203125,
+          "topInBorder": 14.203125
+        },
+        "canvas": {
+          "top": 18,
+          "topInBorder": 17
+        },
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 2.796875,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 17
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true,
+      "glyphMetrics": {
+        "boxHeightPx": 48,
+        "boxWidthPx": 68.859375,
+        "rangeTopInBorder": 14.203125,
+        "rangeBottomInBorder": 33.203125,
+        "rangeHeightInBorder": 19,
+        "computedLhPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "slackAboveRangePx": 14.203125,
+        "slackBelowRangePx": 14.796875,
+        "rangeFillsStretchBox": false
+      },
+      "canvasInkExtents": {
+        "topInBorder": 17,
+        "bottomInBorder": 29,
+        "inkHeightInBorder": 12,
+        "scanBandWidthDev": 28,
+        "scanRegionHeightDev": 48
+      },
+      "foDeltaY": 0,
+      "halfLeadingLhFsPx": 2.8,
+      "canvasDeltaPx": 2.797,
+      "svgDeltaPx": 0,
+      "canvasDeltaVsHalfLeading": -0.003
+    },
+    {
+      "variantId": "lh-normal",
+      "pageId": "variant-lh-normal",
+      "variant": {
+        "label": "line-height: normal",
+        "lineHeight": "normal",
+        "alignItems": "stretch",
+        "foDeltaY": 0
+      },
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "threeWay": {
+        "live": {
+          "top": 15.5,
+          "topInBorder": 14.5
+        },
+        "svg": {
+          "top": 15.5,
+          "topInBorder": 14.5
+        },
+        "canvas": {
+          "top": 19,
+          "topInBorder": 18
+        },
+        "liveVsCanvasTopPx": 3.5,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 3.5,
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true,
+      "glyphMetrics": {
+        "boxHeightPx": 48,
+        "boxWidthPx": 68.859375,
+        "rangeTopInBorder": 14.5,
+        "rangeBottomInBorder": 33.5,
+        "rangeHeightInBorder": 19,
+        "computedLhPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "slackAboveRangePx": 14.5,
+        "slackBelowRangePx": 14.5,
+        "rangeFillsStretchBox": false
+      },
+      "canvasInkExtents": {
+        "topInBorder": 18,
+        "bottomInBorder": 30,
+        "inkHeightInBorder": 12,
+        "scanBandWidthDev": 28,
+        "scanRegionHeightDev": 48
+      },
+      "foDeltaY": 0,
+      "halfLeadingLhFsPx": 2.8,
+      "canvasDeltaPx": 3.5,
+      "svgDeltaPx": 0,
+      "canvasDeltaVsHalfLeading": 0.7
+    },
+    {
+      "variantId": "flex-start",
+      "pageId": "variant-flex-start",
+      "variant": {
+        "label": "align-items: flex-start (row + link)",
+        "lineHeight": "1.35",
+        "alignItems": "flex-start",
+        "foDeltaY": 0
+      },
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "threeWay": {
+        "live": {
+          "top": 2,
+          "topInBorder": 1
+        },
+        "svg": {
+          "top": 2,
+          "topInBorder": 1
+        },
+        "canvas": {
+          "top": 5,
+          "topInBorder": 4
+        },
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 3,
+        "livePaintedTopInBorder": 1,
+        "svgPaintedTopInBorder": 1,
+        "canvasPaintedTopInBorder": 4
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true,
+      "glyphMetrics": {
+        "boxHeightPx": 21.59375,
+        "boxWidthPx": 68.859375,
+        "rangeTopInBorder": 1,
+        "rangeBottomInBorder": 20,
+        "rangeHeightInBorder": 19,
+        "computedLhPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "slackAboveRangePx": 1,
+        "slackBelowRangePx": 1.59375,
+        "rangeFillsStretchBox": false
+      },
+      "canvasInkExtents": {
+        "topInBorder": 4,
+        "bottomInBorder": 16,
+        "inkHeightInBorder": 12,
+        "scanBandWidthDev": 28,
+        "scanRegionHeightDev": 22
+      },
+      "foDeltaY": 0,
+      "halfLeadingLhFsPx": 2.8,
+      "canvasDeltaPx": 3,
+      "svgDeltaPx": 0,
+      "canvasDeltaVsHalfLeading": 0.2
+    },
+    {
+      "variantId": "fo-y-28",
+      "pageId": "variant-fo-y-28",
+      "variant": {
+        "label": "foreignObject y −2.8 px (w7 decode nudge)",
+        "lineHeight": "1.35",
+        "alignItems": "stretch",
+        "foDeltaY": -2.8
+      },
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "threeWay": {
+        "live": {
+          "top": 15.203125,
+          "topInBorder": 14.203125
+        },
+        "svg": {
+          "top": 12.3984375,
+          "topInBorder": 14.203125
+        },
+        "canvas": {
+          "top": 15,
+          "topInBorder": 14
+        },
+        "liveVsCanvasTopPx": -0.203125,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": -0.203125,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 14
+      },
+      "verdict": "OTHER",
+      "bitmapOnly": false,
+      "glyphMetrics": {
+        "boxHeightPx": 48,
+        "boxWidthPx": 68.859375,
+        "rangeTopInBorder": 14.203125,
+        "rangeBottomInBorder": 33.203125,
+        "rangeHeightInBorder": 19,
+        "computedLhPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "slackAboveRangePx": 14.203125,
+        "slackBelowRangePx": 14.796875,
+        "rangeFillsStretchBox": false
+      },
+      "canvasInkExtents": {
+        "topInBorder": 14,
+        "bottomInBorder": 26,
+        "inkHeightInBorder": 12,
+        "scanBandWidthDev": 28,
+        "scanRegionHeightDev": 48
+      },
+      "foDeltaY": -2.8,
+      "halfLeadingLhFsPx": 2.8,
+      "canvasDeltaPx": -0.203,
+      "svgDeltaPx": 0,
+      "canvasDeltaVsHalfLeading": -3.003
+    }
+  ],
+  "synthesis": {
+    "rowCount": 5,
+    "canvasDeltaSpreadPx": 3.703,
+    "halfLeadingMatchesCanvasDelta": true,
+    "foY28ClosesStrut": 2.594,
+    "allBitmapOnly": false,
+    "top3Findings": [
+      "canvasΔ spread across lh/align variants: 3.703 px (headed @ dpr=1)",
+      "Canonical lh-1.35: canvasΔ=2.797 ≈ halfLeading 2.800 (BITMAP_ONLY class).",
+      "FO y −2.8: canvasΔ=-0.203 (w7 closes strut; residual ≈ Range subpixel)."
+    ]
+  },
+  "pages": [
+    {
+      "variantId": "lh-1",
+      "path": "/__localtests__/chromium-fo-only/variant-lh-1.html",
+      "file": "chromium-fo-only/variant-lh-1.html"
+    },
+    {
+      "variantId": "lh-135",
+      "path": "/__localtests__/chromium-fo-only/variant-lh-135.html",
+      "file": "chromium-fo-only/variant-lh-135.html"
+    },
+    {
+      "variantId": "lh-normal",
+      "path": "/__localtests__/chromium-fo-only/variant-lh-normal.html",
+      "file": "chromium-fo-only/variant-lh-normal.html"
+    },
+    {
+      "variantId": "flex-start",
+      "path": "/__localtests__/chromium-fo-only/variant-flex-start.html",
+      "file": "chromium-fo-only/variant-flex-start.html"
+    },
+    {
+      "variantId": "fo-y-28",
+      "path": "/__localtests__/chromium-fo-only/variant-fo-y-28.html",
+      "file": "chromium-fo-only/variant-fo-y-28.html"
+    }
+  ],
+  "commands": [
+    "node __localtests__/chromium-fo-only-round8-probe.mjs --dpr 1",
+    "node __localtests__/chromium-fo-only-round8-probe.mjs --dpr 1 --cdp"
+  ]
+}

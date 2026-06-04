@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO line-height deep probe v2</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font: 13px/1.4 system-ui, sans-serif; background: #f8fafc; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 10px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      findLandmarkElement,
+      getFoFixRecipe,
+      runFoFixProbe,
+      compareThreeWayInk,
+      parseCaptureMeta,
+    } from './fo-fix-lab-runner.js'
+    import { computeHalfLeadingLhFs, buildLabLhFoCss } from './fo-fix-toCanvas.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const section = (params.get('section') || 'lh-sweep').trim()
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const lhVariant = (params.get('lh') || '1.35').trim()
+    const lhOn = (params.get('lhOn') || 'leaf').trim()
+    const flexAlign = (params.get('align') || 'stretch').trim()
+    const trimMode = (params.get('trim') || 'none').trim()
+
+    const TEXT_LEAF_SEL = 'foreignObject nav a'
+    const NAV_SEL = 'foreignObject nav.mini-nav'
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function measureLayoutLineBoxPx(style, el) {
+      if (!(el instanceof Element) || el.childElementCount > 0) return null
+      if (!(el.textContent || '').trim()) return null
+      const pad =
+        (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+      const h = el.getBoundingClientRect().height
+      if (h <= pad) return null
+      const content = h - pad
+      return el.scrollHeight <= content + 2 ? content : null
+    }
+
+    function resolveComputedLhPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      return null
+    }
+
+    function resolveLineHeightPx(cs, el, useLayoutBox) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const computedPx = resolveComputedLhPx(cs, el)
+      if (!useLayoutBox && computedPx != null) return computedPx
+      const layout = measureLayoutLineBoxPx(cs, el)
+      if (layout != null && layout > 0) return layout
+      if (computedPx != null) return computedPx
+      return fs * 1.35
+    }
+
+    function leafMetrics(leaf, { useLayoutBox = false } = {}) {
+      const cs = getComputedStyle(leaf)
+      const nav = leaf.closest('nav')
+      const navCs = nav ? getComputedStyle(nav) : null
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const lineHeightComputedPx = resolveComputedLhPx(cs, leaf)
+      const lineHeightPx = resolveLineHeightPx(cs, leaf, useLayoutBox)
+      const layoutLineBoxPx = measureLayoutLineBoxPx(cs, leaf)
+      const halfLeadingLhFs = computeHalfLeadingLhFs(fontSizePx, lineHeightPx)
+      const halfLeadingComputed = lineHeightComputedPx != null
+        ? computeHalfLeadingLhFs(fontSizePx, lineHeightComputedPx)
+        : null
+      const box = leaf.getBoundingClientRect()
+      const parentBox = nav?.getBoundingClientRect()
+      return {
+        tag: leaf.tagName,
+        computedLineHeight: cs.lineHeight,
+        lineHeightComputedPx: roundPx(lineHeightComputedPx),
+        lineHeightPx: roundPx(lineHeightPx),
+        layoutLineBoxPx: roundPx(layoutLineBoxPx),
+        halfLeadingLhFsPx: roundPx(halfLeadingLhFs),
+        halfLeadingComputedPx: roundPx(halfLeadingComputed),
+        fontSizePx: roundPx(fontSizePx),
+        leafHeightGbcr: roundPx(box.height),
+        parentHeightGbcr: roundPx(parentBox?.height),
+        parentAlignItems: navCs?.alignItems ?? null,
+        display: cs.display,
+        alignSelf: cs.alignSelf,
+        leadingTrim: cs.leadingTrim || cs.getPropertyValue('leading-trim') || null,
+        textBoxTrim: cs.textBoxTrim || cs.getPropertyValue('text-box-trim') || null,
+      }
+    }
+
+    function svgFromDataUrl(url) {
+      const i = url.indexOf(',')
+      if (i < 0) return ''
+      const header = url.slice(0, i)
+      const payload = url.slice(i + 1)
+      if (/;base64/i.test(header)) return atob(payload)
+      return decodeURIComponent(payload)
+    }
+
+    function extractFoLhFromSvg(svgText, leafTag = 'a') {
+      const foRe = new RegExp(
+        `<foreignObject[^>]*>[\\s\\S]*?<${leafTag}[^>]*style="([^"]*)"`,
+        'i',
+      )
+      const m = foRe.exec(svgText)
+      if (!m) return { inlineStyle: null, lineHeight: null }
+      const style = m[1]
+      const lhM = /line-height:\s*([^;]+)/i.exec(style)
+      return {
+        inlineStyle: style,
+        lineHeight: lhM ? lhM[1].trim() : null,
+      }
+    }
+
+    function measureTextMetrics(leaf) {
+      const cs = getComputedStyle(leaf)
+      const font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return null
+      ctx.font = font
+      const m = ctx.measureText((leaf.textContent || '').trim() || 'Hg')
+      return {
+        font,
+        actualBoundingBoxAscent: roundPx(m.actualBoundingBoxAscent),
+        actualBoundingBoxDescent: roundPx(m.actualBoundingBoxDescent),
+        fontBoundingBoxAscent: roundPx(m.fontBoundingBoxAscent),
+        fontBoundingBoxDescent: roundPx(m.fontBoundingBoxDescent),
+        emHeightAscent: roundPx(m.emHeightAscent),
+        emHeightDescent: roundPx(m.emHeightDescent),
+      }
+    }
+
+    function resetLayout() {
+      const nav = root.querySelector('nav.mini-nav')
+      const leaf = findLandmarkElement(root, landmark)
+      if (nav) {
+        nav.style.cssText = ''
+        nav.className = 'mini-nav'
+      }
+      if (leaf) leaf.style.cssText = ''
+      root.style.cssText =
+        'width:500px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0'
+    }
+
+    function applyLhVariant(variant, leaf, nav) {
+      if (variant === 'inherit') {
+        nav.style.setProperty('line-height', 'inherit', 'important')
+        leaf.style.removeProperty('line-height')
+        return
+      }
+      if (variant === 'from-live') return
+      const map = {
+        normal: 'normal',
+        '1': '1',
+        '1em': '1em',
+        '1.35': '1.35',
+        '21.6px': '21.6px',
+        '48px': '48px',
+      }
+      const val = map[variant] ?? variant
+      if (lhOn === 'parent' && nav) {
+        nav.style.setProperty('line-height', val, 'important')
+        leaf.style.removeProperty('line-height')
+      } else {
+        leaf.style.setProperty('line-height', val, 'important')
+      }
+    }
+
+    function applyFlexAlign(align) {
+      const nav = root.querySelector('nav.mini-nav')
+      if (!nav) return
+      nav.style.setProperty('align-items', align, 'important')
+      if (align === 'stretch') {
+        nav.style.setProperty('min-height', '48px')
+        nav.style.setProperty('height', '48px')
+      } else {
+        nav.style.removeProperty('height')
+        nav.style.setProperty('min-height', '48px')
+      }
+    }
+
+    function applyTrim(mode, leaf) {
+      leaf.style.removeProperty('leading-trim')
+      leaf.style.removeProperty('text-box-trim')
+      if (mode === 'leading-trim-both') {
+        leaf.style.setProperty('leading-trim', 'both', 'important')
+      } else if (mode === 'text-box-trim-both') {
+        leaf.style.setProperty('text-box-trim', 'trim-both', 'important')
+      } else if (mode === 'text-box-edge-auto') {
+        leaf.style.setProperty('text-box-trim', 'trim-both', 'important')
+        leaf.style.setProperty('text-box-edge', 'cap alphabetic', 'important')
+      }
+    }
+
+  async function runThreeWay(recipe, leaf) {
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const m = leafMetrics(leaf)
+      const canvasDelta = probe.liveVsCanvasTopPx ?? null
+      const svgDelta = probe.liveVsSvgTopPx ?? null
+      const residual =
+        canvasDelta != null && m.halfLeadingComputedPx != null
+          ? roundPx(canvasDelta - m.halfLeadingComputedPx)
+          : canvasDelta != null && m.halfLeadingLhFsPx != null
+            ? roundPx(canvasDelta - m.halfLeadingLhFsPx)
+            : null
+      return {
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder ?? null,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder ?? null,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder ?? null,
+          liveVsSvgTopPx: roundPx(svgDelta),
+          liveVsCanvasTopPx: roundPx(canvasDelta),
+        },
+        canvasDeltaPx: roundPx(canvasDelta),
+        svgDeltaPx: roundPx(svgDelta),
+        residualCanvasMinusHalfLeadingPx: residual,
+        metrics: m,
+      }
+    }
+
+    async function runLhSweep() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      applyLhVariant(lhVariant, leaf, leaf.closest('nav'))
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const m = leafMetrics(leaf)
+      const lhInject =
+        lhVariant === 'from-live'
+          ? getComputedStyle(leaf).lineHeight
+          : lhVariant === 'inherit'
+            ? 'inherit'
+            : lhVariant
+      const css = buildLabLhFoCss(TEXT_LEAF_SEL, lhInject)
+      const recipe = {
+        ...getFoFixRecipe('product-baseline'),
+        id: `lab-lh-v2-${lhVariant.replace(/[^a-z0-9]+/gi, '-')}`,
+        css,
+        inject: 'capture',
+        rasterPatch: 'product-toCanvas',
+      }
+      const row = await runThreeWay(recipe, leaf)
+      return {
+        section: 'lh-sweep',
+        lhVariant,
+        lhOn: 'leaf',
+        lhInjected: lhInject,
+        injectCss: css,
+        ...row,
+      }
+    }
+
+    async function runParentLeaf() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      const nav = leaf?.closest('nav')
+      if (!leaf || !nav) throw new Error('nav/leaf missing')
+      applyLhVariant(lhVariant, leaf, nav)
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const row = await runThreeWay(recipe, leaf)
+      return {
+        section: 'parent-leaf',
+        lhVariant,
+        lhOn,
+        parentComputedLh: getComputedStyle(nav).lineHeight,
+        leafComputedLh: getComputedStyle(leaf).lineHeight,
+        ...row,
+      }
+    }
+
+    async function runFlexAlign() {
+      resetLayout()
+      applyFlexAlign(flexAlign)
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const row = await runThreeWay(recipe, leaf)
+      return { section: 'flex-align', flexAlign, ...row }
+    }
+
+    async function runStrutMath() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const row = await runThreeWay(recipe, leaf)
+      const mLayout = leafMetrics(leaf, { useLayoutBox: true })
+      const mComputed = leafMetrics(leaf, { useLayoutBox: false })
+      return {
+        section: 'strut-math',
+        landmark,
+        ...row,
+        strut: {
+          halfLeadingComputed: mComputed.halfLeadingComputedPx,
+          halfLeadingLayoutBox: mLayout.halfLeadingLhFsPx,
+          layoutLineBoxPx: mLayout.layoutLineBoxPx,
+          contentHalfStrut:
+            mLayout.layoutLineBoxPx != null && mComputed.lineHeightComputedPx != null
+              ? roundPx((mLayout.layoutLineBoxPx - mComputed.lineHeightComputedPx) / 2)
+              : null,
+        },
+      }
+    }
+
+    async function runFoSerialized() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      const liveCs = getComputedStyle(leaf)
+      const snap = await snapdom(root, { dpr, scale })
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const foLh = extractFoLhFromSvg(svgText)
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const row = await runThreeWay(recipe, leaf)
+      return {
+        section: 'fo-serialized',
+        liveComputed: {
+          lineHeight: liveCs.lineHeight,
+          fontSize: liveCs.fontSize,
+          lineHeightPx: resolveComputedLhPx(liveCs, leaf),
+        },
+        serializedFo: foLh,
+        lhMatch:
+          foLh.lineHeight != null &&
+          liveCs.lineHeight != null &&
+          foLh.lineHeight.replace(/\s+/g, '') === liveCs.lineHeight.replace(/\s+/g, ''),
+        ...row,
+      }
+    }
+
+    async function runTrimDpr() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      applyTrim(trimMode, leaf)
+      const flags = {}
+      if (trimMode === 'leading-trim-both') {
+        flags.experimentalFoLeadingTrim = true
+      }
+      const recipe = {
+        ...getFoFixRecipe('product-baseline'),
+        harnessSnapdom: flags,
+        rasterPatch: 'product-toCanvas',
+      }
+      const row = await runThreeWay(recipe, leaf)
+      return { section: 'trim-dpr', trimMode, dpr, ...row }
+    }
+
+    async function runFontMetrics() {
+      resetLayout()
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark ${landmark} not found`)
+      const mt = measureTextMetrics(leaf)
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const row = await runThreeWay(recipe, leaf)
+      const liveTop = row.threeWay?.livePaintedTopInBorder
+      const predictedFromAscent =
+        liveTop != null && mt?.actualBoundingBoxAscent != null
+          ? roundPx(liveTop - mt.actualBoundingBoxAscent)
+          : null
+      return {
+        section: 'font-metrics',
+        measureText: mt,
+        predictedInkTopFromAscent: predictedFromAscent,
+        ...row,
+      }
+    }
+
+    async function run() {
+      status.textContent = `Running section=${section}…`
+      let result
+      switch (section) {
+        case 'lh-sweep':
+          result = await runLhSweep()
+          break
+        case 'parent-leaf':
+          result = await runParentLeaf()
+          break
+        case 'flex-align':
+          result = await runFlexAlign()
+          break
+        case 'strut-math':
+          result = await runStrutMath()
+          break
+        case 'fo-serialized':
+          result = await runFoSerialized()
+          break
+        case 'trim-dpr':
+          result = await runTrimDpr()
+          break
+        case 'font-metrics':
+          result = await runFontMetrics()
+          break
+        default:
+          throw new Error(`Unknown section: ${section}`)
+      }
+      result.dpr = dpr
+      result.scale = scale
+      result.landmark = landmark
+      result.recipeId = 'product-baseline'
+      result.rasterPatch = 'product-toCanvas'
+      return result
+    }
+
+    window.__foLhDeepProbeV2 = {
+      ready: false,
+      bootError: null,
+      section,
+      run,
+    }
+
+    run()
+      .then((payload) => {
+        window.__foLhDeepProbeV2.result = payload
+        window.__foLhDeepProbeV2.ready = true
+        status.textContent = `Done section=${section} canvasΔ=${payload.canvasDeltaPx ?? '—'}`
+      })
+      .catch((err) => {
+        window.__foLhDeepProbeV2.bootError = String(err?.message || err)
+        window.__foLhDeepProbeV2.ready = true
+        status.textContent = `Error: ${window.__foLhDeepProbeV2.bootError}`
+      })
+  </script>
+</body>
+</html>

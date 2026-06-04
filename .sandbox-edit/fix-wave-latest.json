@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-06-02T16:23:23.957333Z",
+  "repo": "snapdom",
+  "port": 8791,
+  "headed": true,
+  "commands": [
+    "npm run compile",
+    "SNAPDOM_LOCAL_PORT=8791 node __localtests__/fo-tocanvas-svg-fork-probe.mjs --json .sandbox-edit/tocanvas-svg-fork.json",
+    "SNAPDOM_LOCAL_PORT=8791 node __localtests__/fo-ink-meta-align-probe.mjs --json .sandbox-edit/ink-meta-align.json"
+  ],
+  "artifacts": {
+    "inkMetaAlign": ".sandbox-edit/ink-meta-align.json",
+    "tocanvasSvgFork": ".sandbox-edit/tocanvas-svg-fork.json"
+  },
+  "fixture": {
+    "landmark": "Home",
+    "dpr": 1,
+    "scale": 1
+  },
+  "wins": [
+    {
+      "probe": "fo-ink-meta-align-probe",
+      "id": "ink-meta-align",
+      "kind": "canvas_parity",
+      "flags": {
+        "experimentalCaptureInkMeta": true,
+        "experimentalRasterInkAlign": true
+      },
+      "baselineCanvasDeltaPx": 2.796875,
+      "canvasDeltaPx": -2.203125,
+      "absCanvasDeltaBefore": 2.796875,
+      "absCanvasDeltaAfter": 2.203125,
+      "deltaFromBaselinePx": -5,
+      "evaluation": {
+        "verdict": "INK_META_PARTIAL",
+        "fixed": true,
+        "improved": true
+      },
+      "note": "Combined capture Range inkTopFracInBorder + raster dy align cuts ~5px off signed canvas\u0394 vs ~2.797px plateau; overshoots live (negative \u0394) \u2014 partial, not clean parity."
+    },
+    {
+      "probe": "fo-tocanvas-svg-fork-probe",
+      "id": "raster-fork-isolation",
+      "kind": "structural",
+      "note": "All experimentalRasterSvgPatch variants keep SVG leg \u0394=0 vs product baseline (serialized capture unchanged); fork applies pre-decode only.",
+      "svgDeltaStable": true
+    }
+  ],
+  "nonWins": [
+    {
+      "probe": "fo-ink-meta-align-probe",
+      "id": "capture-meta-only",
+      "reason": "Capture meta alone does not move canvas\u0394 (2.797px unchanged)."
+    },
+    {
+      "probe": "fo-ink-meta-align-probe",
+      "id": "raster-align-only",
+      "reason": "Raster align without capture meta does not move canvas\u0394."
+    },
+    {
+      "probe": "fo-tocanvas-svg-fork-probe",
+      "id": "fo-lh-pin",
+      "reason": "No canvas\u0394 change vs baseline on mini Home (dpr=1)."
+    },
+    {
+      "probe": "fo-tocanvas-svg-fork-probe",
+      "id": "viewbox-floor",
+      "reason": "No canvas\u0394 change vs baseline."
+    },
+    {
+      "probe": "fo-tocanvas-svg-fork-probe",
+      "id": "flex-center",
+      "reason": "Large canvas regression (\u0394 \u221216px from baseline); not promotable.",
+      "canvasDeltaPx": -14.203125
+    }
+  ],
+  "headline": "ink-meta-align (capture+raster flags) is the only canvas parity win; SVG fork patches isolate raster without touching serialized SVG.",
+  "evaluations": {
+    "inkMetaAlign": {
+      "verdict": "INK_META_PARTIAL",
+      "atPlateau": true,
+      "improved": true,
+      "lines": [
+        "Baseline canvas\u0394=2.797px (|\u0394|=2.797px).",
+        "Capture meta: inkTopFracInBorder=0.296 expected=0.39 refBorderH=48.",
+        "Fraction delta (measured\u2212expected)=-0.094.",
+        "ink-meta-align canvas\u0394=-2.203px.",
+        "ink-meta-align improved |canvas\u0394| vs baseline."
+      ],
+      "fixed": true
+    },
+    "tocanvasSvgFork": {
+      "verdict": "PATCHES_MOVE_CANVAS_DELTA",
+      "lines": [
+        "Product baseline canvas\u0394=1.797px (|\u0394|=1.797px).",
+        "SVG leg unchanged across variants (raster fork only).",
+        "fo-lh-pin: no meaningful canvas\u0394 change vs baseline (0px).",
+        "flex-center: canvas\u0394=-14.203px (\u0394 from baseline -16px).",
+        "viewbox-floor: no meaningful canvas\u0394 change vs baseline (0px)."
+      ],
+      "anyImprovement": false
+    }
+  }
+}

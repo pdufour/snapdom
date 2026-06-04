@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO strut Range probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      runFoFixProbe,
+      findLandmarkElement,
+      measureLhStrutRangeFacts,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmarks = (params.get('landmarks') || 'Home,Products')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function rankMetrics(canvasOffset, metrics) {
+      if (canvasOffset == null) return { rows: [], best: null, matches: [] }
+      const rows = []
+      for (const [id, value] of Object.entries(metrics)) {
+        if (value == null || !Number.isFinite(value)) continue
+        rows.push({
+          id,
+          value: roundPx(value),
+          deltaAbs: roundPx(Math.abs(canvasOffset - value)),
+        })
+      }
+      rows.sort((a, b) => (a.deltaAbs ?? Infinity) - (b.deltaAbs ?? Infinity))
+      return {
+        rows,
+        best: rows[0] ?? null,
+        matches: rows.filter((r) => r.deltaAbs != null && r.deltaAbs <= 0.06),
+      }
+    }
+
+    async function probeLandmark(landmark) {
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`Landmark "${landmark}" not found`)
+      const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+      const row = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const strutFacts = measureLhStrutRangeFacts(el)
+      const canvasOffset = Math.abs(row.liveVsCanvasTopPx ?? NaN)
+      const metrics = {
+        halfLeadingFs: strutFacts.halfLeadingFs,
+        halfLeadingFontBox: strutFacts.halfLeadingFontBox,
+        halfLeadingUsed: strutFacts.halfLeadingUsed,
+        halfLeadingFromRangeLineFs: strutFacts.halfLeadingFromRangeLineFs,
+        halfLeadingFromRangeLineFontBox: strutFacts.halfLeadingFromRangeLineFontBox,
+        halfLeadingFsMinusRangeSubpixel: strutFacts.halfLeadingFsMinusRangeSubpixel,
+        rangeSubpixelPx: strutFacts.rangeSubpixelPx,
+        rangeMinusLineBoxTop: strutFacts.rangeMinusLineBoxTop,
+        rangeMinusCapTop: strutFacts.rangeMinusCapTop,
+        rangeTopInBorder: strutFacts.rangeTopInBorder,
+        capTopInBorder: strutFacts.capTopInBorder,
+      }
+      return {
+        landmark,
+        dpr,
+        scale,
+        canvasDeltaSignedPx: roundPx(row.liveVsCanvasTopPx),
+        canvasOffsetPx: roundPx(canvasOffset),
+        svgOffsetPx: roundPx(row.liveVsSvgTopPx != null ? Math.abs(row.liveVsSvgTopPx) : null),
+        strutFacts: Object.fromEntries(
+          Object.entries(strutFacts).map(([k, v]) => [k, roundPx(v)]),
+        ),
+        metricRank: rankMetrics(canvasOffset, metrics),
+      }
+    }
+
+    async function run() {
+      const landmarkRows = []
+      for (const landmark of landmarks) {
+        landmarkRows.push(await probeLandmark(landmark))
+      }
+      return {
+        generatedAt: new Date().toISOString(),
+        fixture: 'mini-nav',
+        recipeId: 'product-baseline',
+        landmarks: landmarkRows,
+      }
+    }
+
+    window.__foStrutRangeProbe = { done: false, error: null, payload: null }
+    try {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      if (params.get('auto') === '1') {
+        window.__foStrutRangeProbe.payload = await run()
+      }
+    } catch (e) {
+      window.__foStrutRangeProbe.error = String(e?.message || e)
+    }
+    window.__foStrutRangeProbe.done = true
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+{
+  "purpose": "Isolate Chromium FO→bitmap with zero snapdom/capture — prove BITMAP_ONLY before library fixes.",
+  "generatedAt": "2026-06-03T00:24:49.755Z",
+  "dpr": 1,
+  "rasterPath": "image-decode",
+  "usesSnapdom": false,
+  "usesCaptureJs": false,
+  "overallVerdict": "BITMAP_ONLY",
+  "bitmapOnlyCriteria": "|liveVsSvgTopPx| < 0.35 and |liveVsCanvasTopPx| > 1.5",
+  "primary": {
+    "pageId": "minimal-nav-fo-raster",
+    "landmark": "Home",
+    "dpr": 1,
+    "fixtureDims": {
+      "cssW": 500,
+      "cssH": 50
+    },
+    "rasterPath": "image-decode",
+    "svgBytes": 572,
+    "threeWay": {
+      "live": {
+        "top": 15.203125,
+        "topInBorder": 14.203125
+      },
+      "svg": {
+        "top": 15.203125,
+        "topInBorder": 14.203125
+      },
+      "canvas": {
+        "top": 18,
+        "topInBorder": 17
+      },
+      "liveVsCanvasTopPx": 2.796875,
+      "liveVsSvgTopPx": 0,
+      "svgVsCanvasTopPx": 2.796875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.203125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "verdict": "BITMAP_ONLY",
+    "bitmapOnly": true
+  },
+  "w7Nudge": {
+    "halfLeadingPx": 2.8000000000000007,
+    "baselineCanvasDelta": 2.796875,
+    "nudgeCanvasDelta": -0.203125
+  },
+  "pages": [
+    {
+      "pageId": "minimal-nav-fo-raster",
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rasterPath": "image-decode",
+      "svgBytes": 572,
+      "threeWay": {
+        "live": {
+          "top": 15.203125,
+          "topInBorder": 14.203125
+        },
+        "svg": {
+          "top": 15.203125,
+          "topInBorder": 14.203125
+        },
+        "canvas": {
+          "top": 18,
+          "topInBorder": 17
+        },
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 2.796875,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 17
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true
+    },
+    {
+      "pageId": "minimal-typography-no-flex",
+      "landmark": "Home",
+      "dpr": 1,
+      "fixtureDims": {
+        "cssW": 200,
+        "cssH": 40
+      },
+      "rasterPath": "image-decode",
+      "svgBytes": 418,
+      "threeWay": {
+        "live": {
+          "top": 10,
+          "topInBorder": 0
+        },
+        "svg": {
+          "top": 10,
+          "topInBorder": 0
+        },
+        "canvas": {
+          "top": 13,
+          "topInBorder": 3
+        },
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "svgVsCanvasTopPx": 3,
+        "livePaintedTopInBorder": 0,
+        "svgPaintedTopInBorder": 0,
+        "canvasPaintedTopInBorder": 3
+      },
+      "verdict": "BITMAP_ONLY",
+      "bitmapOnly": true
+    },
+    {
+      "pageId": "minimal-nav-fo-y-nudge",
+      "halfLeadingPx": 2.8000000000000007,
+      "variants": [
+        {
+          "id": "baseline",
+          "verdict": "BITMAP_ONLY",
+          "foDeltaY": 0,
+          "threeWay": {
+            "live": {
+              "top": 15.203125,
+              "topInBorder": 14.203125
+            },
+            "svg": {
+              "top": 15.203125,
+              "topInBorder": 14.203125
+            },
+            "canvas": {
+              "top": 18,
+              "topInBorder": 17
+            },
+            "liveVsCanvasTopPx": 2.796875,
+            "liveVsSvgTopPx": 0,
+            "svgVsCanvasTopPx": 2.796875,
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.203125,
+            "canvasPaintedTopInBorder": 17
+          }
+        },
+        {
+          "id": "fo-y-half-leading",
+          "verdict": "OTHER",
+          "foDeltaY": -2.8000000000000007,
+          "threeWay": {
+            "live": {
+              "top": 15.203125,
+              "topInBorder": 14.203125
+            },
+            "svg": {
+              "top": 12.3984375,
+              "topInBorder": 14.203125
+            },
+            "canvas": {
+              "top": 15,
+              "topInBorder": 14
+            },
+            "liveVsCanvasTopPx": -0.203125,
+            "liveVsSvgTopPx": 0,
+            "svgVsCanvasTopPx": -0.203125,
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.203125,
+            "canvasPaintedTopInBorder": 14
+          }
+        }
+      ],
+      "baseline": {
+        "id": "baseline",
+        "verdict": "BITMAP_ONLY",
+        "foDeltaY": 0,
+        "threeWay": {
+          "live": {
+            "top": 15.203125,
+            "topInBorder": 14.203125
+          },
+          "svg": {
+            "top": 15.203125,
+            "topInBorder": 14.203125
+          },
+          "canvas": {
+            "top": 18,
+            "topInBorder": 17
+          },
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 2.796875,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17
+        }
+      },
+      "nudge": {
+        "id": "fo-y-half-leading",
+        "verdict": "OTHER",
+        "foDeltaY": -2.8000000000000007,
+        "threeWay": {
+          "live": {
+            "top": 15.203125,
+            "topInBorder": 14.203125
+          },
+          "svg": {
+            "top": 12.3984375,
+            "topInBorder": 14.203125
+          },
+          "canvas": {
+            "top": 15,
+            "topInBorder": 14
+          },
+          "liveVsCanvasTopPx": -0.203125,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": -0.203125,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 14
+        }
+      }
+    },
+    {
+      "pageId": "minimal-nav-fo",
+      "svgOnly": true,
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "liveVsSvgTopPx": 0
+      },
+      "note": "No canvas raster on this page — use minimal-nav-fo-raster or probe runner."
+    }
+  ],
+  "commands": [
+    "npm run debug:chromium-fo-only",
+    "node __localtests__/chromium-fo-only-probe.mjs --dpr 1"
+  ],
+  "contrastWithSnapdom": "npm run debug:fo-minimal-repro"
+}

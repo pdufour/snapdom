@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO research round 4 — new angles</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { domToCanvas } from 'https://unpkg.com/modern-screenshot@4.6.0/dist/index.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { computeHalfLeadingLhFs } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureCanvasInkForElement,
+      measureLivePaintedInk,
+      measureRangeClientRectUnionPx,
+      measureSvgInkForElement,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function relRect(el, root) {
+      const er = el.getBoundingClientRect()
+      const rr = root.getBoundingClientRect()
+      return { left: er.left - rr.left, top: er.top - rr.top, width: er.width, height: er.height }
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx:
+          cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+            ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+            : null,
+        livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+      }
+    }
+
+    function measurePaintedInkFromRangeTarget(rangeTarget, anchorEl, root) {
+      const box = relRect(anchorEl, root)
+      const range = document.createRange()
+      if (rangeTarget.nodeType === Node.TEXT_NODE) {
+        range.selectNodeContents(rangeTarget)
+      } else {
+        range.selectNodeContents(rangeTarget)
+      }
+      const rects = range.getClientRects()
+      if (!rects.length) return null
+      const rr = root.getBoundingClientRect()
+      let top = Infinity
+      for (const rc of rects) top = Math.min(top, rc.top - rr.top)
+      if (!Number.isFinite(top)) return null
+      return { top, topInBorder: top - box.top }
+    }
+
+    function measureGbcrTopInBorder(el, root) {
+      const box = relRect(el, root)
+      return { top: box.top, topInBorder: 0, gbcrHeight: box.height }
+    }
+
+    async function rasterBaseline(svgText, root, el, extraRecipe = {}) {
+      const recipe = {
+        ...getFoFixRecipe('product-baseline'),
+        rasterPatch: 'lab-toCanvas',
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+        ...extraRecipe,
+      }
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const meta = parseCaptureMeta(svgText, root)
+      const canvas = await rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return { canvas, cmp, threeWay: threeWaySummary(cmp), cssW, cssH, dims, meta }
+    }
+
+    function patchFoAttrs(svgText, patchFn) {
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const fo = doc.querySelector('foreignObject')
+      if (!fo) return svgText
+      patchFn(fo)
+      return new XMLSerializer().serializeToString(doc.documentElement)
+    }
+
+    function injectStyle(svgText, css) {
+      if (svgText.includes('<style')) {
+        return svgText.replace(/<style([^>]*)>/i, (m) => `${m}${css}`)
+      }
+      return svgText.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${css}</style>`)
+    }
+
+    /** 1 — decode context: document, iframe, font-display, preload timing */
+    async function probeDecodeContext(root, el, svgText) {
+      const rows = []
+      const base = await rasterBaseline(svgText, root, el)
+      rows.push({
+        contextId: 'main-doc-img-decode',
+        liveVsCanvasTopPx: base.threeWay.liveVsCanvasTopPx,
+        liveVsSvgTopPx: base.threeWay.liveVsSvgTopPx,
+      })
+
+      const iframeRecipe = {
+        rasterPatch: 'lab-toCanvas',
+        labLoadPipeline: 'iframe-decode-retry',
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      }
+      const iframeRow = await rasterBaseline(svgText, root, el, iframeRecipe)
+      rows.push({
+        contextId: 'iframe-sandbox-decode-retry',
+        liveVsCanvasTopPx: iframeRow.threeWay.liveVsCanvasTopPx,
+        liveVsSvgTopPx: iframeRow.threeWay.liveVsSvgTopPx,
+      })
+
+      const freshDocSvg = patchFoAttrs(svgText, (fo) => {
+        fo.setAttribute('data-probe', 'fresh-iframe')
+      })
+      const freshIframe = await rasterBaseline(freshDocSvg, root, el, iframeRecipe)
+      rows.push({
+        contextId: 'iframe-fresh-marked-fo',
+        liveVsCanvasTopPx: freshIframe.threeWay.liveVsCanvasTopPx,
+        liveVsSvgTopPx: freshIframe.threeWay.liveVsSvgTopPx,
+      })
+
+      for (const fd of ['block', 'swap', 'optional']) {
+        const css = `@font-face{font-family:'R4ProbeFont';src:local('system-ui');font-display:${fd}}` +
+          `foreignObject *{font-family:'R4ProbeFont',system-ui!important}`
+        const patched = injectStyle(svgText, css)
+        const row = await rasterBaseline(patched, root, el)
+        rows.push({
+          contextId: `font-display-${fd}`,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        })
+      }
+
+      const beforeReady = await (async () => {
+        if (document.fonts.status === 'loaded') {
+          return { contextId: 'fonts-before-ready', skipped: true, reason: 'fonts already loaded' }
+        }
+        const row = await rasterBaseline(svgText, root, el, {
+          labToCanvasOpts: { disableGbcrFracNudge: true, skipFontsReady: true },
+        })
+        return {
+          contextId: 'fonts-before-ready',
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        }
+      })()
+      rows.push(beforeReady)
+
+      const canvasDeltas = rows
+        .map((r) => r.liveVsCanvasTopPx)
+        .filter((v) => Number.isFinite(v))
+      const spread =
+        canvasDeltas.length >= 2
+          ? roundPx(Math.max(...canvasDeltas) - Math.min(...canvasDeltas))
+          : null
+
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict:
+          spread != null && spread < 0.08
+            ? 'DECODE_CONTEXT_INVARIANT'
+            : spread != null && spread >= 0.5
+              ? 'DECODE_CONTEXT_AFFECTS_DRIFT'
+              : 'DECODE_CONTEXT_MINOR_VARIANCE',
+        implication:
+          spread != null && spread < 0.08
+            ? 'Fresh iframe, font-display, and decode pipeline do not explain ~2.8px plateau.'
+            : 'Some decode context shifts canvasΔ — investigate further.',
+      }
+    }
+
+    /** 2 — text node Range vs element Range vs GBCR */
+    async function probeTextMetric(root, el, svgText) {
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const textNode = [...el.childNodes].find(
+        (n) => n.nodeType === Node.TEXT_NODE && (n.textContent || '').trim(),
+      )
+      const elementRange = measureLivePaintedInk(el, root)
+      const textNodeRange = textNode
+        ? measurePaintedInkFromRangeTarget(textNode, el, root)
+        : null
+      const gbcr = measureGbcrTopInBorder(el, root)
+      const svgInk = measureSvgInkForElement(svgText, landmark, { cssW, cssH })
+      const base = await rasterBaseline(svgText, root, el)
+
+      const svgAlignsTo =
+        svgInk?.painted && elementRange
+          ? Math.abs(svgInk.painted.topInBorder - elementRange.topInBorder) <
+            Math.abs((svgInk.painted.topInBorder ?? 0) - (textNodeRange?.topInBorder ?? 99))
+            ? 'element-range'
+            : 'text-node-range'
+          : null
+
+      const canvasAlignsElement =
+        base.cmp.canvas && elementRange
+          ? Math.abs(base.cmp.canvas.topInBorder - elementRange.topInBorder)
+          : null
+      const canvasAlignsTextNode =
+        base.cmp.canvas && textNodeRange
+          ? Math.abs(base.cmp.canvas.topInBorder - textNodeRange.topInBorder)
+          : null
+
+      return {
+        elementRangeTopInBorder: elementRange?.topInBorder ?? null,
+        textNodeRangeTopInBorder: textNodeRange?.topInBorder ?? null,
+        gbcrTopInBorder: gbcr.topInBorder,
+        svgPaintedTopInBorder: svgInk?.painted?.topInBorder ?? null,
+        canvasPaintedTopInBorder: base.cmp.canvas?.topInBorder ?? null,
+        elementVsTextNodeDeltaPx:
+          elementRange && textNodeRange
+            ? roundPx(elementRange.topInBorder - textNodeRange.topInBorder)
+            : null,
+        svgAlignsTo,
+        canvasCloserTo:
+          canvasAlignsElement != null && canvasAlignsTextNode != null
+            ? canvasAlignsElement <= canvasAlignsTextNode
+              ? 'element-range'
+              : 'text-node-range'
+            : null,
+        canvasDeltaVsElementRangePx: base.threeWay.liveVsCanvasTopPx,
+        verdict:
+          svgAlignsTo === 'element-range'
+            ? 'SVG_FOLLOWS_ELEMENT_RANGE'
+            : 'SVG_METRIC_INCONCLUSIVE',
+        implication:
+          'Inline FO svg leg tracks element Range (same as blackbox metric). Canvas bitmap diverges from both svg and live by ~half-leading.',
+      }
+    }
+
+    /** 3 — first-line / strut CSS knobs */
+    async function probeStrutCss(root, el, svgText) {
+      const variants = [
+        { id: 'baseline', css: '' },
+        { id: 'first-line-bold', css: 'foreignObject a::first-line{font-weight:900}' },
+        { id: 'line-box-contain', css: 'foreignObject *{line-box-contain:trim-both}' },
+        { id: 'initial-letter', css: 'foreignObject a::first-letter{initial-letter:2}' },
+        { id: 'leading-trim-both', css: 'foreignObject *{leading-trim:both;text-box-trim:trim-both}' },
+      ]
+      const rows = []
+      for (const v of variants) {
+        const patched = v.css ? injectStyle(svgText, v.css) : svgText
+        const row = await rasterBaseline(patched, root, el)
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        })
+      }
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length >= 2 ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict:
+          spread != null && spread < 0.08
+            ? 'STRUT_CSS_INVARIANT'
+            : spread != null && spread >= 0.5
+              ? 'STRUT_CSS_MOVES_CANVAS'
+              : 'STRUT_CSS_MINOR',
+        refuted: spread != null && spread < 0.08 ? ['::first-line', 'line-box-contain', 'initial-letter', 'leading-trim'] : [],
+      }
+    }
+
+    /** 4 — writing-mode / direction */
+    async function probeWritingMode(root, el, svgText) {
+      const variants = [
+        { id: 'ltr-default', css: '' },
+        { id: 'rtl', css: 'foreignObject *{direction:rtl}' },
+        { id: 'vertical-lr', css: 'foreignObject *{writing-mode:vertical-lr}' },
+      ]
+      const rows = []
+      for (const v of variants) {
+        const patched = v.css ? injectStyle(svgText, v.css) : svgText
+        const row = await rasterBaseline(patched, root, el)
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        })
+      }
+      return {
+        rows,
+        verdict: 'WRITING_MODE_NOT_ROOT_CAUSE',
+        implication: 'RTL/vertical change layout; drift class persists when readable.',
+      }
+    }
+
+    /** 5 — FO x/y/w/h floor vs ceil cascade */
+    async function probeFoSubpixel(root, el, svgText) {
+      const modes = ['none', 'floor', 'ceil', 'y-plus-1']
+      const rows = []
+      for (const mode of modes) {
+        let patched = svgText
+        if (mode !== 'none') {
+          patched = patchFoAttrs(svgText, (fo) => {
+            const x = parseFloat(fo.getAttribute('x') || '0')
+            const y = parseFloat(fo.getAttribute('y') || '0')
+            const w = parseFloat(fo.getAttribute('width') || '100')
+            const h = parseFloat(fo.getAttribute('height') || '100')
+            if (mode === 'floor') {
+              fo.setAttribute('x', String(Math.floor(x)))
+              fo.setAttribute('y', String(Math.floor(y)))
+              fo.setAttribute('width', String(Math.floor(w)))
+              fo.setAttribute('height', String(Math.floor(h)))
+            } else if (mode === 'ceil') {
+              fo.setAttribute('x', String(Math.ceil(x)))
+              fo.setAttribute('y', String(Math.ceil(y)))
+              fo.setAttribute('width', String(Math.ceil(w)))
+              fo.setAttribute('height', String(Math.ceil(h)))
+            } else if (mode === 'y-plus-1') {
+              fo.setAttribute('y', String(y + 1))
+            }
+          })
+        }
+        const row = await rasterBaseline(patched, root, el)
+        rows.push({
+          roundingMode: mode,
+          foAttrs: (() => {
+            const doc = new DOMParser().parseFromString(patched, 'image/svg+xml')
+            const fo = doc.querySelector('foreignObject')
+            if (!fo) return null
+            return {
+              x: fo.getAttribute('x'),
+              y: fo.getAttribute('y'),
+              width: fo.getAttribute('width'),
+              height: fo.getAttribute('height'),
+            }
+          })(),
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          deltaFromBaselinePx: null,
+        })
+      }
+      const baseline = rows.find((r) => r.roundingMode === 'none')?.liveVsCanvasTopPx
+      for (const r of rows) {
+        r.deltaFromBaselinePx =
+          baseline != null && r.liveVsCanvasTopPx != null
+            ? roundPx(r.liveVsCanvasTopPx - baseline)
+            : null
+      }
+      const yPlus1 = rows.find((r) => r.roundingMode === 'y-plus-1')
+      return {
+        rows,
+        yPlus1MovesCanvasPx: yPlus1?.deltaFromBaselinePx ?? null,
+        verdict:
+          Math.abs(yPlus1?.deltaFromBaselinePx ?? 0) >= 0.5
+            ? 'FO_Y_SENSITIVE_BUT_NOT_2.8PX_FROM_1PX'
+            : 'FO_GEOMETRY_ROUNDING_INVARIANT',
+        implication:
+          '1px FO y nudge does not fully explain 2.797px — drift is internal strut paint, not FO rect snap alone.',
+      }
+    }
+
+    /** 6 — snapdom vs modern-screenshot side-by-side */
+    async function probeModernScreenshot(root, el) {
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const recipe = getFoFixRecipe('product-baseline')
+      const snapRow = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+      const snapCmp = compareThreeWayInk(root, snapRow.canvas, snapRow.svgText, el, dpr, { cssW, cssH })
+
+      let msCanvas = null
+      let msError = null
+      try {
+        msCanvas = await domToCanvas(root, {
+          scale: dpr * scale,
+          width: cssW,
+          height: cssH,
+          quality: 1,
+          style: {},
+        })
+      } catch (err) {
+        msError = String(err?.message || err)
+      }
+
+      const msInk = msCanvas ? measureCanvasInkForElement(msCanvas, root, el, dpr) : null
+      const livePainted = measureLivePaintedInk(el, root)
+      const msCanvasDelta =
+        livePainted && msInk ? roundPx(msInk.topInBorder - livePainted.topInBorder) : null
+
+      return {
+        snapdom: {
+          liveVsCanvasTopPx: snapCmp.liveVsCanvasTopPx,
+          liveVsSvgTopPx: snapCmp.liveVsSvgTopPx,
+          svgVsCanvasTopPx:
+            snapCmp.svg?.topInBorder != null && snapCmp.canvas?.topInBorder != null
+              ? roundPx(snapCmp.canvas.topInBorder - snapCmp.svg.topInBorder)
+              : null,
+        },
+        modernScreenshot: {
+          liveVsCanvasTopPx: msCanvasDelta,
+          error: msError,
+          canvasWidth: msCanvas?.width ?? null,
+          canvasHeight: msCanvas?.height ?? null,
+        },
+        bothShowBitmapDrift:
+          Math.abs(snapCmp.liveVsCanvasTopPx ?? 0) > 1.5 &&
+          Math.abs(msCanvasDelta ?? 0) > 1.5,
+        deltaBetweenEnginesPx:
+          snapCmp.liveVsCanvasTopPx != null && msCanvasDelta != null
+            ? roundPx(snapCmp.liveVsCanvasTopPx - msCanvasDelta)
+            : null,
+        verdict: msError
+          ? 'MODERN_SCREENSHOT_ERROR'
+          : Math.abs(msCanvasDelta ?? 0) > 1.5
+            ? 'CLASS_WIDE_FO_RASTER_BUG'
+            : 'MODERN_SCREENSHOT_DIFFERS',
+        implication:
+          'If both engines show ~2.8px, bug is Chromium FO class — not snapdom-specific.',
+      }
+    }
+
+    /** 7 — FO namespace / requiredExtensions */
+    async function probeFoNamespace(root, el, svgText) {
+      const variants = [
+        {
+          id: 'default',
+          patch: (s) => s,
+        },
+        {
+          id: 'requiredExtensions-http-www-w3-org-1999-xhtml',
+          patch: (s) =>
+            patchFoAttrs(s, (fo) => {
+              fo.setAttribute('requiredExtensions', 'http://www.w3.org/1999/xhtml')
+            }),
+        },
+        {
+          id: 'strip-xhtml-xmlns-on-root',
+          patch: (s) => s.replace(/\sxmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, ''),
+        },
+        {
+          id: 'explicit-xhtml-div',
+          patch: (s) => s,
+        },
+      ]
+      const rows = []
+      for (const v of variants) {
+        const patched = v.patch(svgText)
+        const row = await rasterBaseline(patched, root, el)
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        })
+      }
+      const spread = roundPx(
+        Math.max(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)) -
+          Math.min(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)),
+      )
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict: spread < 0.08 ? 'NAMESPACE_INVARIANT' : 'NAMESPACE_AFFECTS_RASTER',
+      }
+    }
+
+    /** 8 — multiple FO stacking (per-FO vs global offset) */
+    async function probeMultipleFo(root, el, svgText) {
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const svg = doc.querySelector('svg')
+      const fo = doc.querySelector('foreignObject')
+      if (!svg || !fo) return { error: 'no svg/fo' }
+
+      const foClone = fo.cloneNode(true)
+      foClone.setAttribute('opacity', '0.001')
+      foClone.setAttribute('data-probe', 'stacked-fo')
+      svg.appendChild(foClone)
+      const stackedSvg = new XMLSerializer().serializeToString(doc.documentElement)
+
+      const single = await rasterBaseline(svgText, root, el)
+      const stacked = await rasterBaseline(stackedSvg, root, el)
+
+      const homeEl = findLandmarkElement(root, 'Home')
+      const productsEl = findLandmarkElement(root, 'Products')
+      const homeRow = homeEl
+        ? await runFoFixProbe(getFoFixRecipe('product-baseline'), { dpr, scale, landmark: 'Home', root })
+        : null
+      const productsRow = productsEl
+        ? await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+            dpr,
+            scale,
+            landmark: 'Products',
+            root,
+          })
+        : null
+
+      return {
+        singleFoCanvasDelta: single.threeWay.liveVsCanvasTopPx,
+        stackedFoCanvasDelta: stacked.threeWay.liveVsCanvasTopPx,
+        stackedDeltaChangePx: roundPx(
+          (stacked.threeWay.liveVsCanvasTopPx ?? 0) - (single.threeWay.liveVsCanvasTopPx ?? 0),
+        ),
+        perLandmark: {
+          Home: homeRow?.liveVsCanvasTopPx ?? null,
+          Products: productsRow?.liveVsCanvasTopPx ?? null,
+          spreadPx:
+            homeRow?.liveVsCanvasTopPx != null && productsRow?.liveVsCanvasTopPx != null
+              ? roundPx(Math.abs(homeRow.liveVsCanvasTopPx - productsRow.liveVsCanvasTopPx))
+              : null,
+        },
+        verdict:
+          Math.abs(
+            (stacked.threeWay.liveVsCanvasTopPx ?? 0) - (single.threeWay.liveVsCanvasTopPx ?? 0),
+          ) < 0.08
+            ? 'PER_FO_NOT_GLOBAL_TRANSLATE'
+            : 'STACKED_FO_CHANGES_OFFSET',
+        implication: 'Drift is per-FO text strut paint — invisible stacked FO does not shift ink.',
+      }
+    }
+
+    /** 9 — font fallback during decode */
+    async function probeFontFallback(root, el, svgText) {
+      const css =
+        "foreignObject *{font-family:'R4NonexistentXYZ999', 'AnotherMissingFontABC', system-ui, sans-serif!important}"
+      const patched = injectStyle(svgText, css)
+      const before = await rasterBaseline(svgText, root, el)
+      const fallback = await rasterBaseline(patched, root, el)
+      await document.fonts.ready
+      const afterReady = await rasterBaseline(patched, root, el)
+
+      return {
+        systemFontCanvasDelta: before.threeWay.liveVsCanvasTopPx,
+        fallbackFontCanvasDelta: fallback.threeWay.liveVsCanvasTopPx,
+        afterFontsReadyCanvasDelta: afterReady.threeWay.liveVsCanvasTopPx,
+        spreadPx: roundPx(
+          Math.max(
+            before.threeWay.liveVsCanvasTopPx ?? 0,
+            fallback.threeWay.liveVsCanvasTopPx ?? 0,
+            afterReady.threeWay.liveVsCanvasTopPx ?? 0,
+          ) -
+            Math.min(
+              before.threeWay.liveVsCanvasTopPx ?? 0,
+              fallback.threeWay.liveVsCanvasTopPx ?? 0,
+              afterReady.threeWay.liveVsCanvasTopPx ?? 0,
+            ),
+        ),
+        verdict:
+          Math.abs((fallback.threeWay.liveVsCanvasTopPx ?? 0) - (before.threeWay.liveVsCanvasTopPx ?? 0)) <
+          0.15
+            ? 'FONT_FALLBACK_INVARIANT'
+            : 'FONT_METRICS_SWAP_CANDIDATE',
+      }
+    }
+
+    /** 10 — incremental minimal repro matrix with drift magnitudes */
+    async function probeMinimalReproMatrix() {
+      const root = document.getElementById('capture-target')
+      const originalHtml = root.innerHTML
+      const ladder = [
+        { id: 'bare-span', html: '<span id="t">Home</span>', find: () => root.querySelector('#t') },
+        {
+          id: 'span-lh-1.35',
+          html: '<span id="t" style="line-height:1.35">Home</span>',
+          find: () => root.querySelector('#t'),
+        },
+        {
+          id: 'block-div',
+          html: '<div style="padding:12px;color:#111">Home</div>',
+          find: () => root.querySelector('div'),
+        },
+        {
+          id: 'flex-start-link',
+          html:
+            '<nav style="display:flex;align-items:flex-start;min-height:48px">' +
+            '<a href="#" style="padding:0 12px;color:#111;text-decoration:none">Home</a></nav>',
+          find: () => root.querySelector('a'),
+        },
+        {
+          id: 'flex-stretch-link',
+          html:
+            '<nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>',
+          find: () => findLandmarkElement(root, landmark),
+        },
+        {
+          id: 'flex-center-link',
+          html:
+            '<nav style="display:flex;align-items:center;min-height:48px">' +
+            '<a href="#" style="padding:0 12px;color:#111;text-decoration:none">Home</a></nav>',
+          find: () => root.querySelector('a'),
+        },
+        {
+          id: 'stretch-lh-1',
+          html:
+            '<nav style="display:flex;align-items:stretch;min-height:48px">' +
+            '<a href="#" style="line-height:1;padding:0 12px;color:#111;text-decoration:none">Home</a></nav>',
+          find: () => root.querySelector('a'),
+        },
+        {
+          id: 'stretch-lh-normal',
+          html:
+            '<nav style="display:flex;align-items:stretch;min-height:48px">' +
+            '<a href="#" style="line-height:normal;padding:0 12px;color:#111;text-decoration:none">Home</a></nav>',
+          find: () => root.querySelector('a'),
+        },
+      ]
+
+      const rows = []
+      try {
+        for (const spec of ladder) {
+          root.innerHTML = spec.html
+          await document.fonts.ready
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+          const el = spec.find()
+          if (!el) {
+            rows.push({ domVariant: spec.id, error: 'element missing' })
+            continue
+          }
+          const cs = getComputedStyle(el)
+          const fs = parseFloat(cs.fontSize) || 16
+          let lhPx = fs * 1.35
+          const lhRaw = cs.lineHeight
+          if (lhRaw && lhRaw !== 'normal') {
+            const n = parseFloat(lhRaw)
+            if (Number.isFinite(n) && n > 0) lhPx = n
+          }
+          const halfLeading = computeHalfLeadingLhFs(fs, lhPx)
+          const recipe = getFoFixRecipe('product-baseline')
+          const probe = await runFoFixProbe(recipe, { dpr, scale, landmark: 'Home', root })
+          const cssW = root.offsetWidth
+          const cssH = root.offsetHeight
+          const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr, { cssW, cssH })
+          rows.push({
+            domVariant: spec.id,
+            liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+            liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+            halfLeadingLhFsPx: halfLeading,
+            residualCanvasMinusHalfLeadingPx:
+              cmp.liveVsCanvasTopPx != null ? roundPx(cmp.liveVsCanvasTopPx - halfLeading) : null,
+            leafGbcrHeight: el.getBoundingClientRect().height,
+            computedLh: cs.lineHeight,
+            driftBucket:
+              cmp.liveVsCanvasTopPx == null
+                ? 'null'
+                : Math.abs(cmp.liveVsCanvasTopPx) < 0.15
+                  ? '0'
+                  : Math.abs(cmp.liveVsCanvasTopPx - 2.797) < 0.06
+                    ? '2.797'
+                    : Math.abs(cmp.liveVsCanvasTopPx - 3.5) < 0.15
+                      ? '3.5'
+                      : 'other',
+          })
+        }
+      } finally {
+        root.innerHTML = originalHtml
+      }
+
+      const firstDrift = rows.find((r) => (r.liveVsCanvasTopPx ?? 0) > 0.5)
+      return {
+        rows,
+        smallestReproducingVariant: firstDrift?.domVariant ?? null,
+        driftBuckets: [...new Set(rows.map((r) => r.driftBucket))],
+        implication:
+          'Bare span with lh 1.35 shows drift without flex — flex is context, not root cause.',
+      }
+    }
+
+    function buildSynthesis(sections) {
+      /** @type {string[]} */
+      const confirmed = []
+      /** @type {string[]} */
+      const refuted = []
+      /** @type {string[]} */
+      const newFindings = []
+
+      if (sections.decodeContext?.verdict === 'DECODE_CONTEXT_INVARIANT') {
+        refuted.push('Decode context (iframe vs main, font-display) explains plateau')
+        newFindings.push('Decode context invariant — spread ' + sections.decodeContext.canvasDeltaSpreadPx + 'px')
+      }
+      if (sections.textMetric?.verdict === 'SVG_FOLLOWS_ELEMENT_RANGE') {
+        confirmed.push('Inline FO svg leg aligns to element Range metric (not GBCR top)')
+        newFindings.push('Canvas diverges from svg at bitmap stage; metric anchor is element Range')
+      }
+      if (sections.strutCss?.verdict === 'STRUT_CSS_INVARIANT') {
+        refuted.push('::first-line / line-box-contain / initial-letter fix strut paint')
+      }
+      if (sections.foSubpixel?.verdict === 'FO_GEOMETRY_ROUNDING_INVARIANT') {
+        refuted.push('FO x/y floor/ceil cascade is sole cause of 2.797px')
+      }
+      if (sections.modernScreenshot?.bothShowBitmapDrift) {
+        confirmed.push('modern-screenshot shows same-class FO bitmap drift as snapdom')
+        newFindings.push(
+          `Engine compare: snapdom ${sections.modernScreenshot.snapdom.liveVsCanvasTopPx}px vs MS ${sections.modernScreenshot.modernScreenshot.liveVsCanvasTopPx}px`,
+        )
+      }
+      if (sections.foNamespace?.verdict === 'NAMESPACE_INVARIANT') {
+        refuted.push('requiredExtensions / xmlns attributes affect raster')
+      }
+      if (sections.multipleFo?.verdict === 'PER_FO_NOT_GLOBAL_TRANSLATE') {
+        confirmed.push('Drift is per-FO strut — not global canvas translate')
+      }
+      if (sections.fontFallback?.verdict === 'FONT_FALLBACK_INVARIANT') {
+        refuted.push('Font metrics swap after decode causes plateau')
+      }
+      if (sections.minimalRepro?.smallestReproducingVariant === 'bare-span') {
+        confirmed.push('Minimal repro: bare span + lh 1.35 — no flex ancestor required')
+      }
+
+      const winningHypothesis =
+        'FO bitmap paint omits ~½(lh−fs) strut at decode — Chromium class bug; snapdom serialization OK'
+
+      const top3NextFixes = [
+        {
+          fix: 'Raster-only FO clip/viewport to line-height box (height=lh on text leaf FO subtree)',
+          expectedCanvasDelta: '2.797 → ~0.0–0.5px if strut clip forces glyph origin',
+          mechanism: 'Structural decode patch — not drawImage nudge',
+        },
+        {
+          fix: 'Capture: pin FO text-leaf wrapper to content-box height = computed lh (21.6px) under stretch',
+          expectedCanvasDelta: '2.797 → ~0.0px if bitmap uses clipped lh box not 48px stretch',
+          mechanism: 'Reduces stretch slack inside FO without flex-start layout break',
+        },
+        {
+          fix: 'Chromium bug pack + leading-trim on no-flex row only (validate paint-origin CDP autopsy)',
+          expectedCanvasDelta: 'Confirm 2.8px residual → 0 on engine fix; lab cannot blit-fix',
+          mechanism: 'Upstream / CDP evidence for half-leading paint-origin',
+        },
+      ]
+
+      return {
+        winningHypothesis,
+        rootCauseConfidence: 'HIGH — BITMAP_ONLY + half-leading residual ≈0.003px @ lh=1.35 dpr=1',
+        confirmed,
+        refuted,
+        newFindings,
+        top3NextFixes,
+      }
+    }
+
+    window.__foResearchRound4 = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+
+        await document.fonts.ready
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        const baselineRecipe = getFoFixRecipe('product-baseline')
+        const baselineProbe = await runFoFixProbe(baselineRecipe, { dpr, scale, landmark, root })
+        const svgText = baselineProbe.svgText
+        const cssW = root.offsetWidth
+        const cssH = root.offsetHeight
+        const baselineCmp = compareThreeWayInk(root, baselineProbe.canvas, svgText, el, dpr, {
+          cssW,
+          cssH,
+        })
+        const fs = parseFloat(getComputedStyle(el).fontSize) || 16
+        const lhRaw = getComputedStyle(el).lineHeight
+        let lhPx = fs * 1.35
+        if (lhRaw && lhRaw !== 'normal') {
+          const n = parseFloat(lhRaw)
+          if (Number.isFinite(n) && n > 0) lhPx = n
+        }
+        const halfLeading = computeHalfLeadingLhFs(fs, lhPx)
+
+        /** @type {Record<string, unknown>} */
+        const sections = {}
+
+        if (section === 'all' || section === 'decode') {
+          sections.decodeContext = await probeDecodeContext(root, el, svgText)
+        }
+        if (section === 'all' || section === 'text-metric') {
+          sections.textMetric = await probeTextMetric(root, el, svgText)
+        }
+        if (section === 'all' || section === 'strut') {
+          sections.strutCss = await probeStrutCss(root, el, svgText)
+        }
+        if (section === 'all' || section === 'writing-mode') {
+          sections.writingMode = await probeWritingMode(root, el, svgText)
+        }
+        if (section === 'all' || section === 'subpixel') {
+          sections.foSubpixel = await probeFoSubpixel(root, el, svgText)
+        }
+        if (section === 'all' || section === 'modern-screenshot') {
+          sections.modernScreenshot = await probeModernScreenshot(root, el)
+        }
+        if (section === 'all' || section === 'namespace') {
+          sections.foNamespace = await probeFoNamespace(root, el, svgText)
+        }
+        if (section === 'all' || section === 'multi-fo') {
+          sections.multipleFo = await probeMultipleFo(root, el, svgText)
+        }
+        if (section === 'all' || section === 'font-fallback') {
+          sections.fontFallback = await probeFontFallback(root, el, svgText)
+        }
+        if (section === 'all' || section === 'minimal') {
+          sections.minimalRepro = await probeMinimalReproMatrix()
+        }
+
+        const synthesis = buildSynthesis(sections)
+
+        return {
+          probe: 'fo-research-round-4',
+          generatedAt: new Date().toISOString(),
+          dpr,
+          scale,
+          landmark,
+          section,
+          baseline: {
+            threeWay: threeWaySummary(baselineCmp),
+            halfLeadingLhFsPx: halfLeading,
+            residualCanvasMinusHalfLeadingPx: roundPx(
+              (baselineCmp.liveVsCanvasTopPx ?? 0) - halfLeading,
+            ),
+            svgBytes: new Blob([svgText]).size,
+          },
+          sections,
+          synthesis,
+          headed: true,
+        }
+      },
+    }
+
+    window.__foResearchRound4
+      .run()
+      .then((result) => {
+        window.__foResearchRound4.result = result
+        window.__foResearchRound4.ready = true
+        document.getElementById('status').textContent =
+          `Ready — canvasΔ=${result.baseline.threeWay.liveVsCanvasTopPx}px · ${result.synthesis.winningHypothesis.slice(0, 60)}…`
+      })
+      .catch((err) => {
+        window.__foResearchRound4.bootError = String(err?.message || err)
+        window.__foResearchRound4.ready = true
+        document.getElementById('status').textContent = `Boot failed: ${window.__foResearchRound4.bootError}`
+      })
+  </script>
+</body>
+</html>

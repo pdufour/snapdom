@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Path A/B: inline FO vs decode same SVG</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      findLandmarkElement,
+      measureSvgInkForElement,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    window.__foPathAbProbe = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+        const recipe = getFoFixRecipe('product-baseline')
+        const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+        const svgText = row.svgText
+        const cssW = root.offsetWidth || root.getBoundingClientRect().width
+        const cssH = root.offsetHeight || root.getBoundingClientRect().height
+        const fixtureDims = { cssW, cssH }
+        const landmarkText = (el.textContent || '').trim()
+
+        const pathAProbe = measureSvgInkForElement(svgText, landmarkText, fixtureDims)
+        const pathAInk = pathAProbe?.painted ?? pathAProbe
+        const pathBInk = {
+          top: row.canvasPaintedTopInBorder,
+          topInBorder: row.canvasPaintedTopInBorder,
+        }
+        const canvas = row.canvas
+
+        const svgTop = pathAInk?.topInBorder ?? pathAInk?.top ?? null
+        const canvasTop = pathBInk?.topInBorder ?? pathBInk?.top ?? null
+        const pathDelta = svgTop != null && canvasTop != null ? canvasTop - svgTop : null
+
+        const liveVsSvg = row.liveVsSvgTopPx ?? null
+        const liveVsCanvas = row.liveVsCanvasTopPx ?? null
+        const svgVsCanvas =
+          row.svgPaintedTopInBorder != null && row.canvasPaintedTopInBorder != null
+            ? row.canvasPaintedTopInBorder - row.svgPaintedTopInBorder
+            : pathDelta
+
+        const interpretation = []
+        if (svgTop != null && canvasTop != null) {
+          interpretation.push(
+            `Path A (inline FO) topInBorder=${svgTop.toFixed(3)}px; path B (decode+draw) topInBorder=${canvasTop.toFixed(3)}px.`,
+          )
+          interpretation.push(`Same-SVG path Δ (B−A) topInBorder=${pathDelta?.toFixed(3) ?? '—'}px.`)
+        }
+        if (liveVsSvg != null && liveVsCanvas != null) {
+          interpretation.push(
+            `vs live: svgΔ=${liveVsSvg.toFixed(3)}px canvasΔ=${liveVsCanvas.toFixed(3)}px (three-way svg↔canvas ${svgVsCanvas?.toFixed(3) ?? '—'}px).`,
+          )
+        }
+        let verdict = 'INCONCLUSIVE'
+        if (Math.abs(liveVsSvg ?? 99) < 0.35 && Math.abs(pathDelta ?? 0) > 1.5) {
+          verdict = 'BITMAP_SHIFTS_VS_INLINE'
+          interpretation.push(
+            'Large path A/B gap — FO→bitmap raster shifts ink vs inline serialized FO measurement.',
+          )
+          interpretation.push(
+            'SVG≈live but canvas drifts — path Δ tracks live↔canvas gap (bitmap stage, not FO serialization layout).',
+          )
+        }
+
+        return {
+          fixture: 'mini-nav',
+          sameCaptureSvg: true,
+          recipeId: 'product-baseline',
+          landmark,
+          landmarkText,
+          dpr,
+          scale,
+          fixtureDims,
+          svgBytes: new Blob([svgText]).size,
+          captureMeta: row.captureMeta ?? null,
+          pathA: {
+            id: 'inlineSvgMeasure',
+            method: 'measureSvgInkForElement',
+            painted: pathAProbe,
+          },
+          pathB: {
+            id: 'decodeDrawCanvas',
+            method: 'runFoFixProbe raster (product decode + drawImage)',
+            painted: pathBInk,
+            canvas: canvas
+              ? {
+                  width: canvas.width,
+                  height: canvas.height,
+                  styleWidth: canvas.style.width,
+                  styleHeight: canvas.style.height,
+                }
+              : null,
+          },
+          delta: {
+            svgVsCanvasTopInBorderPx: pathDelta,
+            svgVsCanvasTopPx: pathDelta,
+          },
+          threeWay: {
+            live: { topInBorder: row.livePaintedTopInBorder },
+            svgFromCompare: { topInBorder: row.svgPaintedTopInBorder },
+            canvasFromCompare: { topInBorder: row.canvasPaintedTopInBorder },
+            liveVsSvgTopPx: liveVsSvg,
+            liveVsCanvasTopPx: liveVsCanvas,
+            compareSvgVsCanvasTopInBorderPx: svgVsCanvas,
+          },
+          pathDeltaMatchesThreeWay:
+            pathDelta != null && svgVsCanvas != null
+              ? Math.abs(pathDelta - svgVsCanvas) < 0.05
+              : null,
+          verdict,
+          interpretation,
+          headed: true,
+        }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foPathAbProbe.ready = true
+    } catch (e) {
+      window.__foPathAbProbe.bootError = String(e?.message || e)
+      window.__foPathAbProbe.ready = true
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-decode-layer.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "snapdomLabToCanvas": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": null,
+      "livePaintedTopInBorder": null,
+      "svgPaintedTopInBorder": null,
+      "canvasPaintedTopInBorder": null
+    },
+    "chromiumRasterSameSnapdomSvg": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "handBuiltStaticChromium": {
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.796875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.203125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "snapdomVsChromiumDecodeDeltaPx": 0,
+    "handBuiltVsSnapdomCanvasDeltaPx": 0,
+    "verdict": "SNAPDOM_ZERO_PX_AT_DECODE_LAYER",
+    "implication": "Same serialized SVG bytes: lab toCanvas vs chromium-only raster should match canvasΔ if snapdom adds no decode offset."
+  }
+}

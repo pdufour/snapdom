@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium FO class probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; font-size: 13px; }
+    h1 { font-size: 16px; margin: 0 0 6px; }
+    p.hint { color: #475569; margin: 0 0 10px; max-width: 90ch; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #capture-target .row {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    #capture-target .row a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 10px; font: 12px ui-monospace, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Chromium FO class probe</h1>
+  <p class="hint">
+    Compares <strong>hand-built FO</strong>, <strong>snapdom</strong>, and <strong>modern-screenshot</strong>
+    on the same flex+text fixture. Headed Chrome only; FO raster only (no text bypass).
+  </p>
+  <div id="capture-target">
+    <div class="row" aria-label="Mini flex row">
+      <a href="#">Home</a>
+    </div>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { domToCanvas } from 'https://unpkg.com/modern-screenshot@4.6.0/dist/index.mjs'
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { applyRasterOnlySvgPatch } from '../src/exporters/rasterOnlySvgPatch.js'
+    import { computeHalfLeadingLhFs } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      enrichRasterMetaFromTextLeaf,
+      findLandmarkElement,
+      getFoFixRecipe,
+      measureLivePaintedInk,
+      measureCanvasInkForElement,
+      rasterSvgUrl,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import {
+      buildStaticMinimalFoSvg,
+      probeHandBuiltFoPath,
+    } from './fo-minimal-repro-probe.js'
+
+    window.snapdom = snapdom
+
+    const params = new URLSearchParams(location.search)
+    const dprList = (params.get('dprs') || '1,2')
+      .split(',')
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isFinite(n) && n > 0)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const includeMs = params.get('modernScreenshot') !== '0'
+
+    const status = document.getElementById('status')
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        liveVsSvgTopPx: roundPx(cmp?.liveVsSvgTopPx),
+        liveVsCanvasTopPx: roundPx(cmp?.liveVsCanvasTopPx),
+        svgVsCanvasTopPx:
+          cmp?.svg?.topInBorder != null && cmp?.canvas?.topInBorder != null
+            ? roundPx(cmp.canvas.topInBorder - cmp.svg.topInBorder)
+            : null,
+        liveTop: roundPx(cmp?.live?.topInBorder),
+        svgTop: roundPx(cmp?.svg?.topInBorder),
+        canvasTop: roundPx(cmp?.canvas?.topInBorder),
+        bitmapOnly:
+          Math.abs(cmp?.liveVsSvgTopPx ?? 99) < 0.35 &&
+          Math.abs(cmp?.liveVsCanvasTopPx ?? 0) > 1.5,
+      }
+    }
+
+    /** Inject decode-time CSS on FO descendants (Chromium docs / round-4 angles). */
+    function injectFoDescendantCss(svgText, cssRule) {
+      if (!cssRule) return svgText
+      const block =
+        `<style xmlns="http://www.w3.org/1999/xhtml">` +
+        `foreignObject *{${cssRule}}</style>`
+      return svgText.replace(
+        /<div xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/i,
+        `${block}<div xmlns="http://www.w3.org/1999/xhtml"`,
+      )
+    }
+
+    const CSS_DOM_FACTORS = [
+      { id: 'baseline', css: '' },
+      { id: 'text-rendering-geometricPrecision', css: 'text-rendering:geometricPrecision!important' },
+      { id: 'text-rendering-optimizeLegibility', css: 'text-rendering:optimizeLegibility!important' },
+      { id: 'text-rendering-optimizeSpeed', css: 'text-rendering:optimizeSpeed!important' },
+      { id: 'direction-rtl', css: 'direction:rtl!important' },
+      { id: 'writing-mode-vertical-lr', css: 'writing-mode:vertical-lr!important' },
+    ]
+
+    async function probeHandBuilt(root, el, dpr, patchId) {
+      const base = await probeHandBuiltFoPath(root, el, landmark, dpr, scale, {
+        svgMode: 'static-minimal',
+      })
+      let svgText = base.svgText
+      let canvas = base.canvas
+      if (patchId) {
+        const meta = enrichRasterMetaFromTextLeaf(el, {})
+        const patched = applyRasterOnlySvgPatch(svgText, patchId, { meta })
+        const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(patched)}`
+        canvas = await rasterSvgUrl(dataUrl, {
+          width: base.fixtureDims.cssW,
+          height: base.fixtureDims.cssH,
+          scale: 1,
+          dpr,
+          rasterPatch: 'none',
+        })
+        svgText = patched
+      }
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, base.fixtureDims)
+      return { path: patchId ? `hand-built+w7:${patchId}` : 'hand-built-static', patchId, ...threeWaySummary(cmp) }
+    }
+
+    async function probeSnapdom(root, el, dpr, recipeId) {
+      const recipe = getFoFixRecipe(recipeId)
+      const row = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+      return { path: `snapdom:${recipeId}`, recipeId, ...threeWaySummary(cmp) }
+    }
+
+    async function probeModernScreenshot(root, el, dpr) {
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      let msError = null
+      let msCanvas = null
+      try {
+        msCanvas = await domToCanvas(root, {
+          scale: dpr * scale,
+          width: cssW,
+          height: cssH,
+          quality: 1,
+          style: {},
+        })
+      } catch (err) {
+        msError = String(err?.message || err)
+      }
+      const live = measureLivePaintedInk(el, root)
+      const msInk = msCanvas ? measureCanvasInkForElement(msCanvas, root, el, dpr) : null
+      const canvasDelta =
+        live && msInk ? roundPx(msInk.topInBorder - live.topInBorder) : null
+      return {
+        path: 'modern-screenshot',
+        error: msError,
+        liveVsCanvasTopPx: canvasDelta,
+        liveTop: roundPx(live?.topInBorder),
+        canvasTop: roundPx(msInk?.topInBorder),
+        bitmapOnly: canvasDelta != null && Math.abs(canvasDelta) > 1.5,
+      }
+    }
+
+    async function probeCssFactorRow(root, el, dpr, factor) {
+      const base = await probeHandBuiltFoPath(root, el, landmark, dpr, scale, {
+        svgMode: 'static-minimal',
+      })
+      let svgText = injectFoDescendantCss(base.svgText, factor.css)
+      const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+      const canvas = await rasterSvgUrl(dataUrl, {
+        width: base.fixtureDims.cssW,
+        height: base.fixtureDims.cssH,
+        scale: 1,
+        dpr,
+        rasterPatch: 'none',
+      })
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, base.fixtureDims)
+      return {
+        path: `css-factor:${factor.id}`,
+        factorId: factor.id,
+        ...threeWaySummary(cmp),
+      }
+    }
+
+    async function runForDpr(root, el, dpr) {
+      const fs = parseFloat(getComputedStyle(el).fontSize) || 16
+      const lh = parseFloat(getComputedStyle(el).lineHeight) || fs * 1.35
+      const halfLeading = computeHalfLeadingLhFs(fs, lh)
+
+      const rows = []
+      rows.push(await probeHandBuilt(root, el, dpr, null))
+      rows.push(await probeHandBuilt(root, el, dpr, 'fo-y-half-leading-meta'))
+      rows.push(await probeSnapdom(root, el, dpr, 'product-baseline'))
+      rows.push(await probeSnapdom(root, el, dpr, 'tc-fix-w7-rfork-fo-y-half-leading-meta'))
+      if (includeMs) rows.push(await probeModernScreenshot(root, el, dpr))
+
+      const cssFactorRows = []
+      for (const factor of CSS_DOM_FACTORS) {
+        cssFactorRows.push(await probeCssFactorRow(root, el, dpr, factor))
+      }
+      const horizontalFactorIds = new Set([
+        'baseline',
+        'text-rendering-geometricPrecision',
+        'text-rendering-optimizeLegibility',
+        'text-rendering-optimizeSpeed',
+      ])
+      for (const row of cssFactorRows) {
+        row.horizontalNavComparable = horizontalFactorIds.has(row.factorId)
+      }
+      const cssDeltas = cssFactorRows
+        .filter((r) => r.horizontalNavComparable && Number.isFinite(r.liveVsCanvasTopPx))
+        .map((r) => r.liveVsCanvasTopPx)
+      const cssFactorSpreadPx =
+        cssDeltas.length > 1
+          ? roundPx(Math.max(...cssDeltas) - Math.min(...cssDeltas))
+          : 0
+
+      const hand = rows.find((r) => r.path === 'hand-built-static')
+      const snap = rows.find((r) => r.path === 'snapdom:product-baseline')
+      const ms = rows.find((r) => r.path === 'modern-screenshot')
+
+      const spread = roundPx(
+        Math.max(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)) -
+          Math.min(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)),
+      )
+
+      return {
+        dpr,
+        typography: { fontSizePx: roundPx(fs), lineHeightPx: roundPx(lh), halfLeadingLhFsPx: roundPx(halfLeading) },
+        rows,
+        cssDomFactors: {
+          rows: cssFactorRows,
+          horizontalNavCanvasDeltaSpreadPx: cssFactorSpreadPx,
+          verdict:
+            cssFactorSpreadPx < 0.05
+              ? 'CSS_DOM_INVARIANT_HORIZONTAL_NAV'
+              : 'CSS_DOM_AFFECTS_CANVAS',
+          refutedAsRootCause:
+            cssFactorSpreadPx < 0.05
+              ? [
+                  'text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)',
+                ]
+              : [],
+          nonComparableOnHorizontalInkProbe: cssFactorRows
+            .filter((r) => !r.horizontalNavComparable)
+            .map((r) => ({
+              factorId: r.factorId,
+              liveVsCanvasTopPx: r.liveVsCanvasTopPx,
+              note:
+                'RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink',
+            })),
+        },
+        classWide:
+          hand?.bitmapOnly &&
+          snap?.bitmapOnly &&
+          (ms == null || ms.bitmapOnly) &&
+          hand?.liveVsCanvasTopPx != null &&
+          snap?.liveVsCanvasTopPx != null &&
+          Math.abs((hand.liveVsCanvasTopPx ?? 0) - (snap.liveVsCanvasTopPx ?? 0)) < 0.08,
+        snapdomMatchesHandBuilt:
+          hand?.liveVsCanvasTopPx != null &&
+          snap?.liveVsCanvasTopPx != null &&
+          Math.abs(hand.liveVsCanvasTopPx - snap.liveVsCanvasTopPx) < 0.08,
+        modernScreenshotMatchesSnapdom:
+          ms?.liveVsCanvasTopPx != null &&
+          snap?.liveVsCanvasTopPx != null &&
+          Math.abs(ms.liveVsCanvasTopPx - snap.liveVsCanvasTopPx) < 0.08,
+        canvasDeltaSpreadPx: spread,
+        w7ClosesGap:
+          rows.find((r) => r.path === 'hand-built+w7:fo-y-half-leading-meta')?.liveVsCanvasTopPx != null &&
+          Math.abs(
+            rows.find((r) => r.path === 'hand-built+w7:fo-y-half-leading-meta').liveVsCanvasTopPx,
+          ) < 0.35,
+      }
+    }
+
+    async function main() {
+      const root = document.getElementById('capture-target')
+      const el = findLandmarkElement(root, landmark) || root.querySelector('a')
+      if (!el) throw new Error(`Landmark ${landmark} not found`)
+
+      const byDpr = []
+      for (const dpr of dprList) byDpr.push(await runForDpr(root, el, dpr))
+
+      const dpr1 = byDpr.find((x) => x.dpr === 1) || byDpr[0]
+      const plateauPx = dpr1?.rows?.find((r) => r.path === 'hand-built-static')?.liveVsCanvasTopPx
+
+      const dpr1Factors = dpr1?.cssDomFactors
+      const result = {
+        probe: 'fo-chromium-class-probe',
+        generatedAt: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        landmark,
+        scale,
+        dprs: dprList,
+        reproFixtures: {
+          svg: '__localtests__/fixtures/chromium-fo-strut-repro.svg',
+          html: '__localtests__/fixtures/chromium-fo-strut-repro.html',
+        },
+        staticSvgBytes: buildStaticMinimalFoSvg(root.offsetWidth, root.offsetHeight).length,
+        byDpr,
+        cssDomFactorsSummary: dpr1Factors
+          ? {
+              horizontalNavCanvasDeltaSpreadPx: dpr1Factors.horizontalNavCanvasDeltaSpreadPx,
+              verdict: dpr1Factors.verdict,
+              refutedAsRootCause: dpr1Factors.refutedAsRootCause,
+              rows: dpr1Factors.rows,
+              nonComparableOnHorizontalInkProbe: dpr1Factors.nonComparableOnHorizontalInkProbe,
+            }
+          : null,
+        synthesis: {
+          verdict: dpr1?.classWide ? 'CHROMIUM_CLASS_WIDE_FO_STRUT_BITMAP' : 'INCONCLUSIVE',
+          plateauPxAtDpr1: roundPx(plateauPx),
+          halfLeadingCorrelatePx: dpr1?.typography?.halfLeadingLhFsPx,
+          residualCanvasMinusHalfLeadingPx:
+            plateauPx != null && dpr1?.typography?.halfLeadingLhFsPx != null
+              ? roundPx(plateauPx - dpr1.typography.halfLeadingLhFsPx)
+              : null,
+          snapdomMatchesHandBuilt: dpr1?.snapdomMatchesHandBuilt ?? null,
+          modernScreenshotMatchesSnapdom: dpr1?.modernScreenshotMatchesSnapdom ?? null,
+          w7ClosesMostGap: dpr1?.w7ClosesGap ?? null,
+          implication:
+            'Identical canvasΔ across hand-built FO, snapdom, and modern-screenshot → Chromium FO bitmap strut paint; not capture-library-specific.',
+          bugDraft: '__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md',
+        },
+      }
+
+      window.__foChromiumClassProbe = { ready: true, result }
+      status.textContent = `Done — ${result.synthesis.verdict} @ dpr=1 canvasΔ≈${result.synthesis.plateauPxAtDpr1}px`
+    }
+
+    main().catch((err) => {
+      window.__foChromiumClassProbe = { ready: true, bootError: String(err?.message || err) }
+      status.textContent = `Error: ${err?.message || err}`
+    })
+  </script>
+</body>
+</html>

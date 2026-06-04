@@ -1,0 +1,50 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-canvas-backend.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "variantId": "default-ctx",
+        "liveVsCanvasTopPx": 2.796875,
+        "error": null
+      },
+      {
+        "variantId": "willReadFrequently",
+        "liveVsCanvasTopPx": 2.796875,
+        "error": null
+      },
+      {
+        "variantId": "desynchronized",
+        "liveVsCanvasTopPx": 2.796875,
+        "error": null
+      },
+      {
+        "variantId": "willRead+desync",
+        "liveVsCanvasTopPx": 2.796875,
+        "error": null
+      },
+      {
+        "variantId": "colorSpace-srgb",
+        "liveVsCanvasTopPx": 2.796875,
+        "error": null
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "CANVAS_BACKEND_INVARIANT"
+  }
+}

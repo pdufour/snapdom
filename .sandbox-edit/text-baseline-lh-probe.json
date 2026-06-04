@@ -1,0 +1,170 @@
+{
+  "fixture": "fo-text-baseline-lh-probe",
+  "purpose": "Baseline/line-height decomposition for Home text leaf: live vs inline FO vs canvas ink.",
+  "landmark": "Home",
+  "recipeId": "product-baseline",
+  "dpr": 1,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 492,
+    "cssH": 50
+  },
+  "stages": {
+    "live": {
+      "lineHeightComputed": "21.6px",
+      "lineHeightUsedPx": 48,
+      "layoutLineBoxPx": 48,
+      "fontSizePx": 16,
+      "verticalAlign": "baseline",
+      "display": "flex",
+      "alignSelf": "auto",
+      "halfLeadingLhFsPx": 16,
+      "halfLeadingFontBoxPx": 15,
+      "paddingTopPx": 0,
+      "borderTopPx": 0,
+      "borderBoxHeightPx": 48,
+      "rangeInkTopInBorderPx": 14.203,
+      "rangeInkTopPx": 15.203,
+      "baselineFromMeasureTextInBorderPx": 30,
+      "measureText": {
+        "fontBoundingBoxAscent": 15,
+        "actualBoundingBoxAscent": 11.273,
+        "fontBoundingBoxAscentDelta": 3.727,
+        "fontBoxHeightPx": 18
+      }
+    },
+    "fo": {
+      "lineHeightComputed": "21.6px",
+      "lineHeightUsedPx": 48,
+      "layoutLineBoxPx": 48,
+      "fontSizePx": 16,
+      "verticalAlign": "baseline",
+      "display": "flex",
+      "alignSelf": "auto",
+      "halfLeadingLhFsPx": 16,
+      "halfLeadingFontBoxPx": 15,
+      "paddingTopPx": 0,
+      "borderTopPx": 0,
+      "borderBoxHeightPx": 48,
+      "rangeInkTopInBorderPx": 14.195,
+      "rangeInkTopPx": 15.195,
+      "baselineFromMeasureTextInBorderPx": 30,
+      "measureText": {
+        "fontBoundingBoxAscent": 15,
+        "actualBoundingBoxAscent": 11.273,
+        "fontBoundingBoxAscentDelta": 3.727,
+        "fontBoxHeightPx": 18
+      }
+    },
+    "canvas": {
+      "inkTopInBorderPx": 17,
+      "inkTopPx": 18,
+      "offsetFromLiveRangePx": 2.797,
+      "note": "Typography N/A on bitmap; ink from canvas dark-pixel band scan."
+    }
+  },
+  "inkOffsetsFromLiveRangePx": {
+    "fo": -0.008,
+    "inlineSvg": -0.008,
+    "canvas": 2.797
+  },
+  "threeWay": {
+    "liveRangeTopInBorder": 14.203,
+    "foRangeTopInBorder": 14.195,
+    "svgRangeTopInBorder": 14.1953125,
+    "canvasInkTopInBorder": 17
+  },
+  "hypothesis": {
+    "canvasOffsetPx": 2.797,
+    "liveRangeInkTopInBorderPx": 14.203,
+    "candidates": {
+      "halfLeadingLhFs_live": 16,
+      "halfLeadingFontBox_live": 15,
+      "fontBoundingBoxAscentDelta_live": 3.727,
+      "neg_halfLeadingLhFs": -16,
+      "neg_fontBoundingBoxAscentDelta": -3.727,
+      "foVsLiveRangeInkTop": -0.008,
+      "baselineMinusRange_live": 15.797
+    },
+    "correlation": {
+      "matchEpsilonPx": 0.06,
+      "rows": [
+        {
+          "id": "fontBoundingBoxAscentDelta_live",
+          "value": 3.727,
+          "deltaAbs": 0.93
+        },
+        {
+          "id": "neg_fontBoundingBoxAscentDelta (negated)",
+          "value": 3.727,
+          "deltaAbs": 0.93
+        },
+        {
+          "id": "foVsLiveRangeInkTop (negated)",
+          "value": 0.008,
+          "deltaAbs": 2.789
+        },
+        {
+          "id": "foVsLiveRangeInkTop",
+          "value": -0.008,
+          "deltaAbs": 2.805
+        },
+        {
+          "id": "fontBoundingBoxAscentDelta_live (negated)",
+          "value": -3.727,
+          "deltaAbs": 6.524
+        },
+        {
+          "id": "neg_fontBoundingBoxAscentDelta",
+          "value": -3.727,
+          "deltaAbs": 6.524
+        },
+        {
+          "id": "halfLeadingFontBox_live",
+          "value": 15,
+          "deltaAbs": 12.203
+        },
+        {
+          "id": "baselineMinusRange_live",
+          "value": 15.797,
+          "deltaAbs": 13
+        },
+        {
+          "id": "halfLeadingLhFs_live",
+          "value": 16,
+          "deltaAbs": 13.203
+        },
+        {
+          "id": "neg_halfLeadingLhFs (negated)",
+          "value": 16,
+          "deltaAbs": 13.203
+        },
+        {
+          "id": "halfLeadingFontBox_live (negated)",
+          "value": -15,
+          "deltaAbs": 17.797
+        },
+        {
+          "id": "baselineMinusRange_live (negated)",
+          "value": -15.797,
+          "deltaAbs": 18.594
+        }
+      ],
+      "best": {
+        "id": "fontBoundingBoxAscentDelta_live",
+        "value": 3.727,
+        "deltaAbs": 0.93
+      },
+      "matches": []
+    },
+    "question": "Does canvasOffset ≈ (lineHeightPx−fontSizePx)/2 or fontBoundingBoxAscent delta?",
+    "answer": "closest:fontBoundingBoxAscentDelta_live"
+  },
+  "generatedAt": "2026-06-02T16:29:30.522Z",
+  "port": 9942,
+  "headed": true,
+  "commands": [
+    "npm run compile",
+    "node __localtests__/fo-text-baseline-lh-probe.mjs"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "probe": "fo-glyph-bounds",
+  "section": "research-round-6-cross-browser.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "rows": [
+      {
+        "engine": "chrome",
+        "available": true,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "largeStrutDrift": true
+      },
+      {
+        "engine": "webkit",
+        "available": true,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15",
+        "liveVsCanvasTopPx": 3.421875,
+        "liveVsSvgTopPx": 0,
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "largeStrutDrift": true
+      },
+      {
+        "engine": "firefox",
+        "available": true,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+        "liveVsCanvasTopPx": 3.5,
+        "liveVsSvgTopPx": 0,
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "largeStrutDrift": true
+      }
+    ],
+    "chromiumOnlyDrift": false,
+    "summary": "Strut drift reproduces on non-Chromium engines — not Blink-only"
+  }
+}

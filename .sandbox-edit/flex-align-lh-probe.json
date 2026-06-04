@@ -1,0 +1,82 @@
+{
+  "fixture": "fo-flex-align-lh-probe",
+  "purpose": "Canvas drift vs flex align-items (leaf lh 1.35)",
+  "alignVariants": [
+    "stretch",
+    "flex-start",
+    "baseline"
+  ],
+  "recipe": {
+    "id": "product-baseline",
+    "rasterPatch": "product-toCanvas"
+  },
+  "dpr": 1,
+  "headed": true,
+  "generatedAt": "2026-06-02T16:32:10.591Z",
+  "rows": [
+    {
+      "alignVariant": "stretch",
+      "landmark": "Home",
+      "metrics": {
+        "parentAlignItems": "stretch",
+        "leafLineHeightPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 48,
+        "navHeightGbcr": 48
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875
+      },
+      "canvasDeltaPx": 2.796875
+    },
+    {
+      "alignVariant": "flex-start",
+      "landmark": "Home",
+      "metrics": {
+        "parentAlignItems": "flex-start",
+        "leafLineHeightPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 21.594,
+        "navHeightGbcr": 48
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 1,
+        "svgPaintedTopInBorder": 1,
+        "canvasPaintedTopInBorder": 4,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3
+      },
+      "canvasDeltaPx": 3
+    },
+    {
+      "alignVariant": "baseline",
+      "landmark": "Home",
+      "metrics": {
+        "parentAlignItems": "baseline",
+        "leafLineHeightPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 21.594,
+        "navHeightGbcr": 48
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 1,
+        "svgPaintedTopInBorder": 1,
+        "canvasPaintedTopInBorder": 4,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3
+      },
+      "canvasDeltaPx": 3
+    }
+  ],
+  "summary": {
+    "canvasDeltaSpreadPx": 0.203,
+    "verdict": "align-items changes canvas drift — cross-axis layout affects FO bitmap paint"
+  }
+}

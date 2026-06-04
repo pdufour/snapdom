@@ -1,0 +1,314 @@
+{
+  "metric": "paint.canvas.vs-border.top",
+  "fixture": "checkout-example.html",
+  "dpr": 2,
+  "offset": 210,
+  "limit": 30,
+  "matrixIds": [
+    "product-baseline",
+    "tc-fix-*",
+    "tc-blh-*",
+    "tc-decode-*",
+    "tc-raster-*",
+    "fix321-*",
+    "tc-fork-*"
+  ],
+  "recipeIds": [
+    "tc-fix-w7-rfork-leaf-margin-reset-lh1",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "tc-fix-w7-rfork-split-fo-per-line",
+    "tc-fix-w7-rfork-chromium-font-render",
+    "tc-fix-w7-rfork-fo-box-linepx-overflow",
+    "tc-fix-w7-capture-parent-lh-leaf-pin",
+    "tc-fix-w7-rfork-flex-container-flex-start",
+    "tc-fix-w7-draw-ink-offset-fo-top",
+    "tc-fix-w7-bitmap-leading-trim-text-box",
+    "tc-fix-w7-rfork-parent-lh-leaf-pin",
+    "tc-fix-w8-rfork-combo-y-half-leading-linebox",
+    "tc-fix-w8-rfork-combo-y-half-leading-box-overflow",
+    "tc-fix-w8-rfork-combo-y-half-leading-overflow",
+    "tc-fix-w8-rfork-fo-y-half-leading-used",
+    "tc-fix-w8-rfork-fo-y-half-leading-no-gbcr",
+    "tc-fix-w9-rfork-fo-y-strut-range-meta",
+    "tc-fix-w9-rfork-fo-y-strut-range-linebox-meta",
+    "tc-fix-w9-rfork-fo-y-ink-offset-meta",
+    "tc-fix-w9-rfork-fo-y-strut-range-no-gbcr",
+    "tc-fix-w9-rfork-fo-y-half-leading-range-subpixel-draw",
+    "tc-fork-w1-inject-fo-lh-pin",
+    "tc-fork-w1-inject-flex-center",
+    "tc-fork-w1-viewbox-int-floor",
+    "tc-fork-w1-fo-y-nudge",
+    "tc-fork-w1-root-height-48",
+    "tc-fork-w1-combo-lh-center",
+    "tc-fork-w2-leading-trim-inject",
+    "tc-fork-w2-align-self-flex-start",
+    "tc-fork-w2-line-height-normal-important",
+    "tc-fork-w2-svg-root-translate-y-minus-half-leading"
+  ],
+  "baseline": {
+    "home": -0.91,
+    "products": -0.91
+  },
+  "blackboxGate": {
+    "baselineHome": -0.91,
+    "baselineProducts": -0.91,
+    "note": "Rank toward 0 from −0.91; do not promote fo-y-strut-range-meta / fo-y-half-leading-meta as product default."
+  },
+  "ranked": [
+    {
+      "recipeId": "tc-fix-w7-rfork-split-fo-per-line",
+      "checkoutQuery": "experimentalRasterSvgPatch=split-fo-per-line",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-chromium-font-render",
+      "checkoutQuery": "experimentalRasterSvgPatch=chromium-font-render-leaf",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "checkoutQuery": "experimentalFoPinLineHeightOnTextLeaf=1&experimentalRasterSvgPatch=lab-toCanvas",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-flex-container-flex-start",
+      "checkoutQuery": "experimentalRasterSvgPatch=flex-container-flex-start",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-draw-ink-offset-fo-top",
+      "checkoutQuery": "experimentalRasterSvgPatch=lab-toCanvas&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-bitmap-leading-trim-text-box",
+      "checkoutQuery": "experimentalRasterSvgPatch=leading-trim-text-box-leaf&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-parent-lh-leaf-pin",
+      "checkoutQuery": "experimentalRasterSvgPatch=parent-lh-normal-leaf-pin",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-inject-fo-lh-pin",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-inject-flex-center",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-viewbox-int-floor",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-fo-y-nudge",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-root-height-48",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w1-combo-lh-center",
+      "checkoutQuery": "experimentalRasterSvgPatch=1",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w2-leading-trim-inject",
+      "checkoutQuery": "experimentalRasterSvgPatch=leading-trim-inject",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w2-line-height-normal-important",
+      "checkoutQuery": "experimentalRasterSvgPatch=line-height-normal-important",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w2-svg-root-translate-y-minus-half-leading",
+      "checkoutQuery": "experimentalRasterSvgPatch=svg-root-translate-y-minus-half-leading",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-half-leading-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w8-rfork-combo-y-half-leading-overflow",
+      "checkoutQuery": "experimentalRasterSvgPatch=combo-fo-y-half-leading-overflow",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w8-rfork-fo-y-half-leading-used",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-half-leading-used-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w8-rfork-fo-y-half-leading-no-gbcr",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-half-leading-meta&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w9-rfork-fo-y-strut-range-meta",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-strut-range-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w9-rfork-fo-y-strut-range-linebox-meta",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-strut-range-linebox-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w9-rfork-fo-y-ink-offset-meta",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-ink-offset-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w9-rfork-fo-y-strut-range-no-gbcr",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-strut-range-meta&experimentalRasterDisableGbcrNudge=1",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w9-rfork-fo-y-half-leading-range-subpixel-draw",
+      "checkoutQuery": "experimentalRasterSvgPatch=fo-y-half-leading-meta",
+      "homeCanvasVsBorderTop": -1.91,
+      "productsCanvasVsBorderTop": -1.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200019.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-leaf-margin-reset-lh1",
+      "checkoutQuery": "experimentalRasterSvgPatch=leaf-margin-reset-lh1",
+      "homeCanvasVsBorderTop": -2.91,
+      "productsCanvasVsBorderTop": -2.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200029.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "tc-fork-w2-align-self-flex-start",
+      "checkoutQuery": "experimentalRasterSvgPatch=align-self-flex-start",
+      "homeCanvasVsBorderTop": -4.91,
+      "productsCanvasVsBorderTop": -4.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200049.1,
+      "beatsBaseline": false
+    }
+  ],
+  "skipped": [],
+  "errors": [],
+  "best": {
+    "recipeId": "tc-fix-w7-rfork-split-fo-per-line",
+    "checkoutQuery": "experimentalRasterSvgPatch=split-fo-per-line",
+    "homeCanvasVsBorderTop": -0.91,
+    "productsCanvasVsBorderTop": -0.91,
+    "navDeltaTopHomeProducts": 0,
+    "rankScore": 200009.1,
+    "beatsBaseline": false
+  },
+  "beatsBaseline": []
+}

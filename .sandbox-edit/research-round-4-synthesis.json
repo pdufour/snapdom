@@ -1,0 +1,55 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-synthesis.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "winningHypothesis": "FO bitmap paint omits ~½(lh−fs) strut at decode — Chromium class bug; snapdom serialization OK",
+    "rootCauseConfidence": "HIGH — BITMAP_ONLY + half-leading residual ≈0.003px @ lh=1.35 dpr=1",
+    "confirmed": [
+      "modern-screenshot shows same-class FO bitmap drift as snapdom",
+      "Drift is per-FO strut — not global canvas translate",
+      "Minimal repro: bare span + lh 1.35 — no flex ancestor required"
+    ],
+    "refuted": [
+      "Decode context (iframe vs main, font-display) explains plateau",
+      "::first-line / line-box-contain / initial-letter fix strut paint",
+      "requiredExtensions / xmlns attributes affect raster",
+      "Font metrics swap after decode causes plateau"
+    ],
+    "newFindings": [
+      "Decode context invariant — spread 0px",
+      "Engine compare: snapdom 2.796875px vs MS 2.797px"
+    ],
+    "top3NextFixes": [
+      {
+        "fix": "Raster-only FO clip/viewport to line-height box (height=lh on text leaf FO subtree)",
+        "expectedCanvasDelta": "2.797 → ~0.0–0.5px if strut clip forces glyph origin",
+        "mechanism": "Structural decode patch — not drawImage nudge"
+      },
+      {
+        "fix": "Capture: pin FO text-leaf wrapper to content-box height = computed lh (21.6px) under stretch",
+        "expectedCanvasDelta": "2.797 → ~0.0px if bitmap uses clipped lh box not 48px stretch",
+        "mechanism": "Reduces stretch slack inside FO without flex-start layout break"
+      },
+      {
+        "fix": "Chromium bug pack + leading-trim on no-flex row only (validate paint-origin CDP autopsy)",
+        "expectedCanvasDelta": "Confirm 2.8px residual → 0 on engine fix; lab cannot blit-fix",
+        "mechanism": "Upstream / CDP evidence for half-leading paint-origin"
+      }
+    ]
+  }
+}

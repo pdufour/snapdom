@@ -1,0 +1,93 @@
+{
+  "landmark": "Home",
+  "limit": 30,
+  "offsets": [
+    0
+  ],
+  "matrixIds": [
+    "product-baseline",
+    "fix321-*",
+    "tc-decode-*",
+    "tc-raster-*"
+  ],
+  "blackboxGate": "Home paint.canvas.vs-border.top default ≈ -0.91px; do not promote fo-y-strut-range-meta (-1.91)",
+  "top10": [
+    {
+      "offset": 0,
+      "id": "fix321-decode-interval",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-decode-interval-raf",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-double-decode",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-triple-decode",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-fonts-ready",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-fonts-ready-interval",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-decode-microtask-twice",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-load-event-interval",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "fix321-decode-interval-prototype",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "tc-decode-001-product-decode-settle",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    }
+  ],
+  "best": {
+    "offset": 0,
+    "id": "fix321-decode-interval",
+    "canvasVsLive": -1.1875,
+    "absCanvasVsLive": 1.1875,
+    "beatsBaseline": false
+  }
+}

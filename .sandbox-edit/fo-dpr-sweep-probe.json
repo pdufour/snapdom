@@ -1,0 +1,84 @@
+{
+  "probe": "fo-dpr-sweep-probe",
+  "scale": 1,
+  "landmark": "Home",
+  "dprList": [
+    1,
+    1.25,
+    1.5,
+    2,
+    2.5
+  ],
+  "halfLeadingPx": 2.8,
+  "rows": [
+    {
+      "dpr": 1,
+      "halfLeadingPx": 2.8,
+      "threeWay": {
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null
+      },
+      "residualFromHalfLeadingPx": -0.003,
+      "classification": "BITMAP_ONLY",
+      "deviceCanvasHeight": 50
+    },
+    {
+      "dpr": 1.25,
+      "halfLeadingPx": 2.8,
+      "threeWay": {
+        "liveVsCanvasTopPx": 3.997,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null
+      },
+      "residualFromHalfLeadingPx": 1.197,
+      "classification": "BITMAP_ONLY",
+      "deviceCanvasHeight": 63
+    },
+    {
+      "dpr": 1.5,
+      "halfLeadingPx": 2.8,
+      "threeWay": {
+        "liveVsCanvasTopPx": 3.464,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null
+      },
+      "residualFromHalfLeadingPx": 0.664,
+      "classification": "BITMAP_ONLY",
+      "deviceCanvasHeight": 75
+    },
+    {
+      "dpr": 2,
+      "halfLeadingPx": 2.8,
+      "threeWay": {
+        "liveVsCanvasTopPx": 3.297,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null
+      },
+      "residualFromHalfLeadingPx": 0.497,
+      "classification": "BITMAP_ONLY",
+      "deviceCanvasHeight": 100
+    },
+    {
+      "dpr": 2.5,
+      "halfLeadingPx": 2.8,
+      "threeWay": {
+        "liveVsCanvasTopPx": 3.197,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null
+      },
+      "residualFromHalfLeadingPx": 0.397,
+      "classification": "BITMAP_ONLY",
+      "deviceCanvasHeight": 125
+    }
+  ],
+  "synthesis": {
+    "allBitmapOnly": true,
+    "canvasDeltaSpreadPx": 1.2,
+    "dpr2MinusDpr1Px": 0.5,
+    "meanResidualFromHalfLeadingPx": 0.55
+  },
+  "port": 9963,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

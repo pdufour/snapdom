@@ -4,9 +4,67 @@
  */
 
 import { extractURL } from '../utils/helpers'
-import { cache } from '../core/cache'
+import { cache } from '../core/cache.js'
 import { isIconFont } from '../modules/iconFonts.js'
 import { snapFetch } from './snapFetch.js'
+
+// ----------------------------------------------------------------------------
+// FontFace API tracking (FontFaceSet / document.fonts)
+// ----------------------------------------------------------------------------
+// Inspired by html-to-image #213 / html2canvas #479:
+// dynamic fonts created via `new FontFace(...)` may never appear in any stylesheet
+// (<style>/<link>) yet are available in `document.fonts`. We best-effort record the
+// constructor `source` so embedCustomFonts can inline them during capture.
+let __fontFaceTrackingInstalled = false
+function installFontFaceTrackingOnce() {
+  if (__fontFaceTrackingInstalled) return
+  __fontFaceTrackingInstalled = true
+
+  try {
+    const FF = /** @type {any} */ (globalThis.FontFace)
+    if (!FF || typeof FF !== 'function') return
+    if (FF.__snapdomPatched) return
+
+    const Wrapped = function SnapdomFontFace(family, source, descriptors) {
+      // eslint-disable-next-line no-invalid-this
+      const inst = new FF(family, source, descriptors)
+      try {
+        // Only persist string sources (usually `url(...)` or `data:`) — ArrayBuffer sources
+        // cannot be safely re-embedded without extra work.
+        if (typeof source === 'string' && source.trim()) {
+          Object.defineProperty(inst, '_snapdomSrc', {
+            value: source,
+            configurable: true,
+            writable: true,
+          })
+        }
+      } catch { /* noop */ }
+      return inst
+    }
+
+    try {
+      // preserve prototype chain (instanceof FontFace still works for many checks)
+      Wrapped.prototype = FF.prototype
+    } catch { /* noop */ }
+
+    Object.defineProperty(Wrapped, '__snapdomPatched', { value: true })
+    // Preserve statics (some engines put native brand checks on these)
+    for (const k of Object.getOwnPropertyNames(FF)) {
+      if (k === 'prototype') continue
+      try {
+        Object.defineProperty(Wrapped, k, Object.getOwnPropertyDescriptor(FF, k))
+      } catch { /* ignore readonly */ }
+    }
+
+    /** @type {any} */ (globalThis).FontFace = /** @type {any} */ (Wrapped)
+  } catch {
+    // ignore — capture must never fail because of FontFace patching
+  }
+}
+
+// Install as early as possible so FontFace instances created before capture can
+// retain their constructor `source` string for later embedding.
+installFontFaceTrackingOnce()
 
 /**
  * Converts a unicode character from an icon font into a data URL image.
@@ -623,18 +681,26 @@ export async function embedCustomFonts({
   useProxy = '',
   fontStylesheetDomains = [],
 } = {}) {
+  // Ensure FontFace tracking is installed before we scan document.fonts.
+  // This makes dynamically added fonts (FontFace API) embeddable even when no
+  // stylesheet contains @font-face rules.
+  installFontFaceTrackingOnce()
+
   // ---------- Normalize inputs ----------
   if (!(required instanceof Set)) required = new Set()
   if (!(usedCodepoints instanceof Set)) usedCodepoints = new Set()
 
-  // Build index: family -> [{w,s,st}]
+  // Build index: family -> [{w,s,st}]. CSS font-family names are case-insensitive, so the
+  // index is keyed lowercase and every lookup lowercases too — otherwise a page using
+  // `Roboto` against `@font-face { font-family: roboto }` would silently fail to embed.
   const requiredIndex = new Map()
   for (const key of required) {
     const [fam, w, s, st] = String(key).split('__')
     if (!fam) continue
-    const arr = requiredIndex.get(fam) || []
+    const famKey = fam.toLowerCase()
+    const arr = requiredIndex.get(famKey) || []
     arr.push({ w: parseInt(w, 10), s, st: parseInt(st, 10) })
-    requiredIndex.set(fam, arr)
+    requiredIndex.set(famKey, arr)
   }
 
   /**
@@ -655,9 +721,10 @@ export async function embedCustomFonts({
  * @param {string} stretchSpec font-stretch desde @font-face (p.ej. "100%")
  */
 function faceMatchesRequired(fam, styleSpec, weightSpec, stretchSpec) {
-  if (!requiredIndex.has(fam)) return false
+  const famKey = String(fam).toLowerCase()
+  if (!requiredIndex.has(famKey)) return false
 
-  const need = requiredIndex.get(fam)
+  const need = requiredIndex.get(famKey)
   const ws = parseWeightSpec(weightSpec)
   const ss = parseStyleSpec(styleSpec)
   const ts = parseStretchSpec(stretchSpec)
@@ -736,6 +803,9 @@ function faceMatchesRequired(fam, styleSpec, weightSpec, stretchSpec) {
       if (!hasLink) importUrls.push(u)
     }
   }
+  // @import font URLs with no matching <link> are made reachable by injecting a temporary
+  // <link>. These are tracked and removed below so the capture never mutates the user's DOM.
+  const injectedLinks = []
   if (importUrls.length) {
     await Promise.all(importUrls.map((u) => new Promise((resolve) => {
       if (document.querySelector(`link[rel="stylesheet"][href="${u}"]`)) return resolve(null)
@@ -746,13 +816,17 @@ function faceMatchesRequired(fam, styleSpec, weightSpec, stretchSpec) {
       link.onload = () => resolve(link)
       link.onerror = () => resolve(null)
       document.head.appendChild(link)
+      injectedLinks.push(link)
     })))
   }
 
   let finalCSS = ''
 
   // ---------- 1) External <link rel="stylesheet"> ----------
+  // Snapshot BEFORE detaching the injected links so their @import'd font CSS is still
+  // collected below, then remove them from <head> to keep the capture non-destructive.
   const linkNodes = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).filter(l => !!l.href)
+  for (const l of injectedLinks) { try { l.remove() } catch { /* ok */ } }
 
   for (const link of linkNodes) {
     try {
@@ -847,40 +921,59 @@ function faceMatchesRequired(fam, styleSpec, weightSpec, stretchSpec) {
     }
   }
 
-  // ---------- 3) document.fonts with _snapdomSrc ----------
+  // ---------- 3) document.fonts (FontFaceSet) ----------
+  // Best-effort: inline dynamic FontFace API fonts that were added via document.fonts.add().
+  // We can only embed faces we can reconstruct a usable `src:` for (typically from the
+  // FontFace constructor's `source` string captured as `_snapdomSrc` above).
   try {
     for (const f of document.fonts || []) {
-      if (!f || !f.family || f.status !== 'loaded' || !f._snapdomSrc) continue
+      if (!f || !f.family || f.status !== 'loaded') continue
+      const rawSrc =
+        /** @type {any} */ (f)._snapdomSrc ||
+        /** @type {any} */ (f).source ||
+        /** @type {any} */ (f)._source ||
+        ''
+      if (!rawSrc) continue
+
+      // Normalize to a concrete URL so fetch/cache work (FontFace sources are often `url(...)`).
+      const srcUrls = typeof rawSrc === 'string' ? extractSrcUrls(rawSrc, location.href) : []
+      const srcUrl = srcUrls[0] || (typeof rawSrc === 'string' ? rawSrc.trim() : '')
+      if (!srcUrl) continue
+
       const fam = String(f.family).replace(/^['"]+|['"]+$/g, '')
       if (isIconFont(fam)) continue
-      if (!requiredIndex.has(fam)) continue
+      if (!requiredIndex.has(fam.toLowerCase())) continue
 
       if (exclude?.families && exclude.families.some(n => String(n).toLowerCase() === fam.toLowerCase())) {
         continue
       }
 
-      let b64 = f._snapdomSrc
+      let b64 = srcUrl
       if (!String(b64).startsWith('data:')) {
-        if (cache.resource?.has(f._snapdomSrc)) {
-          b64 = cache.resource.get(f._snapdomSrc)
-          cache.font?.add(f._snapdomSrc)
-        } else if (!cache.font?.has(f._snapdomSrc)) {
+        if (cache.resource?.has(srcUrl)) {
+          b64 = cache.resource.get(srcUrl)
+          cache.font?.add(srcUrl)
+        } else if (!cache.font?.has(srcUrl)) {
           try {
-            const r = await snapFetch(f._snapdomSrc, { as: 'dataURL', useProxy, silent: true })
+            const r = await snapFetch(srcUrl, { as: 'dataURL', useProxy, silent: true })
             if (r.ok && typeof r.data === 'string') {
               b64 = r.data
-              cache.resource?.set(f._snapdomSrc, b64)
-              cache.font?.add(f._snapdomSrc)
+              cache.resource?.set(srcUrl, b64)
+              cache.font?.add(srcUrl)
             } else {
               continue
             }
           } catch {
-            console.warn('[snapDOM] Failed to fetch dynamic font src:', f._snapdomSrc)
+            console.warn('[snapDOM] Failed to fetch dynamic font src:', srcUrl)
             continue
           }
         }
       }
-      finalCSS += `@font-face{font-family:'${fam}';src:url(${b64});font-style:${f.style || 'normal'};font-weight:${f.weight || 'normal'};}`
+      const style = /** @type {any} */ (f).style || 'normal'
+      const weight = /** @type {any} */ (f).weight || 'normal'
+      const stretch = /** @type {any} */ (f).stretch || ''
+      const ur = /** @type {any} */ (f).unicodeRange || ''
+      finalCSS += `@font-face{font-family:'${fam}';src:url(${b64});font-style:${style};font-weight:${weight};${stretch ? `font-stretch:${stretch};` : ''}${ur ? `unicode-range:${ur};` : ''}}`
     }
   } catch {}
 
@@ -889,7 +982,7 @@ function faceMatchesRequired(fam, styleSpec, weightSpec, stretchSpec) {
     if (!font || typeof font !== 'object') continue
     const family = String(font.family || '').replace(/^['"]+|['"]+$/g, '')
     if (!family || isIconFont(family)) continue
-    if (!requiredIndex.has(family)) continue
+    if (!requiredIndex.has(family.toLowerCase())) continue
     if (exclude?.families && exclude.families.some(n => String(n).toLowerCase() === family.toLowerCase())) continue
 
     const weight = font.weight != null ? String(font.weight) : 'normal'

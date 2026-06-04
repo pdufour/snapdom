@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>FO fix lab — redirect</title>
+  <script>
+    const qs = new URLSearchParams(location.search);
+    if (!qs.has('_cb')) qs.set('_cb', String(Date.now()));
+    const target = 'fo-fix-lab-ink-v2.html?' + qs.toString();
+    location.replace(target);
+  </script>
+</head>
+<body>
+  <p>Redirecting to <a id="link" href="fo-fix-lab-ink-v2.html">fo-fix-lab-ink-v2.html</a> (canvas-svg-viewport-v7)…</p>
+  <script>
+    (function () {
+      const qs = new URLSearchParams(location.search);
+      if (!qs.has('_cb')) qs.set('_cb', String(Date.now()));
+      document.getElementById('link').href = 'fo-fix-lab-ink-v2.html?' + qs.toString();
+    })();
+  </script>
+</body>
+</html>

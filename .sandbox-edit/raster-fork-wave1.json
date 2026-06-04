@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-06-02T16:24:01.882Z",
+  "port": 8787,
+  "landmark": "Home",
+  "recipeIds": [
+    "product-baseline",
+    "tc-fork-w1-inject-fo-lh-pin",
+    "tc-fork-w1-inject-flex-center",
+    "tc-fork-w1-viewbox-int-floor",
+    "tc-fork-w1-fo-y-nudge",
+    "tc-fork-w1-root-height-48",
+    "tc-fork-w1-combo-lh-center"
+  ],
+  "mechanism": "raster-only-svg-fork",
+  "inkPassThresholdPx": 0.06,
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": null
+    },
+    {
+      "recipeId": "tc-fork-w1-inject-fo-lh-pin",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "inject-fo-lh-pin"
+    },
+    {
+      "recipeId": "tc-fork-w1-viewbox-int-floor",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "viewbox-int-floor"
+    },
+    {
+      "recipeId": "tc-fork-w1-root-height-48",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "root-height-48"
+    },
+    {
+      "recipeId": "tc-fork-w1-fo-y-nudge",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "svgVsCanvasTopPx": 3.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "fo-y-nudge"
+    },
+    {
+      "recipeId": "tc-fork-w1-combo-lh-center",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": -11.203,
+      "svgVsCanvasTopPx": -11.195,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "combo-lh-center"
+    },
+    {
+      "recipeId": "tc-fork-w1-inject-flex-center",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": -12.203,
+      "svgVsCanvasTopPx": -12.195,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "inject-flex-center"
+    }
+  ],
+  "summary": {
+    "verdict": "NO_FORK_BEATS_BASELINE",
+    "baselineCanvasDeltaPx": 2.797,
+    "baselineAbsCanvasDeltaPx": 2.797,
+    "forkCount": 6,
+    "improvedCount": 0,
+    "improvedIds": [],
+    "anyForkPass": false,
+    "svgUnchanged": true
+  }
+}

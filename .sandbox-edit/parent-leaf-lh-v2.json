@@ -1,0 +1,280 @@
+{
+  "fixture": "fo-lh-deep-probe-v2",
+  "section": "parent-leaf",
+  "variants": [
+    {
+      "lh": "1.35",
+      "lhOn": "leaf"
+    },
+    {
+      "lh": "1.35",
+      "lhOn": "parent"
+    },
+    {
+      "lh": "21.6px",
+      "lhOn": "leaf"
+    },
+    {
+      "lh": "21.6px",
+      "lhOn": "parent"
+    },
+    {
+      "lh": "normal",
+      "lhOn": "leaf"
+    },
+    {
+      "lh": "normal",
+      "lhOn": "parent"
+    }
+  ],
+  "dpr": 1,
+  "headed": true,
+  "generatedAt": "2026-06-02T16:32:09.013Z",
+  "rows": [
+    {
+      "section": "parent-leaf",
+      "lhVariant": "1.35",
+      "lhOn": "leaf",
+      "parentComputedLh": "21.6px",
+      "leafComputedLh": "21.6px",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 2.797
+      },
+      "canvasDeltaPx": 2.797,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": -0.003,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "parent-leaf",
+      "lhVariant": "1.35",
+      "lhOn": "parent",
+      "parentComputedLh": "21.6px",
+      "leafComputedLh": "21.6px",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.008,
+        "liveVsCanvasTopPx": 2.797
+      },
+      "canvasDeltaPx": 2.797,
+      "svgDeltaPx": -0.008,
+      "residualCanvasMinusHalfLeadingPx": -0.003,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "parent-leaf",
+      "lhVariant": "21.6px",
+      "lhOn": "leaf",
+      "parentComputedLh": "21.6px",
+      "leafComputedLh": "21.6px",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.1953125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.805
+      },
+      "canvasDeltaPx": 2.805,
+      "svgDeltaPx": 0,
+      "residualCanvasMinusHalfLeadingPx": 0.005,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "parent-leaf",
+      "lhVariant": "21.6px",
+      "lhOn": "parent",
+      "parentComputedLh": "21.6px",
+      "leafComputedLh": "21.6px",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.1953125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.805
+      },
+      "canvasDeltaPx": 2.805,
+      "svgDeltaPx": 0,
+      "residualCanvasMinusHalfLeadingPx": 0.005,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "lineHeightComputedPx": 21.6,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 2.8,
+        "halfLeadingComputedPx": 2.8,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "parent-leaf",
+      "lhVariant": "normal",
+      "lhOn": "leaf",
+      "parentComputedLh": "21.6px",
+      "leafComputedLh": "normal",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.5
+      },
+      "canvasDeltaPx": 3.5,
+      "svgDeltaPx": 0,
+      "residualCanvasMinusHalfLeadingPx": -12.5,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "normal",
+        "lineHeightComputedPx": null,
+        "lineHeightPx": 48,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 16,
+        "halfLeadingComputedPx": null,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    },
+    {
+      "section": "parent-leaf",
+      "lhVariant": "normal",
+      "lhOn": "parent",
+      "parentComputedLh": "normal",
+      "leafComputedLh": "normal",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.5
+      },
+      "canvasDeltaPx": 3.5,
+      "svgDeltaPx": 0,
+      "residualCanvasMinusHalfLeadingPx": -12.5,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "normal",
+        "lineHeightComputedPx": null,
+        "lineHeightPx": 48,
+        "layoutLineBoxPx": 48,
+        "halfLeadingLhFsPx": 16,
+        "halfLeadingComputedPx": null,
+        "fontSizePx": 16,
+        "leafHeightGbcr": 48,
+        "parentHeightGbcr": 48,
+        "parentAlignItems": "stretch",
+        "display": "flex",
+        "alignSelf": "auto",
+        "leadingTrim": null,
+        "textBoxTrim": "none"
+      },
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "recipeId": "product-baseline",
+      "rasterPatch": "product-toCanvas"
+    }
+  ],
+  "summary": {
+    "notes": [
+      "Compare parent nav lh vs leaf lh — who controls FO raster strut when flex stretch inflates box?",
+      "leaf lh=1.35: parentLh=21.6px leafLh=21.6px canvasΔ=2.797",
+      "parent lh=1.35: parentLh=21.6px leafLh=21.6px canvasΔ=2.797",
+      "leaf lh=21.6px: parentLh=21.6px leafLh=21.6px canvasΔ=2.805",
+      "parent lh=21.6px: parentLh=21.6px leafLh=21.6px canvasΔ=2.805",
+      "leaf lh=normal: parentLh=21.6px leafLh=normal canvasΔ=3.5",
+      "parent lh=normal: parentLh=normal leafLh=normal canvasΔ=3.5"
+    ]
+  }
+}

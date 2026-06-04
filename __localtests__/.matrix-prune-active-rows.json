@@ -1,0 +1,268 @@
+{
+  "rows": [
+    {
+      "id": "loop-ai-b10-w01-025",
+      "canvasSigned": -0.203,
+      "absRank": 0.203
+    },
+    {
+      "id": "loop-ai-b10-w01-035",
+      "canvasSigned": -0.203,
+      "absRank": 0.203
+    },
+    {
+      "id": "mp-capture-recipe-css",
+      "canvasSigned": 2.797,
+      "absRank": 2.797
+    },
+    {
+      "id": "mp-decode-interval-prototype",
+      "canvasSigned": 2.797,
+      "absRank": 2.797
+    },
+    {
+      "id": "mp-draw-image-pixelated",
+      "canvasSigned": 2.797,
+      "absRank": 2.797
+    },
+    {
+      "id": "mp-h2-fo-normalize-capture",
+      "canvasSigned": 2.797,
+      "absRank": 2.797
+    },
+    {
+      "id": "product-baseline",
+      "canvasSigned": 2.797,
+      "absRank": 2.797
+    },
+    {
+      "id": "loop-ai-b11-w80-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w07-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w07-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w07-004",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w08-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w08-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w08-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w08-004",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w09-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w09-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w09-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w09-004",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w10-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w10-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w10-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b4-w10-004",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w01-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w01-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w01-003",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w01-004",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w02-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b5-w02-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalCaptureInkMeta",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalCaptureIntViewBox",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoChromiumText",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoFlexRowAlignCenter",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoFlexRowCenter",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoLeadingTrim",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoPinLineHeightFromLive",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoPinLineHeightOnTextLeaf",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextBaselineFix",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextBoxEdgeAuto",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextGeometric",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextLayout",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextLeafNormalize",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalFoTextLineHeightNormal",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterBackingCeil",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterCtxNoScale",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterDecodeSettle",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterDisableGbcrNudge",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterDoubleDecode",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterInkAlign",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterNaturalDims",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterPreDecodeRaf",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "src-mirror-experimentalRasterSvgPatch",
+      "canvasSigned": null,
+      "absRank": null
+    }
+  ],
+  "meta": {
+    "source": "merged matrix-rank-all-rows.json + lab logs",
+    "activeOnly": true
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "probe": "chromium-fo-only-round8-cdp",
+  "generatedAt": "2026-06-03T00:20:00.860Z",
+  "dpr": 1,
+  "notes": [
+    {
+      "variantId": "lh-1",
+      "screenshot": ".sandbox-edit/research-round-8-lh-1.png",
+      "layerTree": {
+        "error": "cdpSession.send: Protocol error (LayerTree.layers): 'LayerTree.layers' wasn't found"
+      },
+      "boxModel": {
+        "borderTop": 92.2890625,
+        "borderHeight": 48,
+        "lineHeight": "16px",
+        "fontSize": "16px",
+        "alignItems": "center"
+      }
+    },
+    {
+      "variantId": "lh-135",
+      "screenshot": ".sandbox-edit/research-round-8-lh-135.png",
+      "layerTree": {
+        "error": "cdpSession.send: Protocol error (LayerTree.layers): 'LayerTree.layers' wasn't found"
+      },
+      "boxModel": {
+        "borderTop": 92.2890625,
+        "borderHeight": 48,
+        "lineHeight": "21.6px",
+        "fontSize": "16px",
+        "alignItems": "center"
+      }
+    },
+    {
+      "variantId": "lh-normal",
+      "screenshot": ".sandbox-edit/research-round-8-lh-normal.png",
+      "layerTree": {
+        "error": "cdpSession.send: Protocol error (LayerTree.layers): 'LayerTree.layers' wasn't found"
+      },
+      "boxModel": {
+        "borderTop": 92.2890625,
+        "borderHeight": 48,
+        "lineHeight": "normal",
+        "fontSize": "16px",
+        "alignItems": "center"
+      }
+    },
+    {
+      "variantId": "flex-start",
+      "screenshot": ".sandbox-edit/research-round-8-flex-start.png",
+      "layerTree": {
+        "error": "cdpSession.send: Protocol error (LayerTree.layers): 'LayerTree.layers' wasn't found"
+      },
+      "boxModel": {
+        "borderTop": 92.2890625,
+        "borderHeight": 21.59375,
+        "lineHeight": "21.6px",
+        "fontSize": "16px",
+        "alignItems": "flex-start"
+      }
+    },
+    {
+      "variantId": "fo-y-28",
+      "screenshot": ".sandbox-edit/research-round-8-fo-y-28.png",
+      "layerTree": {
+        "error": "cdpSession.send: Protocol error (LayerTree.layers): 'LayerTree.layers' wasn't found"
+      },
+      "boxModel": {
+        "borderTop": 92.2890625,
+        "borderHeight": 48,
+        "lineHeight": "21.6px",
+        "fontSize": "16px",
+        "alignItems": "center"
+      }
+    }
+  ]
+}

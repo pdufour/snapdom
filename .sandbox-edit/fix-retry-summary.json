@@ -1,0 +1,159 @@
+{
+  "runAt": "2026-06-02T16:24:04.201Z",
+  "port": 8795,
+  "headed": true,
+  "fixture": "fo-experimental-flags-probe.html mini Home nav",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "noTextBypass": true,
+  "flagScope": [
+    "experimentalFoPinLineHeightFromLive",
+    "experimentalFoFlexRowAlignCenter",
+    "experimentalFoLeadingTrim"
+  ],
+  "svgDeltaBandPx": 0.15,
+  "baseline": {
+    "id": "product-baseline",
+    "svgDeltaPx": -0.008,
+    "canvasDeltaPx": 2.797,
+    "absCanvasDeltaPx": 2.797
+  },
+  "allThreeOn": {
+    "svgDeltaPx": -0.008,
+    "canvasDeltaPx": 2.797,
+    "absCanvasDeltaPx": 2.797,
+    "flags": {
+      "experimentalFoPinLineHeightFromLive": true,
+      "experimentalFoFlexRowAlignCenter": true,
+      "experimentalFoLeadingTrim": true
+    }
+  },
+  "rows": [
+    {
+      "id": "product-baseline",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalFoFlexRowAlignCenter": false,
+        "experimentalFoLeadingTrim": false
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "pinLineHeight",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalFoFlexRowAlignCenter": false,
+        "experimentalFoLeadingTrim": false
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "flexRowAlignCenter",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalFoFlexRowAlignCenter": true,
+        "experimentalFoLeadingTrim": false
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "leadingTrim",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalFoFlexRowAlignCenter": false,
+        "experimentalFoLeadingTrim": true
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "all-three-on",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalFoFlexRowAlignCenter": true,
+        "experimentalFoLeadingTrim": true
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "pin+flex",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalFoFlexRowAlignCenter": true,
+        "experimentalFoLeadingTrim": false
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "pin+trim",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalFoFlexRowAlignCenter": false,
+        "experimentalFoLeadingTrim": true
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    },
+    {
+      "id": "flex+trim",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalFoFlexRowAlignCenter": true,
+        "experimentalFoLeadingTrim": true
+      },
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgBandOk": true,
+      "deltaFromBaselineCanvasPx": 0
+    }
+  ],
+  "bestWithSvgBand": {
+    "id": "product-baseline",
+    "svgDeltaPx": -0.008,
+    "canvasDeltaPx": 2.797,
+    "absCanvasDeltaPx": 2.797,
+    "flags": {
+      "experimentalFoPinLineHeightFromLive": false,
+      "experimentalFoFlexRowAlignCenter": false,
+      "experimentalFoLeadingTrim": false
+    }
+  },
+  "log": ".sandbox-edit/fix-retry-d.log",
+  "verdict": "NO improvement — flags do not beat baseline under svg≈live band"
+}

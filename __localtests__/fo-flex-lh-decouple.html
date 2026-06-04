@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flex stretch 48px — leaf line-height decouple</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+      height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flex stretch 48px — leaf line-height only</h1>
+  <p class="hint">
+    Parent <code>nav.mini-nav</code> is fixed <code>height:48px</code> + <code>align-items:stretch</code>.
+  Only the probe landmark gets an inline <code>line-height</code> before capture. Product baseline FO raster;
+  no FO lh inject. Question: does canvas drift track leaf lh or constant parent box height?
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      findLandmarkElement,
+      getFoFixRecipe,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const lhVariant = (params.get('lh') || '21.6px').trim()
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const PARENT_SEL = 'nav.mini-nav'
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      const h = el.getBoundingClientRect().height
+      const pad =
+        (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+      const content = h - pad
+      if (content > fs) return content
+      return fs * 1.35
+    }
+
+  /**
+   * @param {Element} leaf
+   * @param {string} variant
+   */
+    function applyLeafLineHeight(leaf, variant) {
+      leaf.style.lineHeight = variant
+    }
+
+    /**
+     * @param {Element} leaf
+     * @param {Element} parent
+     */
+    function layoutMeta(leaf, parent) {
+      const cs = getComputedStyle(leaf)
+      const pcs = getComputedStyle(parent)
+      const leafBox = leaf.getBoundingClientRect()
+      const parentBox = parent.getBoundingClientRect()
+      return {
+        tag: leaf.tagName,
+        lhVariant,
+        computedLineHeight: cs.lineHeight,
+        lineHeightPx: roundPx(resolveLineHeightPx(cs, leaf)),
+        fontSizePx: roundPx(parseFloat(cs.fontSize) || 16),
+        leafHeightGbcr: roundPx(leafBox.height),
+        parentHeightGbcr: roundPx(parentBox.height),
+        parentMinHeight: pcs.minHeight,
+        parentHeight: pcs.height,
+        alignSelf: cs.alignSelf,
+        display: cs.display,
+        parentAlignItems: pcs.alignItems,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark "${landmark}" not found`)
+      const parent = root.querySelector(PARENT_SEL)
+      if (!parent) throw new Error(`${PARENT_SEL} missing`)
+
+      applyLeafLineHeight(leaf, lhVariant)
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const metrics = layoutMeta(leaf, parent)
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+
+      status.textContent = `Probing ${landmark} lh=${lhVariant} (leaf lh px≈${metrics.lineHeightPx})…`
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      return {
+        fixture: 'fo-flex-lh-decouple',
+        probe: 'flex-stretch-parent-constant-leaf-lh',
+        lhVariant,
+        landmark,
+        parentFixedHeightPx: 48,
+        liveLhAppliedOn: 'text leaf inline style only',
+        injectMode: 'none',
+        baseRecipe: 'product-baseline',
+        rasterPatch: 'product-toCanvas',
+        dpr,
+        scale,
+        metrics,
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+          pass: probe.pass,
+        },
+        canvasDeltaPx: probe.liveVsCanvasTopPx,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__flexLhDecoupleProbe = {
+        ready: false,
+        bootError: null,
+        lhVariant,
+        landmark,
+        run: runProbe,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__flexLhDecoupleProbe.ready = true
+        status.textContent = `Ready — landmark=${landmark}, lh=${lhVariant}. CLI invokes run().`
+      } catch (err) {
+        window.__flexLhDecoupleProbe.bootError = String(err?.message || err)
+        status.textContent = window.__flexLhDecoupleProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__flexLhDecoupleProbe = window.__flexLhDecoupleProbe || {}
+      window.__flexLhDecoupleProbe.bootError = String(err?.message || err)
+      status.textContent = window.__flexLhDecoupleProbe.bootError
+    })
+  </script>
+</body>
+</html>

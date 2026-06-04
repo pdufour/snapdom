@@ -1,0 +1,105 @@
+{
+  "probe": "fo-glyph-bounds",
+  "section": "research-round-6-chromium-fo-pages.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "pages": [
+      {
+        "pageId": "minimal-nav-fo-raster",
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "threeWay": {
+          "live": {
+            "top": 15.203125,
+            "topInBorder": 14.203125
+          },
+          "svg": {
+            "top": 15.203125,
+            "topInBorder": 14.203125
+          },
+          "canvas": {
+            "top": 18,
+            "topInBorder": 17
+          },
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 2.796875,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17
+        },
+        "glyphMetrics": {
+          "boxHeightPx": 48,
+          "boxWidthPx": 68.859375,
+          "rangeTopInBorder": 14.203125,
+          "rangeBottomInBorder": 33.203125,
+          "rangeHeightInBorder": 19,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 14.203125,
+          "slackBelowRangePx": 14.796875,
+          "rangeFillsStretchBox": false
+        },
+        "canvasInkExtents": {
+          "topInBorder": 17,
+          "bottomInBorder": 29,
+          "inkHeightInBorder": 12,
+          "scanBandWidthDev": 28,
+          "scanRegionHeightDev": 48
+        },
+        "rasterPath": "image-decode"
+      },
+      {
+        "pageId": "minimal-typography-no-flex",
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "threeWay": {
+          "live": {
+            "top": 10,
+            "topInBorder": 0
+          },
+          "svg": {
+            "top": 10,
+            "topInBorder": 0
+          },
+          "canvas": {
+            "top": 13,
+            "topInBorder": 3
+          },
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 3,
+          "livePaintedTopInBorder": 0,
+          "svgPaintedTopInBorder": 0,
+          "canvasPaintedTopInBorder": 3
+        },
+        "glyphMetrics": {
+          "boxHeightPx": 19,
+          "boxWidthPx": 44.859375,
+          "rangeTopInBorder": 0,
+          "rangeBottomInBorder": 19,
+          "rangeHeightInBorder": 19,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 0,
+          "slackBelowRangePx": 0,
+          "rangeFillsStretchBox": true
+        },
+        "canvasInkExtents": {
+          "topInBorder": 3,
+          "bottomInBorder": 15,
+          "inkHeightInBorder": 12,
+          "scanBandWidthDev": 28,
+          "scanRegionHeightDev": 19
+        },
+        "rasterPath": "image-decode"
+      },
+      {
+        "pageId": "minimal-nav-fo-y-nudge"
+      }
+    ]
+  }
+}

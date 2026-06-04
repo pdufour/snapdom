@@ -1,0 +1,38 @@
+{
+  "probe": "fo-snapdom-vs-chromium-delta-probe",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "byteDiff": {
+    "lenA": 572,
+    "lenB": 29932,
+    "lenDelta": 29360,
+    "firstDiffIndex": 84,
+    "diffByteCount": 29832,
+    "hashA": "0ea79dad",
+    "hashB": "f9d9e449",
+    "identical": false
+  },
+  "decode": {
+    "snapdomCaptureSvg": {
+      "canvasDelta": 2.797,
+      "svgDelta": -0.008,
+      "svgVsCanvas": 2.805
+    },
+    "handBuiltStaticSvg": {
+      "canvasDelta": 2.797,
+      "svgDelta": 0,
+      "svgVsCanvas": 2.797
+    },
+    "canvasDeltaDiffPx": 0,
+    "decodeLayerAddsOffset": false
+  },
+  "synthesis": {
+    "svgBytesDiffer": true,
+    "decodeInvariant": "CONFIRMED — decode delta 0 px despite SVG byte diff",
+    "implication": "Strut gap is Chromium FO decode class; snapdom serialization is not the delta source."
+  },
+  "port": 9962,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

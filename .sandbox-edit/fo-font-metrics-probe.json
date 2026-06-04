@@ -1,0 +1,72 @@
+{
+  "probe": "fo-font-metrics-probe",
+  "dpr": 1,
+  "scale": 1,
+  "landmarks": [
+    {
+      "landmark": "Home",
+      "canvasOffsetPx": 2.797,
+      "svgOffsetPx": -0.008,
+      "fontSizePx": 16,
+      "lineHeightPx": 21.6,
+      "halfLeadingLhFsPx": 2.8,
+      "halfLeadingFromRangePx": 2.8,
+      "halfLeadingFromRangeLinePx": 1.5,
+      "rangeLineHeightPx": 19,
+      "rangeTopInBorderPx": 15.203,
+      "livePaintedTopInBorderPx": 14.203,
+      "capModelTopInBorderPx": 18.727,
+      "fontMetrics": {
+        "actualBoundingBoxAscent": 11.273,
+        "actualBoundingBoxDescent": 0.172,
+        "fontBoundingBoxAscent": 15,
+        "fontBoundingBoxDescent": 3,
+        "emHeightAscent": null,
+        "emHeightDescent": null,
+        "width": 44.859
+      },
+      "predictors": {
+        "halfLeadingLhFsDeltaAbs": 0.003,
+        "ascentPlusHalfLeadingDeltaAbs": 11.276,
+        "capModelDeltaAbs": 1.727
+      }
+    },
+    {
+      "landmark": "Products",
+      "canvasOffsetPx": 2.797,
+      "svgOffsetPx": -0.008,
+      "fontSizePx": 16,
+      "lineHeightPx": 21.6,
+      "halfLeadingLhFsPx": 2.8,
+      "halfLeadingFromRangePx": 2.8,
+      "halfLeadingFromRangeLinePx": 1.5,
+      "rangeLineHeightPx": 19,
+      "rangeTopInBorderPx": 15.203,
+      "livePaintedTopInBorderPx": 14.203,
+      "capModelTopInBorderPx": 18.727,
+      "fontMetrics": {
+        "actualBoundingBoxAscent": 11.849,
+        "actualBoundingBoxDescent": 0.172,
+        "fontBoundingBoxAscent": 15,
+        "fontBoundingBoxDescent": 3,
+        "emHeightAscent": null,
+        "emHeightDescent": null,
+        "width": 68.745
+      },
+      "predictors": {
+        "halfLeadingLhFsDeltaAbs": 0.003,
+        "ascentPlusHalfLeadingDeltaAbs": 11.852,
+        "capModelDeltaAbs": 1.727
+      }
+    }
+  ],
+  "synthesis": {
+    "halfLeadingExplainsCanvasDelta": true,
+    "bestPredictor": "halfLeadingLhFs",
+    "meanCanvasOffsetPx": 2.797,
+    "note": "actualBoundingBoxAscent/Descent from measureText; half-leading from (lh−fs)/2 and Range line height."
+  },
+  "port": 9961,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

@@ -1,0 +1,47 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-img-vs-bitmap.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "imageDecode": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "createImageBitmap": null,
+    "bitmapError": "The source image could not be decoded.",
+    "canvasDeltaBetweenPathsPx": null,
+    "handBuilt": {
+      "imageDecode": {
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.796875,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 17
+      },
+      "createImageBitmap": null,
+      "bitmapError": "The source image could not be decoded.",
+      "canvasDeltaBetweenPathsPx": null
+    },
+    "verdict": "CREATEIMAGEBITMAP_DECODE_FAILED_ON_SNAPDOM_SVG",
+    "implication": "createImageBitmap failed on full snapdom SVG — hand-built row is authoritative for CIB A/B."
+  }
+}

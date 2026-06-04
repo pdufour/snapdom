@@ -1,0 +1,397 @@
+{
+  "probe": "fo-drift-per-landmark",
+  "recipeId": "product-baseline",
+  "dpr": 1,
+  "scale": 1,
+  "fixtures": [
+    {
+      "fixture": "mini-nav",
+      "dpr": 1,
+      "scale": 1,
+      "captureDims": {
+        "cssW": 500,
+        "cssH": 50
+      },
+      "rows": [
+        {
+          "landmark": "Home",
+          "summary": {
+            "fontSize": 16,
+            "lineHeight": 21.6,
+            "layoutBox": 48,
+            "halfLeadingStrut": 2.8,
+            "canvasDelta": 2.797
+          },
+          "metrics": {
+            "tag": "A",
+            "elementKind": "nav-link",
+            "fontSizePx": 16,
+            "lineHeightComputed": "21.6px",
+            "lineHeightPx": 21.6,
+            "layoutBoxPx": 48,
+            "halfLeadingStrutPx": 2.8,
+            "halfLayoutStrutPx": 13.2,
+            "halfLeadingCapPx": 1.8,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "600",
+            "display": "flex",
+            "borderTopPx": 0,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 48,
+            "flexParentTag": "NAV",
+            "alignItems": "stretch",
+            "alignSelf": "auto",
+            "flexChildStretched": true
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203,
+            "liveCapModelTopInBorder": 18.727,
+            "svgPaintedTopInBorder": 14.195,
+            "canvasPaintedTopInBorder": 17,
+            "liveVsSvgTopPx": -0.008,
+            "liveVsCanvasTopPx": 2.797,
+            "deltaTopCapModel": -1.727,
+            "svgVsCanvasTopPx": 2.805
+          }
+        },
+        {
+          "landmark": "Products",
+          "summary": {
+            "fontSize": 16,
+            "lineHeight": 21.6,
+            "layoutBox": 48,
+            "halfLeadingStrut": 2.8,
+            "canvasDelta": 2.797
+          },
+          "metrics": {
+            "tag": "A",
+            "elementKind": "nav-link",
+            "fontSizePx": 16,
+            "lineHeightComputed": "21.6px",
+            "lineHeightPx": 21.6,
+            "layoutBoxPx": 48,
+            "halfLeadingStrutPx": 2.8,
+            "halfLayoutStrutPx": 13.2,
+            "halfLeadingCapPx": 1.8,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "600",
+            "display": "flex",
+            "borderTopPx": 0,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 48,
+            "flexParentTag": "NAV",
+            "alignItems": "stretch",
+            "alignSelf": "auto",
+            "flexChildStretched": true
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203,
+            "liveCapModelTopInBorder": 18.727,
+            "svgPaintedTopInBorder": 14.195,
+            "canvasPaintedTopInBorder": 17,
+            "liveVsSvgTopPx": -0.008,
+            "liveVsCanvasTopPx": 2.797,
+            "deltaTopCapModel": -1.727,
+            "svgVsCanvasTopPx": 2.805
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "checkout-example",
+      "dpr": 1,
+      "scale": 1,
+      "captureDims": {
+        "cssW": 720,
+        "cssH": 137
+      },
+      "rows": [
+        {
+          "landmark": "Home",
+          "summary": {
+            "fontSize": 16,
+            "lineHeight": 21.6,
+            "layoutBox": 52,
+            "halfLeadingStrut": 2.8,
+            "canvasDelta": 2.797
+          },
+          "metrics": {
+            "tag": "A",
+            "elementKind": "nav-link",
+            "fontSizePx": 16,
+            "lineHeightComputed": "21.6px",
+            "lineHeightPx": 21.6,
+            "layoutBoxPx": 52,
+            "halfLeadingStrutPx": 2.8,
+            "halfLayoutStrutPx": 15.2,
+            "halfLeadingCapPx": 1.8,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "600",
+            "display": "flex",
+            "borderTopPx": 3,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 55,
+            "flexParentTag": "NAV",
+            "alignItems": "stretch",
+            "alignSelf": "auto",
+            "flexChildStretched": true
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 19.203,
+            "liveCapModelTopInBorder": 22.227,
+            "svgPaintedTopInBorder": 19.203,
+            "canvasPaintedTopInBorder": 22,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "deltaTopCapModel": -0.227,
+            "svgVsCanvasTopPx": 2.797
+          }
+        },
+        {
+          "landmark": "Products",
+          "summary": {
+            "fontSize": 16,
+            "lineHeight": 21.6,
+            "layoutBox": 52,
+            "halfLeadingStrut": 2.8,
+            "canvasDelta": 2.797
+          },
+          "metrics": {
+            "tag": "A",
+            "elementKind": "nav-link",
+            "fontSizePx": 16,
+            "lineHeightComputed": "21.6px",
+            "lineHeightPx": 21.6,
+            "layoutBoxPx": 52,
+            "halfLeadingStrutPx": 2.8,
+            "halfLayoutStrutPx": 15.2,
+            "halfLeadingCapPx": 1.8,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "600",
+            "display": "flex",
+            "borderTopPx": 3,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 55,
+            "flexParentTag": "NAV",
+            "alignItems": "stretch",
+            "alignSelf": "auto",
+            "flexChildStretched": true
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 19.203,
+            "liveCapModelTopInBorder": 22.227,
+            "svgPaintedTopInBorder": 19.203,
+            "canvasPaintedTopInBorder": 22,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "deltaTopCapModel": -0.227,
+            "svgVsCanvasTopPx": 2.797
+          }
+        },
+        {
+          "landmark": "Email",
+          "summary": {
+            "fontSize": 15,
+            "lineHeight": 22.5,
+            "layoutBox": 22.5,
+            "halfLeadingStrut": 3.75,
+            "canvasDelta": 2.5
+          },
+          "metrics": {
+            "tag": "LABEL",
+            "elementKind": "block-label",
+            "fontSizePx": 15,
+            "lineHeightComputed": "22.5px",
+            "lineHeightPx": 22.5,
+            "layoutBoxPx": 22.5,
+            "halfLeadingStrutPx": 3.75,
+            "halfLayoutStrutPx": 0,
+            "halfLeadingCapPx": 2.25,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "400",
+            "display": "inline-block",
+            "borderTopPx": 0,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 22.5,
+            "flexParentTag": null,
+            "alignItems": null,
+            "alignSelf": null,
+            "flexChildStretched": false
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 2.5,
+            "liveCapModelTopInBorder": 6.22,
+            "svgPaintedTopInBorder": 2.5,
+            "canvasPaintedTopInBorder": 5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.5,
+            "deltaTopCapModel": -1.22,
+            "svgVsCanvasTopPx": 2.5
+          }
+        },
+        {
+          "landmark": "Full name",
+          "summary": {
+            "fontSize": 15,
+            "lineHeight": 22.5,
+            "layoutBox": 22.5,
+            "halfLeadingStrut": 3.75,
+            "canvasDelta": 2.5
+          },
+          "metrics": {
+            "tag": "LABEL",
+            "elementKind": "block-label",
+            "fontSizePx": 15,
+            "lineHeightComputed": "22.5px",
+            "lineHeightPx": 22.5,
+            "layoutBoxPx": 22.5,
+            "halfLeadingStrutPx": 3.75,
+            "halfLayoutStrutPx": 0,
+            "halfLeadingCapPx": 2.25,
+            "fontBoxHeightPx": 18,
+            "fontWeight": "400",
+            "display": "inline-block",
+            "borderTopPx": 0,
+            "paddingTopPx": 0,
+            "borderBoxHeightPx": 22.5,
+            "flexParentTag": null,
+            "alignItems": null,
+            "alignSelf": null,
+            "flexChildStretched": false
+          },
+          "threeWay": {
+            "livePaintedTopInBorder": 2.5,
+            "liveCapModelTopInBorder": 6.681,
+            "svgPaintedTopInBorder": 2.5,
+            "canvasPaintedTopInBorder": 5,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.5,
+            "deltaTopCapModel": -1.681,
+            "svgVsCanvasTopPx": 2.5
+          }
+        }
+      ]
+    }
+  ],
+  "buckets": {
+    "navPaintedCanvasDelta": {
+      "bucket": "~2.8px FO raster (painted Range vs canvas)",
+      "valuesPx": [
+        2.797,
+        2.797,
+        2.797,
+        2.797
+      ],
+      "meanPx": 2.797,
+      "spreadPx": 0
+    },
+    "navStructureCapDelta": {
+      "bucket": "~-0.9px cap-model vs canvas (legacy structure metric)",
+      "valuesPx": [
+        -1.727,
+        -1.727,
+        -0.227,
+        -0.227
+      ],
+      "meanPx": -0.977,
+      "spreadPx": 1.5
+    },
+    "formLabelPaintedCanvasDelta": {
+      "bucket": "smaller than nav (15px/400 inline-block label)",
+      "valuesPx": [
+        2.5,
+        2.5
+      ],
+      "meanPx": 2.5,
+      "spreadPx": 0
+    }
+  },
+  "correlation": {
+    "verdict": "CONSTANT_CLASS",
+    "canvasDeltaSpreadPx": 0.297,
+    "residualSpreadPx": 1.247,
+    "pearsonR": {
+      "canvasDeltaVsHalfLeadingStrut": -1,
+      "canvasDeltaVsHalfLayoutStrut": 0.993,
+      "canvasDeltaVsFontSize": 1,
+      "canvasDeltaVsLineHeight": -1,
+      "canvasDeltaVsLayoutBox": 0.992
+    },
+    "perRowClosestMetric": [
+      {
+        "landmark": "Home",
+        "fixture": "mini-nav",
+        "canvasDelta": 2.797,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        }
+      },
+      {
+        "landmark": "Products",
+        "fixture": "mini-nav",
+        "canvasDelta": 2.797,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        }
+      },
+      {
+        "landmark": "Home",
+        "fixture": "checkout-example",
+        "canvasDelta": 2.797,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        }
+      },
+      {
+        "landmark": "Products",
+        "fixture": "checkout-example",
+        "canvasDelta": 2.797,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        }
+      },
+      {
+        "landmark": "Email",
+        "fixture": "checkout-example",
+        "canvasDelta": 2.5,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 3.75,
+          "deltaAbs": 1.25
+        }
+      },
+      {
+        "landmark": "Full name",
+        "fixture": "checkout-example",
+        "canvasDelta": 2.5,
+        "best": {
+          "id": "halfLeadingStrut",
+          "value": 3.75,
+          "deltaAbs": 1.25
+        }
+      }
+    ],
+    "notes": [
+      "canvasΔ spread across 6 landmarks = 0.297 px (not proportional to typography alone).",
+      "Pearson r(canvasΔ, halfLeadingStrut)=-1.000; r(canvasΔ, halfLayoutStrut)=0.993.",
+      "Residual (canvasΔ − halfLeadingStrut) spread = 1.247 px.",
+      "Canvas drift is nearly constant across landmarks — typography metrics do not explain the spread.",
+      "Bucket means: nav-link canvasΔ=2.797 px (4 rows); block-label canvasΔ=2.500 px (2 rows)."
+    ]
+  },
+  "generatedAt": "2026-06-02T16:40:00.412Z",
+  "port": 8765,
+  "headless": false,
+  "commands": [
+    "npm run compile",
+    "node __localtests__/fo-drift-per-landmark.mjs"
+  ]
+}

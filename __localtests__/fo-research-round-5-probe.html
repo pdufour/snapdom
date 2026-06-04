@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO research round 5</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+
+    window.snapdom = snapdom
+    import { computeHalfLeadingLhFs } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureCanvasInkForElement,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import {
+      buildStaticMinimalNavFoSvg,
+      compareThreeWay,
+      findLandmark,
+      halfLeadingFromComputed,
+      rasterSvgToCanvasEx,
+      DRAW_IMAGE_INTERVAL_MS,
+    } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx: cmp.svgVsCanvasTopPx ?? null,
+        livePaintedTopInBorder: cmp.livePaintedTopInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svgPaintedTopInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvasPaintedTopInBorder ?? null,
+      }
+    }
+
+    function patchFoAttrs(svgText, patchFn) {
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const fo = doc.querySelector('foreignObject')
+      if (!fo) return svgText
+      patchFn(fo)
+      return new XMLSerializer().serializeToString(doc.documentElement)
+    }
+
+    async function rasterChromium(svgText, root, el, rasterOpts) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const { canvas } = await rasterSvgToCanvasEx(svgText, cssW * scale, cssH * scale, dpr, rasterOpts)
+      const fixtureDims = { cssW, cssH }
+      const threeWay = compareThreeWay(root, canvas, svgText, el, dpr, fixtureDims)
+      return { canvas, threeWay: threeWaySummary(threeWay), cssW, cssH }
+    }
+
+    async function captureBaselineSvg(root) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const el = findLandmarkElement(root, landmark)
+      const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+      return { svgText: row.svgText, el, recipe }
+    }
+
+    /** 1 — decode timing on same snapdom SVG (chromium-only raster path) */
+    async function probeDecodeTiming(root, el, svgText) {
+      const variants = [
+        {
+          id: 'upstream-triple-100ms',
+          opts: { postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS },
+        },
+        { id: 'single-paint', opts: { postDecodePaintCount: 1, postDecodeIntervalMs: 0 } },
+        {
+          id: 'pre-fonts-ready',
+          opts: { preDecodeTiming: 'fonts-before-decode', postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS },
+        },
+        {
+          id: 'pre-double-raf',
+          opts: { preDecodeTiming: 'double-raf-before-decode', postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS },
+        },
+        {
+          id: 'pre-interval-100ms',
+          opts: { preDecodeTiming: 'interval-before-decode', postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS },
+        },
+        {
+          id: 'post-fonts-ready',
+          opts: { postDecodeTiming: 'fonts-ready', postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS },
+        },
+        {
+          id: 'pre-fonts+raf',
+          opts: {
+            preDecodeTiming: 'fonts-before-decode',
+            postDecodeTiming: 'double-raf',
+            postDecodePaintCount: 3,
+            postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+          },
+        },
+        {
+          id: 'triple-paint-zero-interval',
+          opts: { postDecodePaintCount: 3, postDecodeIntervalMs: 0 },
+        },
+      ]
+      const rows = []
+      for (const v of variants) {
+        const row = await rasterChromium(svgText, root, el, v.opts)
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+        })
+      }
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict: spread != null && spread < 0.08 ? 'DECODE_TIMING_INVARIANT' : 'DECODE_TIMING_AFFECTS_CANVAS',
+        implication:
+          spread != null && spread < 0.08
+            ? 'fonts.ready / rAF / drawImageInterval timing does not explain ~2.8px plateau (beyond round-4 decode context).'
+            : 'Some decode timing variant moves canvas ink — investigate which pipeline differs.',
+      }
+    }
+
+    /** 2 — canvas2d context backend */
+    async function probeCanvasBackend(root, el, svgText) {
+      const baseOpts = { postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS }
+      const variants = [
+        { id: 'default-ctx', opts: { ...baseOpts, ctx2d: {} } },
+        { id: 'willReadFrequently', opts: { ...baseOpts, ctx2d: { willReadFrequently: true } } },
+        { id: 'desynchronized', opts: { ...baseOpts, ctx2d: { desynchronized: true } } },
+        {
+          id: 'willRead+desync',
+          opts: { ...baseOpts, ctx2d: { willReadFrequently: true, desynchronized: true } },
+        },
+        { id: 'colorSpace-srgb', opts: { ...baseOpts, ctx2d: { colorSpace: 'srgb' } } },
+      ]
+      const rows = []
+      for (const v of variants) {
+        try {
+          const row = await rasterChromium(svgText, root, el, v.opts)
+          rows.push({
+            variantId: v.id,
+            liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+            error: null,
+          })
+        } catch (err) {
+          rows.push({ variantId: v.id, liveVsCanvasTopPx: null, error: String(err?.message || err) })
+        }
+      }
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict: spread != null && spread < 0.08 ? 'CANVAS_BACKEND_INVARIANT' : 'CANVAS_BACKEND_AFFECTS_RASTER',
+      }
+    }
+
+    /** 3 — FO xmlns / requiredExtensions on hand-built chromium-only SVG */
+    async function probeFoNamespaceChromium(root, el) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const variants = [
+        { id: 'hand-built-default', patch: (s) => s },
+        {
+          id: 'requiredExtensions-xhtml',
+          patch: (s) =>
+            patchFoAttrs(s, (fo) => {
+              fo.setAttribute('requiredExtensions', 'http://www.w3.org/1999/xhtml')
+            }),
+        },
+        {
+          id: 'strip-xhtml-xmlns',
+          patch: (s) => s.replace(/\sxmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/gi, ''),
+        },
+        {
+          id: 'explicit-svg-xmlns-only',
+          patch: (s) => {
+            if (!/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/i.test(s)) {
+              return s.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"')
+            }
+            return s
+          },
+        },
+      ]
+      const rows = []
+      for (const v of variants) {
+        let svgText = buildStaticMinimalNavFoSvg(cssW, cssH)
+        svgText = v.patch(svgText)
+        const row = await rasterChromium(svgText, root, el, {
+          postDecodePaintCount: 3,
+          postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+        })
+        rows.push({
+          variantId: v.id,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+          svgBytes: svgText.length,
+        })
+      }
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict: spread != null && spread < 0.08 ? 'NAMESPACE_INVARIANT_CHROMIUM_ONLY' : 'NAMESPACE_AFFECTS_RASTER',
+        implication: 'Confirms round-4 on pure hand-built FO — no snapdom bytes in path.',
+      }
+    }
+
+    /** 4 — FO subpixel width/height */
+    async function probeFoSubpixel(root, el, svgText) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const intW = Math.round(cssW)
+      const intH = Math.round(cssH)
+      const variants = [
+        { id: 'integer-fo-100pct', mode: 'none' },
+        {
+          id: 'fractional-fo-dims',
+          mode: 'frac',
+          w: (cssW - 0.4).toFixed(2),
+          h: (cssH + 0.3).toFixed(2),
+        },
+        { id: 'floor-fo-dims', mode: 'floor', w: String(Math.floor(cssW)), h: String(Math.floor(cssH)) },
+        { id: 'ceil-fo-dims', mode: 'ceil', w: String(Math.ceil(cssW)), h: String(Math.ceil(cssH)) },
+      ]
+      const rows = []
+      const baseline = await rasterChromium(svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      for (const v of variants) {
+        let patched = svgText
+        if (v.mode === 'frac' || v.mode === 'floor' || v.mode === 'ceil') {
+          patched = patchFoAttrs(patched, (fo) => {
+            fo.setAttribute('width', v.w)
+            fo.setAttribute('height', v.h)
+            fo.removeAttribute('x')
+            fo.removeAttribute('y')
+          })
+        }
+        const row = await rasterChromium(patched, root, el, {
+          postDecodePaintCount: 3,
+          postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+        })
+        rows.push({
+          variantId: v.id,
+          foWidth: v.w ?? '100%',
+          foHeight: v.h ?? '100%',
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          deltaFromBaselinePx: roundPx(
+            (row.threeWay.liveVsCanvasTopPx ?? 0) - (baseline.threeWay.liveVsCanvasTopPx ?? 0),
+          ),
+        })
+      }
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        baselineCanvasDelta: baseline.threeWay.liveVsCanvasTopPx,
+        canvasDeltaSpreadPx: spread,
+        verdict:
+          spread != null && spread < 0.08
+            ? 'FO_SUBPIXEL_DIMS_INVARIANT'
+            : 'FO_SUBPIXEL_DIMS_AFFECT_RASTER',
+        implication:
+          'Round-4 integer floor/ceil ruled out; round-5 adds fractional FO width/height on snapdom SVG.',
+      }
+    }
+
+    /** 5 — Image.decode vs createImageBitmap (same SVG string) */
+    async function probeImgVsBitmap(root, el, svgText) {
+      const baseOpts = { postDecodePaintCount: 3, postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS }
+      const imgRow = await rasterChromium(svgText, root, el, { ...baseOpts, useCreateImageBitmap: false })
+      let bitmapRow = null
+      let bitmapError = null
+      try {
+        bitmapRow = await rasterChromium(svgText, root, el, {
+          ...baseOpts,
+          useCreateImageBitmap: true,
+          createImageBitmapOptions: { resizeQuality: 'high' },
+        })
+      } catch (err) {
+        bitmapError = String(err?.message || err)
+      }
+      const deltaPx =
+        bitmapRow != null
+          ? roundPx(
+              (bitmapRow.threeWay.liveVsCanvasTopPx ?? 0) - (imgRow.threeWay.liveVsCanvasTopPx ?? 0),
+            )
+          : null
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const handSvg = buildStaticMinimalNavFoSvg(cssW, cssH)
+      const handImg = await rasterChromium(handSvg, root, el, { ...baseOpts, useCreateImageBitmap: false })
+      let handBitmap = null
+      let handBitmapError = null
+      try {
+        handBitmap = await rasterChromium(handSvg, root, el, {
+          ...baseOpts,
+          useCreateImageBitmap: true,
+          createImageBitmapOptions: { resizeQuality: 'high' },
+        })
+      } catch (err) {
+        handBitmapError = String(err?.message || err)
+      }
+      const handDeltaPx =
+        handBitmap != null
+          ? roundPx(
+              (handBitmap.threeWay.liveVsCanvasTopPx ?? 0) -
+                (handImg.threeWay.liveVsCanvasTopPx ?? 0),
+            )
+          : null
+
+      return {
+        imageDecode: imgRow.threeWay,
+        createImageBitmap: bitmapRow?.threeWay ?? null,
+        bitmapError,
+        canvasDeltaBetweenPathsPx: deltaPx,
+        handBuilt: {
+          imageDecode: handImg.threeWay,
+          createImageBitmap: handBitmap?.threeWay ?? null,
+          bitmapError: handBitmapError,
+          canvasDeltaBetweenPathsPx: handDeltaPx,
+        },
+        verdict:
+          handDeltaPx != null && Math.abs(handDeltaPx) < 0.08
+            ? 'IMG_BITMAP_PATH_INVARIANT_HAND_BUILT'
+            : bitmapError
+              ? 'CREATEIMAGEBITMAP_DECODE_FAILED_ON_SNAPDOM_SVG'
+              : Math.abs(deltaPx ?? 0) < 0.08
+                ? 'IMG_BITMAP_PATH_INVARIANT'
+                : 'IMG_BITMAP_PATH_DIFFERS',
+        implication:
+          handDeltaPx != null && Math.abs(handDeltaPx) < 0.08
+            ? 'On minimal hand-built FO, Image vs createImageBitmap tie — strut gap is not CIB handoff.'
+            : bitmapError
+              ? 'createImageBitmap failed on full snapdom SVG — hand-built row is authoritative for CIB A/B.'
+              : 'Wave-12 tc-fix-w12-bitmap-* — check headed calibrate if CIB differs from img path.',
+      }
+    }
+
+    /** 6 — snapdom adds 0px at decode-only layer */
+    async function probeDecodeLayerZeroPx(root, el, svgText) {
+      const snapdomRow = await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const snapCmp = compareThreeWayInk(root, snapdomRow.canvas, snapdomRow.svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      })
+      const chromiumRow = await rasterChromium(snapdomRow.svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const handBuilt = buildStaticMinimalNavFoSvg(
+        root.offsetWidth,
+        root.offsetHeight,
+      )
+      const handRow = await rasterChromium(handBuilt, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const snapdomVsChromiumSameSvgPx = roundPx(
+        (chromiumRow.threeWay.liveVsCanvasTopPx ?? 0) - (snapCmp.liveVsCanvasTopPx ?? 0),
+      )
+      return {
+        snapdomLabToCanvas: threeWaySummary(snapCmp),
+        chromiumRasterSameSnapdomSvg: chromiumRow.threeWay,
+        handBuiltStaticChromium: handRow.threeWay,
+        snapdomVsChromiumDecodeDeltaPx: snapdomVsChromiumSameSvgPx,
+        handBuiltVsSnapdomCanvasDeltaPx: roundPx(
+          (handRow.threeWay.liveVsCanvasTopPx ?? 0) - (snapCmp.liveVsCanvasTopPx ?? 0),
+        ),
+        verdict:
+          Math.abs(snapdomVsChromiumSameSvgPx ?? 0) < 0.08
+            ? 'SNAPDOM_ZERO_PX_AT_DECODE_LAYER'
+            : 'SNAPDOM_DECODE_LAYER_ADDS_OFFSET',
+        implication:
+          'Same serialized SVG bytes: lab toCanvas vs chromium-only raster should match canvasΔ if snapdom adds no decode offset.',
+      }
+    }
+
+    /** 7 — wave-12 spot-check (recipes exist; matrix not committed) */
+    async function probeWave12Spot(root) {
+      const ids = [
+        'product-baseline',
+        'tc-fix-w7-rfork-fo-y-half-leading-meta',
+        'tc-fix-w12-rfork-viewbox-y-half-leading',
+        'tc-fix-w12-bitmap-w7-y',
+        'tc-fix-w12-rfork-leaf-translate-y-half-leading',
+      ]
+      const rows = []
+      for (const id of ids) {
+        const recipe = getFoFixRecipe(id)
+        if (!recipe) {
+          rows.push({ recipeId: id, error: 'recipe not found' })
+          continue
+        }
+        try {
+          const row = await runFoFixProbe(recipe, {
+            dpr,
+            scale,
+            landmark,
+            root,
+            labToCanvasOpts: { disableGbcrFracNudge: true, ...(recipe.labToCanvasOpts || {}) },
+          })
+          rows.push({
+            recipeId: id,
+            liveVsCanvasTopPx: row.liveVsCanvasTopPx,
+            liveVsSvgTopPx: row.liveVsSvgTopPx,
+            passesGate006: Math.abs(row.liveVsCanvasTopPx ?? 99) <= 0.06,
+          })
+        } catch (err) {
+          rows.push({ recipeId: id, error: String(err?.message || err) })
+        }
+      }
+      const best = rows
+        .filter((r) => Number.isFinite(r.liveVsCanvasTopPx))
+        .sort((a, b) => Math.abs(a.liveVsCanvasTopPx) - Math.abs(b.liveVsCanvasTopPx))[0]
+      return {
+        rows,
+        matrixCommitted: false,
+        note: 'Wave-12 recipes in recipes-tocanvas-fix-wave12.js — run full --ids tc-fix-w12-* calibrate separately.',
+        bestRow: best ?? null,
+        noRowPassesGate: !rows.some((r) => r.passesGate006),
+      }
+    }
+
+    function buildSynthesis(sections, baseline) {
+      const refuted = []
+      const newFindings = []
+      if (sections.decodeTiming?.verdict === 'DECODE_TIMING_INVARIANT') {
+        refuted.push('Upstream drawImageInterval / fonts.ready / double-rAF before decode')
+      }
+      if (sections.canvasBackend?.verdict === 'CANVAS_BACKEND_INVARIANT') {
+        refuted.push('willReadFrequently / desynchronized / colorSpace srgb canvas2d hints')
+      }
+      if (sections.foNamespace?.verdict === 'NAMESPACE_INVARIANT_CHROMIUM_ONLY') {
+        refuted.push('requiredExtensions / xmlns on hand-built FO (chromium-only confirm)')
+      }
+      if (sections.foSubpixel?.verdict === 'FO_SUBPIXEL_DIMS_INVARIANT') {
+        refuted.push('Fractional FO width/height vs integer (extends round-4 floor/ceil)')
+      }
+      if (
+        sections.imgVsBitmap?.verdict === 'IMG_BITMAP_PATH_INVARIANT' ||
+        sections.imgVsBitmap?.verdict === 'IMG_BITMAP_PATH_INVARIANT_HAND_BUILT'
+      ) {
+        refuted.push('createImageBitmap vs Image.decode handoff as strut root cause')
+        newFindings.push(
+          `Image vs createImageBitmap: ΔcanvasΔ=${sections.imgVsBitmap.canvasDeltaBetweenPathsPx ?? 0}px on same SVG`,
+        )
+      } else if (sections.imgVsBitmap?.verdict === 'CREATEIMAGEBITMAP_DECODE_FAILED_ON_SNAPDOM_SVG') {
+        newFindings.push(
+          'createImageBitmap throws on full snapdom SVG — use hand-built FO for CIB A/B (chromium-class probe)',
+        )
+      }
+      if (sections.decodeLayerZeroPx?.verdict === 'SNAPDOM_ZERO_PX_AT_DECODE_LAYER') {
+        newFindings.push(
+          `Snapdom decode-layer delta vs chromium-only same SVG: ${sections.decodeLayerZeroPx.snapdomVsChromiumDecodeDeltaPx ?? 0}px`,
+        )
+      }
+      if (sections.decodeTiming?.canvasDeltaSpreadPx != null) {
+        newFindings.push(`Decode timing spread: ${sections.decodeTiming.canvasDeltaSpreadPx}px`)
+      }
+      if (sections.wave12Spot?.bestRow) {
+        newFindings.push(
+          `Wave-12 spot best: ${sections.wave12Spot.bestRow.recipeId} |canvasΔ|=${Math.abs(sections.wave12Spot.bestRow.liveVsCanvasTopPx)}px (gate 0.06 not met)`,
+        )
+      }
+
+      return {
+        winningHypothesis:
+          'Chromium FO bitmap omits ~½(lh−fs) strut — round-5 rules decode timing, canvas backend, CIB path, FO subpixel attrs, xmlns',
+        rootCauseConfidence: 'HIGH',
+        confirmed: [
+          'BITMAP_ONLY on product-baseline',
+          `Half-leading residual ≈${baseline.residualCanvasMinusHalfLeadingPx}px`,
+        ],
+        refuted,
+        newFindings,
+        top3NewFindings: newFindings.slice(0, 3),
+        bestNextFixDirection:
+          'Promote structural FO paint-origin fix (w7 viewBox-y or inner linebox clip) — not decode/backing/timing; file Chromium bug; reconcile 0.203px w7 residual via metric or Range-aligned scan',
+        top3NextFixes: [
+          {
+            fix: 'tc-fix-w12-rfork-viewbox-y-half-leading — viewBox minY strut without FO height change',
+            expectedCanvasDelta: '2.797 → ≤0.5px headed calibrate',
+          },
+          {
+            fix: 'tc-fix-w12-rfork-leaf-translate-y-half-leading — decode CSS on text leaf not FO y',
+            expectedCanvasDelta: 'avoid stretch-box side effects of FO attr nudge',
+          },
+          {
+            fix: 'File CHROMIUM-FO-STRUT-BUG-DRAFT.md + attach round-5 decode-layer 0px proof',
+            expectedCanvasDelta: 'upstream Blink fix',
+          },
+        ],
+        chromiumBugDraft: '__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md',
+        filingStatus: 'Draft — no exact open dup (crbug 1218383 / 467484 related only)',
+      }
+    }
+
+    async function run() {
+      const status = document.getElementById('status')
+      const root = document.getElementById('capture-target')
+      await document.fonts.ready
+
+      const { svgText, el } = await captureBaselineSvg(root)
+      if (!el) throw new Error(`landmark ${landmark} not found`)
+
+      const halfLeadingLhFsPx = computeHalfLeadingLhFs(el)
+      const baselineProbe = await rasterChromium(svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const baseline = {
+        threeWay: baselineProbe.threeWay,
+        halfLeadingLhFsPx,
+        residualCanvasMinusHalfLeadingPx: roundPx(
+          (baselineProbe.threeWay.liveVsCanvasTopPx ?? 0) - halfLeadingLhFsPx,
+        ),
+        svgBytes: svgText.length,
+      }
+
+      status.textContent = 'Running round-5 probes…'
+      const sections = {}
+      const runAll = section === 'all'
+      if (runAll || section === 'decodeTiming') {
+        sections.decodeTiming = await probeDecodeTiming(root, el, svgText)
+      }
+      if (runAll || section === 'canvasBackend') {
+        sections.canvasBackend = await probeCanvasBackend(root, el, svgText)
+      }
+      if (runAll || section === 'foNamespace') {
+        sections.foNamespace = await probeFoNamespaceChromium(root, el)
+      }
+      if (runAll || section === 'foSubpixel') {
+        sections.foSubpixel = await probeFoSubpixel(root, el, svgText)
+      }
+      if (runAll || section === 'imgVsBitmap') {
+        sections.imgVsBitmap = await probeImgVsBitmap(root, el, svgText)
+      }
+      if (runAll || section === 'decodeLayer') {
+        sections.decodeLayerZeroPx = await probeDecodeLayerZeroPx(root, el, svgText)
+      }
+      if (runAll || section === 'wave12') {
+        sections.wave12Spot = await probeWave12Spot(root)
+      }
+
+      const synthesis = buildSynthesis(sections, baseline)
+      status.textContent = 'Done.'
+      return {
+        probe: 'fo-research-round-5',
+        generatedAt: new Date().toISOString(),
+        dpr,
+        scale,
+        landmark,
+        section,
+        baseline,
+        sections,
+        synthesis,
+      }
+    }
+
+    window.__foResearchRound5 = { ready: false, bootError: null, result: null }
+    run()
+      .then((result) => {
+        window.__foResearchRound5.result = result
+        window.__foResearchRound5.ready = true
+      })
+      .catch((err) => {
+        window.__foResearchRound5.bootError = String(err?.message || err)
+        window.__foResearchRound5.ready = true
+        document.getElementById('status').textContent = `Error: ${window.__foResearchRound5.bootError}`
+      })
+  </script>
+</body>
+</html>

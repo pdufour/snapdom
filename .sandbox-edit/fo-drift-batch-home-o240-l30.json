@@ -1,0 +1,303 @@
+{
+  "landmark": "Home",
+  "dpr": 1,
+  "offset": 240,
+  "limit": 30,
+  "includeInactive": true,
+  "matrixIds": [
+    "product-baseline",
+    "tc-fix-*",
+    "tc-blh-*",
+    "tc-decode-*",
+    "tc-raster-*",
+    "fix321-*",
+    "tc-fork-*"
+  ],
+  "recipeIds": [
+    "tc-blh-w1-raster-backing-ceil",
+    "tc-blh-w1-raster-decode-settle",
+    "tc-blh-w1-raster-no-gbcr",
+    "tc-blh-w1-combo-pin-lh-backing-ceil",
+    "tc-blh-w1-combo-rfork-pin-lh-backing-ceil",
+    "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+    "tc-blh-w1-combo-capture-rfork-decode-settle",
+    "tc-blh-w1-combo-full-lh-raster",
+    "tc-blh-w2-rfork-lh-meta-leaf",
+    "tc-blh-w2-rfork-inline-block-linebox",
+    "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+    "tc-blh-w2-rfork-strut-translate-y-meta"
+  ],
+  "baselineAbsCanvasVsLive": null,
+  "bestRecipeId": "tc-blh-w2-rfork-strut-translate-y-meta",
+  "bestAbsCanvasVsLive": 1,
+  "beatsBaseline": false,
+  "rows": [
+    {
+      "id": "tc-blh-w1-raster-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-raster-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-raster-no-gbcr",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-combo-pin-lh-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-combo-rfork-pin-lh-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-combo-capture-rfork-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w1-combo-full-lh-raster",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w2-rfork-lh-meta-leaf",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-blh-w2-rfork-strut-translate-y-meta",
+      "canvasVsLive": -1,
+      "svgVsLive": -2,
+      "svgVsCanvas": 2
+    },
+    {
+      "id": "tc-blh-w2-rfork-inline-block-linebox",
+      "canvasVsLive": -12.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": -11
+    }
+  ],
+  "ranked": [
+    {
+      "id": "tc-blh-w1-raster-backing-ceil",
+      "recipeId": "tc-blh-w1-raster-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-raster-decode-settle",
+      "recipeId": "tc-blh-w1-raster-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-raster-no-gbcr",
+      "recipeId": "tc-blh-w1-raster-no-gbcr",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-combo-pin-lh-backing-ceil",
+      "recipeId": "tc-blh-w1-combo-pin-lh-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-combo-rfork-pin-lh-backing-ceil",
+      "recipeId": "tc-blh-w1-combo-rfork-pin-lh-backing-ceil",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+      "recipeId": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-combo-capture-rfork-decode-settle",
+      "recipeId": "tc-blh-w1-combo-capture-rfork-decode-settle",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w1-combo-full-lh-raster",
+      "recipeId": "tc-blh-w1-combo-full-lh-raster",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w2-rfork-lh-meta-leaf",
+      "recipeId": "tc-blh-w2-rfork-lh-meta-leaf",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+      "recipeId": "tc-blh-w2-rfork-chromium-copy-lh-baseline",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w2-rfork-strut-translate-y-meta",
+      "recipeId": "tc-blh-w2-rfork-strut-translate-y-meta",
+      "canvasVsLive": -1,
+      "svgVsLive": -2,
+      "svgVsCanvas": 2,
+      "svgVsCanvasPx": 2,
+      "absSvgCanvas": 2,
+      "absCanvasVsLive": 1,
+      "previewCanvasVsLive": -1,
+      "previewSvgVsLive": -2,
+      "svgHigherPx": 2,
+      "canvasHigherPx": 1,
+      "bitmapCanvasVsLive": 0.8125,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-blh-w2-rfork-inline-block-linebox",
+      "recipeId": "tc-blh-w2-rfork-inline-block-linebox",
+      "canvasVsLive": -12.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": -11,
+      "svgVsCanvasPx": -11,
+      "absSvgCanvas": 11,
+      "absCanvasVsLive": 12.1875,
+      "previewCanvasVsLive": -12.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 12.1875,
+      "bitmapCanvasVsLive": -12.1875,
+      "bitmapSvgVsLive": -1.1875
+    }
+  ],
+  "errors": []
+}

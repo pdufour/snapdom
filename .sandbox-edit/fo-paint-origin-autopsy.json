@@ -1,0 +1,513 @@
+{
+  "generatedAt": "2026-06-03T00:24:48.389Z",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "fixtures": [
+    {
+      "fixtureId": "mini-nav",
+      "layout": "flex stretch 48px mini nav",
+      "landmark": "Home",
+      "dpr": 1,
+      "scale": 1,
+      "recipes": [
+        {
+          "recipeId": "product-baseline",
+          "threeWay": {
+            "liveTopInBorder": 14.203125,
+            "svgTopInBorder": 14.1953125,
+            "canvasTopInBorderInteger": 17,
+            "canvasTopInBorderFractionalThreshold": 16.112,
+            "canvasTopInBorderFractionalCom": 18.75,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPxInteger": 2.796875,
+            "liveVsCanvasTopPxFractionalThreshold": 1.9088749999999983,
+            "liveVsCanvasTopPxFractionalCom": 4.546875,
+            "svgVsCanvasTopPx": 2.8046875
+          },
+          "strutFacts": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingFs": 2.8000000000000007,
+            "halfLeadingFontBox": 1.8000000000000007,
+            "halfLeadingUsed": 15,
+            "rangeTopInBorder": 14.203125,
+            "capTopInBorder": 5.526562500000001,
+            "lineBoxTopInBorder": 13.2,
+            "rangeLineHeightPx": 19,
+            "halfLeadingFromRangeLineFs": 1.5,
+            "halfLeadingFromRangeLineFontBox": 0.5,
+            "rangeMinusLineBoxTop": 1.0031250000000007,
+            "rangeMinusCapTop": 8.6765625,
+            "rangeSubpixelPx": 0.203125,
+            "halfLeadingFsMinusRangeSubpixel": 2.5968750000000007
+          },
+          "meta": {
+            "lhStrutHalfLeadingPx": 2.8000000000000007,
+            "lhStrutRangeSubpixelPx": 0.203125,
+            "lhStrutFoYAdjustPx": 2.5968750000000007
+          },
+          "foBaseline": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "50",
+              "style": "overflow: visible;"
+            }
+          },
+          "foPatched": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "50",
+              "style": "overflow: visible;"
+            }
+          },
+          "foYDelta": 0,
+          "inkBand": {
+            "box": {
+              "top": 1,
+              "left": 1,
+              "width": 68.859375,
+              "height": 48
+            },
+            "leftCss": 1,
+            "topCss": 1,
+            "x": 5,
+            "y": 1,
+            "w": 28,
+            "h": 48,
+            "dpr": 1
+          },
+          "scanModes": {
+            "integerDeviceRow": 17,
+            "fractionalThresholdDeviceRow": 16.112,
+            "fractionalComDeviceRow": 18.75,
+            "bandOriginDeviceY": 1
+          },
+          "inkRowProfile": {
+            "profile": "gradual-ramp",
+            "firstInkRow": 17,
+            "firstInkRowCss": 18
+          },
+          "svgInlineTopInBorder": 14.1953125,
+          "serializedLhAudit": {
+            "landmarkText": "Home",
+            "liveLineHeightPx": 21.6,
+            "liveFontSizePx": 16,
+            "liveHalfLeadingLhFsPx": 2.8000000000000007,
+            "serializedLineHeightPx": 21.6,
+            "serializedMatchesLivePx": true,
+            "landmarkLeaf": {
+              "text": "Home",
+              "tag": "a",
+              "inlineLineHeight": null,
+              "inlineFontSize": null,
+              "matchesLandmark": true
+            },
+            "serializedLhSource": "class.c1",
+            "leafCount": 3,
+            "injectedLineHeightRules": [
+              "normal",
+              "21.6px"
+            ],
+            "svgHash": "2aa27c35"
+          },
+          "canvasBacking": {
+            "width": 500,
+            "height": 50,
+            "dpr": 1
+          }
+        },
+        {
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "threeWay": {
+            "liveTopInBorder": 14.203125,
+            "svgTopInBorder": 14.1953125,
+            "canvasTopInBorderInteger": 14,
+            "canvasTopInBorderFractionalThreshold": 13.112,
+            "canvasTopInBorderFractionalCom": 15.75,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPxInteger": -0.203125,
+            "liveVsCanvasTopPxFractionalThreshold": -1.091125,
+            "liveVsCanvasTopPxFractionalCom": 1.546875,
+            "svgVsCanvasTopPx": -0.1953125
+          },
+          "strutFacts": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingFs": 2.8000000000000007,
+            "halfLeadingFontBox": 1.8000000000000007,
+            "halfLeadingUsed": 15,
+            "rangeTopInBorder": 14.203125,
+            "capTopInBorder": 5.526562500000001,
+            "lineBoxTopInBorder": 13.2,
+            "rangeLineHeightPx": 19,
+            "halfLeadingFromRangeLineFs": 1.5,
+            "halfLeadingFromRangeLineFontBox": 0.5,
+            "rangeMinusLineBoxTop": 1.0031250000000007,
+            "rangeMinusCapTop": 8.6765625,
+            "rangeSubpixelPx": 0.203125,
+            "halfLeadingFsMinusRangeSubpixel": 2.5968750000000007
+          },
+          "meta": {
+            "lhStrutHalfLeadingPx": 2.8000000000000007,
+            "lhStrutRangeSubpixelPx": 0.203125,
+            "lhStrutFoYAdjustPx": 2.5968750000000007
+          },
+          "foBaseline": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "50",
+              "style": "overflow: visible;"
+            }
+          },
+          "foPatched": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "-2.8000000000000007",
+              "width": "500",
+              "height": "50",
+              "style": "overflow: visible;"
+            }
+          },
+          "foYDelta": -2.8,
+          "inkBand": {
+            "box": {
+              "top": 1,
+              "left": 1,
+              "width": 68.859375,
+              "height": 48
+            },
+            "leftCss": 1,
+            "topCss": 1,
+            "x": 5,
+            "y": 1,
+            "w": 28,
+            "h": 48,
+            "dpr": 1
+          },
+          "scanModes": {
+            "integerDeviceRow": 14,
+            "fractionalThresholdDeviceRow": 13.112,
+            "fractionalComDeviceRow": 15.75,
+            "bandOriginDeviceY": 1
+          },
+          "inkRowProfile": {
+            "profile": "gradual-ramp",
+            "firstInkRow": 14,
+            "firstInkRowCss": 15
+          },
+          "svgInlineTopInBorder": 14.1953125,
+          "serializedLhAudit": {
+            "landmarkText": "Home",
+            "liveLineHeightPx": 21.6,
+            "liveFontSizePx": 16,
+            "liveHalfLeadingLhFsPx": 2.8000000000000007,
+            "serializedLineHeightPx": 21.6,
+            "serializedMatchesLivePx": true,
+            "landmarkLeaf": {
+              "text": "Home",
+              "tag": "a",
+              "inlineLineHeight": null,
+              "inlineFontSize": null,
+              "matchesLandmark": true
+            },
+            "serializedLhSource": "class.c1",
+            "leafCount": 3,
+            "injectedLineHeightRules": [
+              "normal",
+              "21.6px"
+            ],
+            "svgHash": "29d12a12"
+          },
+          "canvasBacking": {
+            "width": 500,
+            "height": 50,
+            "dpr": 1
+          }
+        }
+      ]
+    },
+    {
+      "fixtureId": "typography-no-flex",
+      "layout": "inline-block span; no flex; 21.6px typographic line box",
+      "landmark": "Home",
+      "dpr": 1,
+      "scale": 1,
+      "recipes": [
+        {
+          "recipeId": "product-baseline",
+          "threeWay": {
+            "liveTopInBorder": 13,
+            "svgTopInBorder": 13,
+            "canvasTopInBorderInteger": 16,
+            "canvasTopInBorderFractionalThreshold": 15.112000000000002,
+            "canvasTopInBorderFractionalCom": 17.75,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPxInteger": 3,
+            "liveVsCanvasTopPxFractionalThreshold": 2.112000000000002,
+            "liveVsCanvasTopPxFractionalCom": 4.75,
+            "svgVsCanvasTopPx": 3
+          },
+          "strutFacts": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingFs": 2.8000000000000007,
+            "halfLeadingFontBox": 1.8000000000000007,
+            "halfLeadingUsed": 1.8000000000000007,
+            "rangeTopInBorder": 13,
+            "capTopInBorder": 17.5265625,
+            "lineBoxTopInBorder": 12,
+            "rangeLineHeightPx": 19,
+            "halfLeadingFromRangeLineFs": 1.5,
+            "halfLeadingFromRangeLineFontBox": 0.5,
+            "rangeMinusLineBoxTop": 1,
+            "rangeMinusCapTop": -4.526562500000001,
+            "rangeSubpixelPx": 0,
+            "halfLeadingFsMinusRangeSubpixel": 2.8000000000000007
+          },
+          "meta": {
+            "lhStrutHalfLeadingPx": 2.8000000000000007,
+            "lhStrutRangeSubpixelPx": 0,
+            "lhStrutFoYAdjustPx": 2.8000000000000007
+          },
+          "foBaseline": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "48",
+              "style": "overflow: visible;"
+            }
+          },
+          "foPatched": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "48",
+              "style": "overflow: visible;"
+            }
+          },
+          "foYDelta": 0,
+          "inkBand": {
+            "box": {
+              "top": 1,
+              "left": 1,
+              "width": 68.859375,
+              "height": 45.59375
+            },
+            "leftCss": 1,
+            "topCss": 1,
+            "x": 5,
+            "y": 1,
+            "w": 28,
+            "h": 46,
+            "dpr": 1
+          },
+          "scanModes": {
+            "integerDeviceRow": 16,
+            "fractionalThresholdDeviceRow": 15.112,
+            "fractionalComDeviceRow": 17.75,
+            "bandOriginDeviceY": 1
+          },
+          "inkRowProfile": {
+            "profile": "gradual-ramp",
+            "firstInkRow": 16,
+            "firstInkRowCss": 17
+          },
+          "svgInlineTopInBorder": 13,
+          "serializedLhAudit": {
+            "landmarkText": "Home",
+            "liveLineHeightPx": 21.6,
+            "liveFontSizePx": 16,
+            "liveHalfLeadingLhFsPx": 2.8000000000000007,
+            "serializedLineHeightPx": null,
+            "serializedMatchesLivePx": null,
+            "landmarkLeaf": {
+              "text": "Home",
+              "tag": "span",
+              "inlineLineHeight": null,
+              "inlineFontSize": null,
+              "matchesLandmark": true
+            },
+            "serializedLhSource": null,
+            "leafCount": 2,
+            "injectedLineHeightRules": [
+              "normal",
+              "21.6px"
+            ],
+            "svgHash": "61696686"
+          },
+          "canvasBacking": {
+            "width": 500,
+            "height": 48,
+            "dpr": 1
+          }
+        },
+        {
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "threeWay": {
+            "liveTopInBorder": 13,
+            "svgTopInBorder": 13,
+            "canvasTopInBorderInteger": 13,
+            "canvasTopInBorderFractionalThreshold": 12.112,
+            "canvasTopInBorderFractionalCom": 14.75,
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPxInteger": 0,
+            "liveVsCanvasTopPxFractionalThreshold": -0.8879999999999999,
+            "liveVsCanvasTopPxFractionalCom": 1.75,
+            "svgVsCanvasTopPx": 0
+          },
+          "strutFacts": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingFs": 2.8000000000000007,
+            "halfLeadingFontBox": 1.8000000000000007,
+            "halfLeadingUsed": 1.8000000000000007,
+            "rangeTopInBorder": 13,
+            "capTopInBorder": 17.5265625,
+            "lineBoxTopInBorder": 12,
+            "rangeLineHeightPx": 19,
+            "halfLeadingFromRangeLineFs": 1.5,
+            "halfLeadingFromRangeLineFontBox": 0.5,
+            "rangeMinusLineBoxTop": 1,
+            "rangeMinusCapTop": -4.526562500000001,
+            "rangeSubpixelPx": 0,
+            "halfLeadingFsMinusRangeSubpixel": 2.8000000000000007
+          },
+          "meta": {
+            "lhStrutHalfLeadingPx": 2.8000000000000007,
+            "lhStrutRangeSubpixelPx": 0,
+            "lhStrutFoYAdjustPx": 2.8000000000000007
+          },
+          "foBaseline": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "0",
+              "width": "500",
+              "height": "48",
+              "style": "overflow: visible;"
+            }
+          },
+          "foPatched": {
+            "foreignObject": {
+              "xmlns": "http://www.w3.org/2000/svg",
+              "x": "0",
+              "y": "-2.8000000000000007",
+              "width": "500",
+              "height": "48",
+              "style": "overflow: visible;"
+            }
+          },
+          "foYDelta": -2.8,
+          "inkBand": {
+            "box": {
+              "top": 1,
+              "left": 1,
+              "width": 68.859375,
+              "height": 45.59375
+            },
+            "leftCss": 1,
+            "topCss": 1,
+            "x": 5,
+            "y": 1,
+            "w": 28,
+            "h": 46,
+            "dpr": 1
+          },
+          "scanModes": {
+            "integerDeviceRow": 13,
+            "fractionalThresholdDeviceRow": 12.112,
+            "fractionalComDeviceRow": 14.75,
+            "bandOriginDeviceY": 1
+          },
+          "inkRowProfile": {
+            "profile": "gradual-ramp",
+            "firstInkRow": 13,
+            "firstInkRowCss": 14
+          },
+          "svgInlineTopInBorder": 13,
+          "serializedLhAudit": {
+            "landmarkText": "Home",
+            "liveLineHeightPx": 21.6,
+            "liveFontSizePx": 16,
+            "liveHalfLeadingLhFsPx": 2.8000000000000007,
+            "serializedLineHeightPx": null,
+            "serializedMatchesLivePx": null,
+            "landmarkLeaf": {
+              "text": "Home",
+              "tag": "span",
+              "inlineLineHeight": null,
+              "inlineFontSize": null,
+              "matchesLandmark": true
+            },
+            "serializedLhSource": null,
+            "leafCount": 2,
+            "injectedLineHeightRules": [
+              "normal",
+              "21.6px"
+            ],
+            "svgHash": "4635755f"
+          },
+          "canvasBacking": {
+            "width": 500,
+            "height": 48,
+            "dpr": 1
+          }
+        }
+      ]
+    }
+  ],
+  "cdp": {
+    "miniNavHome": {
+      "selector": "#capture-target-mini nav.mini-nav a",
+      "contentTop": 141.7890625,
+      "borderTop": 141.7890625,
+      "lineHeight": "21.6px",
+      "fontSize": "16px",
+      "height": "48px"
+    },
+    "typographyNoFlex": {
+      "selector": "#capture-target-noflex #text-leaf",
+      "contentTop": 153.7890625,
+      "borderTop": 141.7890625,
+      "lineHeight": "21.6px",
+      "fontSize": "16px",
+      "height": "45.5938px"
+    }
+  },
+  "evaluation": {
+    "verdict": "METRIC_ARTIFACT",
+    "gateEps": 0.06,
+    "interpretation": [
+      "mini-nav: baseline integer canvasΔ=2.797 → w7 integer=-0.203 (Range subpx=0.203).",
+      "  |w7 integer Δ|≈Range subpixel (0.203 ≈ 0.203) — residual tracks integer ink row vs Range fractional top.",
+      "  Baseline canvasΔ≈halfLeading (2.797 ≈ 2.8) — strut enters at FO bitmap paint origin.",
+      "  w7 FO y shift=-2.8px (meta halfLeading=2.8).",
+      "  first-ink device row: baseline=17 w7=14 (Δ=3px) · live=14.203 canvas=14.",
+      "  ink row profile: gradual-ramp (fractional-threshold scan unreliable on AA ramp).",
+      "typography-no-flex: baseline integer canvasΔ=3 → w7 integer=0 (Range subpx=0).",
+      "  w7 passes integer gate on no-flex fixture (canvasΔ=0).",
+      "  w7 FO y shift=-2.8px (meta halfLeading=2.8).",
+      "  first-ink device row: baseline=16 w7=13 (Δ=3px) · live=13 canvas=13.",
+      "  ink row profile: gradual-ramp (fractional-threshold scan unreliable on AA ramp).",
+      "Structural w7 fix aligns FO bitmap to correct ink row; flex-stretch residual is Range subpixel vs integer scan, not missing strut formula."
+    ],
+    "subpixelCorrelatedResidual": true,
+    "noFlexIntegerPass": true,
+    "fractionalHelps": false
+  }
+}

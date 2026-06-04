@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO bitmap row profile probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    window.snapdom = snapdom
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { scanCanvasInkRowProfile } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureCanvasInkBandRegion,
+      measureLivePaintedInk,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    async function runVariant(recipeId, root) {
+      const recipe = getFoFixRecipe(recipeId)
+      const row = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const el = findLandmarkElement(root, landmark)
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+      const live = measureLivePaintedInk(el, root)
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const rr = range.getBoundingClientRect()
+      const rootBox = root.getBoundingClientRect()
+      const rangeTopInBorder = rr.top - rootBox.top
+      const region = measureCanvasInkBandRegion(row.canvas, root, el, dpr)
+      const rowProfile = region
+        ? scanCanvasInkRowProfile(row.canvas, region)
+        : null
+
+      const firstInkCss = rowProfile?.firstInkRowCss ?? null
+      const rangeVsFirstInkPx =
+        firstInkCss != null && rangeTopInBorder != null
+          ? roundPx(firstInkCss - rangeTopInBorder)
+          : null
+
+      return {
+        recipeId,
+        threeWay: {
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+          livePaintedTopInBorder: cmp.live?.topInBorder,
+          canvasPaintedTopInBorder: cmp.canvas?.topInBorder,
+        },
+        rangeTopInBorder: roundPx(rangeTopInBorder),
+        rowProfile: rowProfile
+          ? {
+              profile: rowProfile.profile,
+              firstInkRow: rowProfile.firstInkRow,
+              firstInkRowCss: roundPx(rowProfile.firstInkRowCss),
+              rows: rowProfile.rows?.slice(0, 12),
+            }
+          : null,
+        rangeVsFirstInkRowPx: rangeVsFirstInkPx,
+        canvasDeltaVsRangeFirstInkPx: rangeVsFirstInkPx,
+      }
+    }
+
+    window.__foBitmapRowProfileProbe = { ready: false, bootError: null, result: null }
+
+    async function run() {
+      await document.fonts.ready
+      const root = document.getElementById('capture-target')
+      const baseline = await runVariant('product-baseline', root)
+      const w7 = await runVariant('tc-fix-w7-rfork-fo-y-half-leading-meta', root)
+      const deltaFirstInk =
+        baseline.rowProfile?.firstInkRowCss != null && w7.rowProfile?.firstInkRowCss != null
+          ? roundPx(w7.rowProfile.firstInkRowCss - baseline.rowProfile.firstInkRowCss)
+          : null
+
+      return {
+        probe: 'fo-bitmap-row-profile-probe',
+        dpr,
+        scale,
+        landmark,
+        variants: { baseline, w7 },
+        synthesis: {
+          baselineCanvasDelta: baseline.threeWay.liveVsCanvasTopPx,
+          w7CanvasDelta: w7.threeWay.liveVsCanvasTopPx,
+          w7MinusBaselineFirstInkCssPx: deltaFirstInk,
+          baselineProfile: baseline.rowProfile?.profile,
+          w7Profile: w7.rowProfile?.profile,
+          rangeAlignsWithFirstInk:
+            baseline.rangeVsFirstInkRowPx != null &&
+            Math.abs(baseline.rangeVsFirstInkRowPx - (baseline.threeWay.liveVsCanvasTopPx ?? 0)) <
+              0.15,
+        },
+      }
+    }
+
+    run()
+      .then((result) => {
+        window.__foBitmapRowProfileProbe.result = result
+        window.__foBitmapRowProfileProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foBitmapRowProfileProbe.bootError = String(err?.message || err)
+        window.__foBitmapRowProfileProbe.ready = true
+      })
+  </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{
+  "generatedAt": "2026-06-03T07:15:27.596Z",
+  "headed": true,
+  "port": 8799,
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "flagsLandedInSrc": true,
+  "variants": [
+    {
+      "id": "product-baseline",
+      "flags": {
+        "experimentalRasterNaturalDims": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterBackingCeil": false
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 17.003125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "liveVsCanvasTopPx": -1.0031250000000007,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "experimentalRasterNaturalDims",
+      "flags": {
+        "experimentalRasterNaturalDims": true,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterBackingCeil": false
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 17.003125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "liveVsCanvasTopPx": -1.0031250000000007,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "experimentalRasterDisableGbcrNudge",
+      "flags": {
+        "experimentalRasterNaturalDims": false,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterBackingCeil": false
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 17.003125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "liveVsCanvasTopPx": -0.0031250000000007105,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "experimentalRasterBackingCeil",
+      "flags": {
+        "experimentalRasterNaturalDims": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterBackingCeil": true
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 17.003125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -2.8078125000000007,
+        "liveVsCanvasTopPx": -1.0031250000000007,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    }
+  ],
+  "baselineCanvasDeltaPx": -1.0031250000000007,
+  "comparisons": [
+    {
+      "id": "product-baseline",
+      "canvasDeltaPx": -1.0031250000000007,
+      "svgDeltaPx": -2.8078125000000007,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "experimentalRasterNaturalDims",
+      "canvasDeltaPx": -1.0031250000000007,
+      "svgDeltaPx": -2.8078125000000007,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "experimentalRasterDisableGbcrNudge",
+      "canvasDeltaPx": -0.0031250000000007105,
+      "svgDeltaPx": -2.8078125000000007,
+      "svgVsCanvasPx": 2.8046875,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "experimentalRasterBackingCeil",
+      "canvasDeltaPx": -1.0031250000000007,
+      "svgDeltaPx": -2.8078125000000007,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselinePx": 0
+    }
+  ],
+  "evaluation": {
+    "verdict": "FLAG_IMPROVES_CANVAS_DELTA",
+    "lines": [
+      "Product baseline canvasΔ=-1.003px (|Δ|=1.003px).",
+      "experimentalRasterNaturalDims: no meaningful canvasΔ change vs baseline (0px).",
+      "experimentalRasterDisableGbcrNudge: canvasΔ=-0.003px (Δ from baseline +1px).",
+      "experimentalRasterBackingCeil: no meaningful canvasΔ change vs baseline (0px)."
+    ],
+    "anyImprovement": true
+  }
+}

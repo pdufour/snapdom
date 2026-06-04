@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium-only — minimal nav FO (no raster)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px 14px 24px; font: 14px/1.4 system-ui, sans-serif; background: #f8fafc; color: #111; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 78ch; }
+    #fixture {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #fixture .row { display: flex; align-items: stretch; min-height: 48px; }
+    #fixture .row a {
+      display: flex; align-items: center; padding: 0 12px;
+      text-decoration: none; color: #111;
+    }
+    .row-panels { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-top: 12px; }
+    .panel { background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; }
+    .panel h2 { font-size: 13px; margin: 0 0 8px; color: #475569; }
+    #metrics { font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 12px; color: #334155; }
+    pre#report { margin-top: 12px; padding: 10px; background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 6px; font: 11px/1.4 ui-monospace, Menlo, monospace; overflow: auto; max-height: 50vh; }
+  </style>
+</head>
+<body>
+  <h1>Chromium-only: minimal nav FO (inline SVG)</h1>
+  <p class="hint">
+    Hand-built <code>foreignObject</code> + flex stretch + <code>font:600 16px/1.35</code>.
+    No snapdom, no modern-screenshot, no capture pipeline. Live DOM vs inline FO SVG ink only
+    (Range). Raster: <a href="minimal-nav-fo-raster.html">minimal-nav-fo-raster.html</a>.
+  </p>
+  <div id="fixture">
+    <div class="row" aria-label="Minimal flex row">
+      <a href="#">Home</a>
+    </div>
+  </div>
+  <div class="row-panels">
+    <div class="panel">
+      <h2>Live DOM</h2>
+      <p id="live-ink">—</p>
+    </div>
+    <div class="panel">
+      <h2>Inline FO SVG</h2>
+      <div id="svg-host"></div>
+      <p id="svg-ink">—</p>
+    </div>
+  </div>
+  <p id="metrics">Booting…</p>
+  <pre id="report" hidden></pre>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      findLandmark,
+      measureLivePaintedInk,
+      measureSvgInkForElement,
+    } from './chromium-fo-only-shared.js'
+
+    const root = document.getElementById('fixture')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    async function run() {
+      await document.fonts.ready
+      const el = findLandmark(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const fixtureDims = { cssW, cssH }
+      const svgText = buildStaticMinimalNavFoSvg(cssW, cssH)
+
+      document.getElementById('svg-host').innerHTML = svgText
+
+      const live = measureLivePaintedInk(el, root)
+      const svg = measureSvgInkForElement(svgText, landmark, fixtureDims)
+      const liveVsSvgTopPx =
+        live && svg ? svg.topInBorder - live.topInBorder : null
+
+      document.getElementById('live-ink').textContent =
+        `topInBorder: ${fmt(live?.topInBorder)} px`
+      document.getElementById('svg-ink').textContent =
+        `topInBorder: ${fmt(svg?.topInBorder)} px · svgΔ: ${fmt(liveVsSvgTopPx)} px`
+
+      const payload = {
+        pageId: 'minimal-nav-fo',
+        dpr,
+        landmark,
+        fixtureDims,
+        threeWay: {
+          livePaintedTopInBorder: live?.topInBorder ?? null,
+          svgPaintedTopInBorder: svg?.topInBorder ?? null,
+          liveVsSvgTopPx,
+        },
+        note: 'No canvas raster on this page — use minimal-nav-fo-raster or probe runner.',
+      }
+
+      document.getElementById('metrics').textContent =
+        `svgΔ (live vs inline FO): ${fmt(liveVsSvgTopPx)} px · dpr=${dpr}`
+      const report = document.getElementById('report')
+      report.hidden = false
+      report.textContent = JSON.stringify(payload, null, 2)
+      return payload
+    }
+
+    window.__chromiumFoOnlyProbe = {
+      ready: false,
+      pageId: 'minimal-nav-fo',
+      async run() {
+        return run()
+      },
+    }
+
+    run()
+      .then(() => { window.__chromiumFoOnlyProbe.ready = true })
+      .catch((err) => {
+        document.getElementById('metrics').textContent = `Error: ${err.message}`
+        window.__chromiumFoOnlyProbe.bootError = String(err)
+        window.__chromiumFoOnlyProbe.ready = true
+      })
+  </script>
+</body>
+</html>

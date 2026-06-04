@@ -1,0 +1,167 @@
+{
+  "generatedAt": "2026-06-02T16:22:59.670Z",
+  "headed": true,
+  "port": 8791,
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "variants": [
+    {
+      "id": "product-baseline",
+      "experimentalRasterSvgPatch": "none",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "fo-lh-pin",
+      "experimentalRasterSvgPatch": "fo-lh-pin",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "flex-center",
+      "experimentalRasterSvgPatch": "flex-center",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 0,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": -14.203125,
+        "svgVsCanvasTopPx": -14.1953125
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "viewbox-floor",
+      "experimentalRasterSvgPatch": "viewbox-floor",
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    }
+  ],
+  "baselineCanvasDeltaPx": 1.796875,
+  "baselineSvgDeltaPx": -0.0078125,
+  "comparisons": [
+    {
+      "id": "product-baseline",
+      "experimentalRasterSvgPatch": "none",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselineCanvasPx": 0,
+      "deltaFromBaselineSvgPx": 0
+    },
+    {
+      "id": "fo-lh-pin",
+      "experimentalRasterSvgPatch": "fo-lh-pin",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselineCanvasPx": 0,
+      "deltaFromBaselineSvgPx": 0
+    },
+    {
+      "id": "flex-center",
+      "experimentalRasterSvgPatch": "flex-center",
+      "canvasDeltaPx": -14.203125,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": -14.1953125,
+      "deltaFromBaselineCanvasPx": -16,
+      "deltaFromBaselineSvgPx": 0
+    },
+    {
+      "id": "viewbox-floor",
+      "experimentalRasterSvgPatch": "viewbox-floor",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselineCanvasPx": 0,
+      "deltaFromBaselineSvgPx": 0
+    }
+  ],
+  "svgLegUnchanged": true,
+  "evaluation": {
+    "verdict": "PATCHES_MOVE_CANVAS_DELTA",
+    "lines": [
+      "Product baseline canvasΔ=1.797px (|Δ|=1.797px).",
+      "SVG leg unchanged across variants (raster fork only).",
+      "fo-lh-pin: no meaningful canvasΔ change vs baseline (0px).",
+      "flex-center: canvasΔ=-14.203px (Δ from baseline -16px).",
+      "viewbox-floor: no meaningful canvasΔ change vs baseline (0px)."
+    ],
+    "anyImprovement": false
+  }
+}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fonts.ready timing investigation</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font: 12px system-ui, sans-serif; background: #f8fafc; }
+    #capture-target { background: #fff; border: 1px solid #cbd5e1; width: 500px; }
+    .mini-nav { display: flex; align-items: stretch; min-height: 48px; font: 600 16px/1.35 system-ui; }
+    .mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+  </style>
+</head>
+<body>
+  <nav id="capture-target" class="mini-nav" aria-label="Mini checkout nav">
+    <a href="#">H</a>
+  </nav>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { runFoFixProbe, DEFAULT_LANDMARK } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const landmark = params.get('landmark') || DEFAULT_LANDMARK
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || window.devicePixelRatio || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+
+    const RECIPE_IDS = (params.get('recipes') || [
+      'product-baseline',
+      'v3-wait-fonts-500ms',
+      'brain-l01-006',
+      'brain-l01-007',
+      'brain-l01-028',
+      'brain-l01-039',
+    ].join(',')).split(',').map((s) => s.trim()).filter(Boolean)
+
+    /** @param {boolean} captureAfterFontsReady @param {number} decodeWaitMs */
+    async function runGridCell(captureAfterFontsReady, decodeWaitMs) {
+      const base = getFoFixRecipe('product-baseline')
+      const rasterPatch =
+        decodeWaitMs > 0 ? `lab-wait-${decodeWaitMs}ms` : base.rasterPatch
+      /** @type {import('./fo-fix-recipes.js').FoFixRecipe} */
+      const recipe = {
+        ...base,
+        id: `grid-capture-${captureAfterFontsReady ? 'after' : 'before'}-fonts-decode-${decodeWaitMs}ms`,
+        label: `grid capture ${captureAfterFontsReady ? 'after' : 'before'} fonts.ready + ${decodeWaitMs}ms pre-decode wait`,
+        rasterPatch,
+      }
+      const fontsStatusBeforeCapture = document.fonts?.status ?? 'unknown'
+      const orig = window.snapdom
+      window.snapdom = async (el, opts) => {
+        if (captureAfterFontsReady) {
+          try {
+            await document.fonts.ready
+          } catch {
+            /* ok */
+          }
+        }
+        return orig(el, opts)
+      }
+      try {
+        const t0 = performance.now()
+        const row = await runFoFixProbe(recipe, { dpr, scale, landmark })
+        return {
+          kind: 'captureTimingGrid',
+          captureAfterFontsReady,
+          decodeWaitMs,
+          recipeId: recipe.id,
+          rasterPatch: rasterPatch ?? null,
+          fontsStatusBeforeCapture,
+          fontsStatusAfterCapture: document.fonts?.status ?? 'unknown',
+          elapsedMs: performance.now() - t0,
+          liveVsCanvasTopPx: row.deltaTopInBorder ?? row.liveVsCanvasTopPx ?? null,
+          liveVsSvgTopPx: row.deltaSvgInBorder ?? row.liveVsSvgTopPx ?? null,
+          pass: !!row.pass,
+          error: null,
+        }
+      } catch (err) {
+        return {
+          kind: 'captureTimingGrid',
+          captureAfterFontsReady,
+          decodeWaitMs,
+          recipeId: recipe.id,
+          error: String(err?.message || err),
+        }
+      } finally {
+        window.snapdom = orig
+      }
+    }
+
+    async function runRecipeRow(recipeId) {
+      let recipe
+      try {
+        recipe = getFoFixRecipe(recipeId)
+      } catch (err) {
+        return { kind: 'recipe', recipeId, missing: true, error: String(err?.message || err) }
+      }
+      if (!recipe) {
+        return { kind: 'recipe', recipeId, missing: true, error: 'recipe not found' }
+      }
+      try {
+        const row = await runFoFixProbe(recipe, { dpr, scale, landmark })
+        return {
+          kind: 'recipe',
+          recipeId,
+          missing: false,
+          rasterPatch: recipe.rasterPatch ?? null,
+          liveVsCanvasTopPx: row.deltaTopInBorder ?? row.liveVsCanvasTopPx ?? null,
+          liveVsSvgTopPx: row.deltaSvgInBorder ?? row.liveVsSvgTopPx ?? null,
+          pass: !!row.pass,
+          error: null,
+        }
+      } catch (err) {
+        return { kind: 'recipe', recipeId, missing: false, error: String(err?.message || err) }
+      }
+    }
+
+    window.__fontsReadyTiming = {
+      done: false,
+      error: null,
+      payload: null,
+    }
+
+    ;(async () => {
+      try {
+        status.textContent = 'Priming fonts…'
+        try {
+          await document.fonts.ready
+        } catch {
+          /* ok */
+        }
+        /** @type {Record<string, unknown>[]} */
+        const rows = []
+        for (const captureAfter of [false, true]) {
+          for (const decodeWaitMs of [0, 100, 500]) {
+            status.textContent = `Grid capture=${captureAfter ? 'after' : 'before'} decodeWait=${decodeWaitMs}ms…`
+            rows.push(await runGridCell(captureAfter, decodeWaitMs))
+          }
+        }
+        for (const id of RECIPE_IDS) {
+          status.textContent = `Recipe ${id}…`
+          rows.push(await runRecipeRow(id))
+        }
+        window.__fontsReadyTiming.payload = {
+          generatedAt: new Date().toISOString(),
+          fixture: 'mini',
+          landmark,
+          dpr,
+          scale,
+          headed: true,
+          fontsStatusAtStart: document.fonts?.status ?? 'unknown',
+          recipeIdsRequested: RECIPE_IDS,
+          v3WaitFonts500ms: { requested: true, found: !!getFoFixRecipe('v3-wait-fonts-500ms')?.id },
+          rows,
+        }
+        status.textContent = 'Done.'
+      } catch (err) {
+        window.__fontsReadyTiming.error = String(err?.message || err)
+        status.textContent = window.__fontsReadyTiming.error
+      } finally {
+        window.__fontsReadyTiming.done = true
+      }
+    })()
+  </script>
+</body>
+</html>

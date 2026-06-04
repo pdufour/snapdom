@@ -1,0 +1,145 @@
+{
+  "generatedAt": "2026-06-03T07:39:47.178Z",
+  "metric": "paint.canvas.vs-border.top",
+  "fixture": "checkout-example.html",
+  "dpr": 2,
+  "limit": 30,
+  "offsets": [
+    0,
+    30
+  ],
+  "matrixIds": [
+    "tc-blh-*",
+    "tc-fix-w1-*",
+    "tc-fix-w2-*",
+    "tc-fix-w3-*",
+    "tc-fix-w4-*",
+    "baseline-plateau-2797",
+    "tc-fix-drift-chromium-copy-lh-baseline",
+    "tc-fix-w17-rfork-w7-dominant-baseline-alphabetic",
+    "tc-fix-w19-w7-integer-baseline",
+    "tc-fix-w20-w7-integer-baseline",
+    "tc-fix-w6-capture-baseline-global",
+    "tc-flags-w1-flex-baseline",
+    "tc-flags-w3-vertical-align-middle",
+    "tc-raster-008-product-baseline-decode",
+    "tc-reg-lock-baseline",
+    "tc-reg-lock-w7-plus-baseline-css",
+    "tc-text-w1-vertical-align-top-leaf",
+    "w7-beats-baseline"
+  ],
+  "parallel": 2,
+  "headed": true,
+  "baseline": {
+    "home": -0.91,
+    "products": -0.91
+  },
+  "blackboxGate": "Home/Products paint.canvas.vs-border.top toward 0 from −0.91; npm run test:blackbox for src promotion",
+  "top5": [
+    {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=combo-lh-normal-va-baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+      "checkoutQuery": "experimentalFoTextBaselineFix=1&experimentalRasterSvgPatch=baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "product-baseline",
+      "checkoutQuery": null,
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "tc-raster-008-product-baseline-decode",
+      "checkoutQuery": null,
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false,
+      "batchOffset": 0
+    }
+  ],
+  "winners": [
+    {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=combo-lh-normal-va-baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+      "checkoutQuery": "experimentalFoTextBaselineFix=1&experimentalRasterSvgPatch=baseline-leaf",
+      "homeCanvasVsBorderTop": 0.09,
+      "productsCanvasVsBorderTop": 0.09,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 0.8999999999999999,
+      "beatsBaseline": true,
+      "batchOffset": 0
+    }
+  ],
+  "best": {
+    "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+    "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+    "homeCanvasVsBorderTop": 0.09,
+    "productsCanvasVsBorderTop": 0.09,
+    "navDeltaTopHomeProducts": 0,
+    "rankScore": 0.8999999999999999,
+    "beatsBaseline": true,
+    "batchOffset": 0
+  },
+  "beatsBaselineCount": 3,
+  "inBudgetCandidates": [],
+  "bestInBudget": null,
+  "inBudgetCount": 0,
+  "promoteSrc": false,
+  "promoteSrcReason": "Nav-only winners beat −0.91 toward 0 but exceed 0.06px budget and/or fail full INK_GATE_LABELS",
+  "doNotPromoteAsDefault": [
+    "fo-y-strut-range-meta",
+    "fo-y-half-leading-meta"
+  ],
+  "rankedCount": 46,
+  "skipped": [],
+  "errors": []
+}

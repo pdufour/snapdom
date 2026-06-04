@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-stage-ink e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  {
+    "imports": {
+      "image-trim": "https://esm.sh/image-trim@1.0.0",
+      "transformation-matrix": "/node_modules/transformation-matrix/src/index.js"
+    }
+  }
+  </script>
+  <style>
+    .band-host { position: absolute; left: -9999px; top: 0; }
+    .band { position: relative; width: 100px; height: 80px; background: #fff; overflow: hidden; }
+    .ink-bar { position: absolute; left: 15px; width: 50px; height: 12px; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="band-host" class="band-host"></div>
+  <script type="module">
+    import {
+      INK_SCAN_CAP_CORE_DEFAULTS,
+      ensureInkScanBackend,
+      inkTopRowFromCanvasRegion,
+      registerImageTrimGetBorders,
+    } from './fo-ink-bounds-scan.mjs'
+
+    /**
+     * Sign convention: down = +shift = larger row Y = lower on screen.
+     * delta = stageTop − liveTop (+ = stage lower than live).
+     */
+
+    /** Band geometry (device px). */
+    const BAND_W = 100
+    const BAND_H = 80
+    const BAR_H = 12
+    const BAR_X = 15
+    const BAR_W = 50
+
+    /** Aligned triplets: live ≈ svg ≈ canvas within ±1px. */
+    const ALIGNED_TOL = 1
+    const ALIGNED_INK_TOPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 42, 45, 48, 50, 52, 55, 58, 60, 65]
+
+    /** Drift / predictable cases: integer px gaps within ±1px scan slack. */
+    const DRIFT_TOL = 1
+
+    const SCAN_OPTS = {
+      mode: 'integer',
+      solidBand: true,
+      capCrest: true,
+      refineUpward: true,
+      ...INK_SCAN_CAP_CORE_DEFAULTS,
+    }
+
+    /**
+     * @param {number} inkTop row from band top (device px)
+     */
+    function buildBandSvg(inkTop) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${BAND_W}" height="${BAND_H}" viewBox="0 0 ${BAND_W} ${BAND_H}">
+  <rect width="100%" height="100%" fill="#fff"/>
+  <foreignObject width="${BAND_W}" height="${BAND_H}">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;width:${BAND_W}px;height:${BAND_H}px;background:#fff;position:relative">
+      <div style="position:absolute;top:${inkTop}px;left:${BAR_X}px;width:${BAR_W}px;height:${BAR_H}px;background:#000"></div>
+    </div>
+  </foreignObject>
+</svg>`
+    }
+
+    function svgDataUrl(svgText) {
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+    }
+
+    /**
+     * Live stage: DOM band (GBCR) rasterized to canvas for ink scan.
+     * @param {number} inkTop
+     */
+    function mountLiveBand(inkTop) {
+      const host = document.getElementById('band-host')
+      host.replaceChildren()
+      const band = document.createElement('div')
+      band.className = 'band'
+      band.style.width = `${BAND_W}px`
+      band.style.height = `${BAND_H}px`
+      const bar = document.createElement('div')
+      bar.className = 'ink-bar'
+      bar.style.top = `${inkTop}px`
+      bar.style.height = `${BAR_H}px`
+      band.appendChild(bar)
+      host.appendChild(band)
+      return band
+    }
+
+    function rasterizeLiveFromDom(bandEl, canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      const bandRect = bandEl.getBoundingClientRect()
+      const bar = bandEl.querySelector('.ink-bar')
+      const barRect = bar.getBoundingClientRect()
+      ctx.fillStyle = '#000'
+      ctx.fillRect(
+        barRect.left - bandRect.left,
+        barRect.top - bandRect.top,
+        barRect.width,
+        barRect.height,
+      )
+    }
+
+    /**
+     * SVG stage: data-URL FO SVG → Image → canvas band scan.
+     * @param {string} svgText
+     * @param {HTMLCanvasElement} canvas
+     */
+    async function rasterizeSvgPreview(svgText, canvas) {
+      const url = svgDataUrl(svgText)
+      const img = new Image()
+      img.decoding = 'sync'
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('svg preview load failed'))
+        img.src = url
+      })
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, 0, BAND_W, BAND_H)
+    }
+
+    /**
+     * Canvas stage: decode drawImage path (fresh Image + decode).
+     * @param {string} svgText
+     * @param {HTMLCanvasElement} canvas
+     * @param {number} [drawShiftY] drawImage Y offset (+ = down / larger row)
+     */
+    async function rasterizeCanvasDecode(svgText, canvas, drawShiftY = 0) {
+      const url = svgDataUrl(svgText)
+      const img = new Image()
+      if (typeof img.decode === 'function') {
+        img.src = url
+        await img.decode()
+      } else {
+        await new Promise((resolve, reject) => {
+          img.onload = () => resolve()
+          img.onerror = () => reject(new Error('canvas decode load failed'))
+          img.src = url
+        })
+      }
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, drawShiftY, BAND_W, BAND_H)
+    }
+
+    function scanBandTop(canvas) {
+      const hit = inkTopRowFromCanvasRegion(
+        canvas.getContext('2d', { willReadFrequently: true }),
+        0,
+        0,
+        BAND_W,
+        BAND_H,
+        SCAN_OPTS,
+      )
+      return hit?.regionRow ?? hit?.row ?? null
+    }
+
+    function makeCanvas() {
+      const c = document.createElement('canvas')
+      c.width = BAND_W
+      c.height = BAND_H
+      return c
+    }
+
+    /** @typedef {{ id: string, inkTop: number, liveShift?: number, svgShift?: number, canvasShift?: number, kind: 'aligned' | 'drift' | 'predictable', expect?: object }} CaseDef */
+
+    /** @type {CaseDef[]} */
+    const CASES = [
+      ...ALIGNED_INK_TOPS.map((inkTop) => ({
+        id: `aligned-${inkTop}`,
+        inkTop,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: 0,
+        kind: 'aligned',
+      })),
+      {
+        id: 'canvas-higher-3',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: -3,
+        kind: 'drift',
+        expect: { canvasHigherPx: 3 },
+      },
+      {
+        id: 'canvas-higher-2',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: -2,
+        kind: 'drift',
+        expect: { canvasHigherPx: 2 },
+      },
+      {
+        id: 'canvas-higher-5',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: -5,
+        kind: 'drift',
+        expect: { canvasHigherPx: 5 },
+      },
+      {
+        id: 'svg-higher-1',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: -1,
+        canvasShift: 0,
+        kind: 'drift',
+        expect: { svgHigherPx: 1, deltaCanvasVsLive: 0 },
+      },
+      {
+        id: 'svg-higher-2',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: -2,
+        canvasShift: 0,
+        kind: 'drift',
+        expect: { svgHigherPx: 2, deltaCanvasVsLive: 0 },
+      },
+      {
+        id: 'svg-higher-5',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: -5,
+        canvasShift: 0,
+        kind: 'drift',
+        expect: { svgHigherPx: 5, deltaCanvasVsLive: 0 },
+      },
+      ...[1, 2, 3, 5, 7, 8, 10, 12].map((shift) => ({
+        id: `all-down-${shift}`,
+        inkTop: 40,
+        liveShift: shift,
+        svgShift: shift,
+        canvasShift: shift,
+        kind: 'predictable',
+        expect: { liveTop: 40 + shift, svgTop: 40 + shift, canvasTop: 40 + shift },
+      })),
+      {
+        id: 'border-top-0',
+        inkTop: 0,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 0, svgTop: 0, canvasTop: 0 },
+      },
+      {
+        id: 'border-top-all-down-5',
+        inkTop: 0,
+        liveShift: 5,
+        svgShift: 5,
+        canvasShift: 5,
+        kind: 'predictable',
+        expect: { liveTop: 5, svgTop: 5, canvasTop: 5 },
+      },
+      {
+        id: 'border-top-live-down-5',
+        inkTop: 0,
+        liveShift: 5,
+        svgShift: 0,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 5, svgTop: 0, canvasTop: 0 },
+      },
+      {
+        id: 'border-top-svg-down-5',
+        inkTop: 0,
+        liveShift: 0,
+        svgShift: 5,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 0, svgTop: 5, canvasTop: 0 },
+      },
+      {
+        id: 'border-top-canvas-down-5',
+        inkTop: 0,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: 5,
+        kind: 'predictable',
+        expect: { liveTop: 0, svgTop: 0, canvasTop: 5 },
+      },
+      {
+        id: 'border-top-all-up-5',
+        inkTop: 5,
+        liveShift: -5,
+        svgShift: -5,
+        canvasShift: -5,
+        kind: 'predictable',
+        expect: { liveTop: 0, svgTop: 0, canvasTop: 0 },
+      },
+      {
+        id: 'live-down-3',
+        inkTop: 40,
+        liveShift: 3,
+        svgShift: 0,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 43, svgTop: 40, canvasTop: 40 },
+      },
+      {
+        id: 'live-down-10',
+        inkTop: 40,
+        liveShift: 10,
+        svgShift: 0,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 50, svgTop: 40, canvasTop: 40 },
+      },
+      {
+        id: 'svg-down-10',
+        inkTop: 40,
+        liveShift: 0,
+        svgShift: 10,
+        canvasShift: 0,
+        kind: 'predictable',
+        expect: { liveTop: 40, svgTop: 50, canvasTop: 40 },
+      },
+      {
+        id: 'canvas-down-10',
+        inkTop: 40,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: 10,
+        kind: 'predictable',
+        expect: { liveTop: 40, svgTop: 40, canvasTop: 50 },
+      },
+      {
+        id: 'canvas-up-10',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: 0,
+        canvasShift: -10,
+        kind: 'predictable',
+        expect: { liveTop: 50, svgTop: 50, canvasTop: 40 },
+      },
+      {
+        id: 'stacked',
+        inkTop: 40,
+        liveShift: 0,
+        svgShift: 5,
+        canvasShift: 10,
+        kind: 'predictable',
+        expect: { liveTop: 40, svgTop: 45, canvasTop: 50 },
+      },
+      {
+        id: 'triple-misaligned',
+        inkTop: 40,
+        liveShift: 0,
+        svgShift: 3,
+        canvasShift: -3,
+        kind: 'predictable',
+        expect: { liveTop: 40, svgTop: 43, canvasTop: 37 },
+      },
+      {
+        id: 'product-baseline-stack',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: -2,
+        canvasShift: -3,
+        kind: 'drift',
+        expect: { svgHigherPx: 2, deltaCanvasVsLive: -3 },
+      },
+      {
+        id: 'product-baseline-order',
+        inkTop: 50,
+        liveShift: 0,
+        svgShift: -2,
+        canvasShift: -3,
+        kind: 'drift',
+        expect: { canvasLowerThanLive: true, svgHigherThanLive: true, canvasHigherThanSvg: true },
+      },
+    ]
+
+    /**
+     * URL params for single-case debug: ?inkTop=&liveShift=&svgShift=&canvasShift=
+     * @returns {CaseDef | null}
+     */
+    function caseFromUrlParams() {
+      const p = new URLSearchParams(location.search)
+      if (!p.has('inkTop')) return null
+      const inkTop = Number(p.get('inkTop'))
+      const liveShift = Number(p.get('liveShift') ?? 0)
+      const svgShift = Number(p.get('svgShift') ?? 0)
+      const canvasShift = Number(p.get('canvasShift') ?? 0)
+      if (!Number.isFinite(inkTop)) return null
+      return {
+        id: 'url-params',
+        inkTop,
+        liveShift,
+        svgShift,
+        canvasShift,
+        kind: 'predictable',
+        expect: {
+          liveTop: inkTop + liveShift,
+          svgTop: inkTop + svgShift,
+          canvasTop: inkTop + canvasShift,
+        },
+      }
+    }
+
+    /**
+     * @param {CaseDef} def
+     */
+    async function runCase(def) {
+      const liveShift = def.liveShift ?? 0
+      const svgShift = def.svgShift ?? 0
+      const canvasShift = def.canvasShift ?? 0
+
+      const liveInkTop = def.inkTop + liveShift
+      const svgInkTop = def.inkTop + svgShift
+
+      const liveCanvas = makeCanvas()
+      const svgCanvas = makeCanvas()
+      const canvasStage = makeCanvas()
+
+      const band = mountLiveBand(liveInkTop)
+      rasterizeLiveFromDom(band, liveCanvas)
+
+      const svgText = buildBandSvg(svgInkTop)
+      await rasterizeSvgPreview(svgText, svgCanvas)
+
+      const canvasSvgText = buildBandSvg(def.inkTop)
+      await rasterizeCanvasDecode(canvasSvgText, canvasStage, canvasShift)
+
+      const liveTop = scanBandTop(liveCanvas)
+      const svgTop = scanBandTop(svgCanvas)
+      const canvasTop = scanBandTop(canvasStage)
+
+      const deltaSvgVsLive =
+        liveTop != null && svgTop != null ? svgTop - liveTop : null
+      const deltaCanvasVsLive =
+        liveTop != null && canvasTop != null ? canvasTop - liveTop : null
+      const canvasHigherPx =
+        svgTop != null && canvasTop != null ? svgTop - canvasTop : null
+
+      let pass = false
+      /** @type {string[]} */
+      const errors = []
+
+      if (def.kind === 'aligned') {
+        const tol = ALIGNED_TOL
+        if (liveTop == null || svgTop == null || canvasTop == null) {
+          errors.push('missing scan row')
+        } else {
+          if (Math.abs(liveTop - def.inkTop) > tol) {
+            errors.push(`live row ${liveTop} expected ${def.inkTop}`)
+          }
+          if (Math.abs(svgTop - def.inkTop) > tol) {
+            errors.push(`svg row ${svgTop} expected ${def.inkTop}`)
+          }
+          if (Math.abs(canvasTop - def.inkTop) > tol) {
+            errors.push(`canvas row ${canvasTop} expected ${def.inkTop}`)
+          }
+          if (Math.abs(deltaSvgVsLive) > tol) {
+            errors.push(`|svg−live| ${Math.abs(deltaSvgVsLive)} > ${tol}`)
+          }
+          if (Math.abs(deltaCanvasVsLive) > tol) {
+            errors.push(`|canvas−live| ${Math.abs(deltaCanvasVsLive)} > ${tol}`)
+          }
+        }
+        pass = errors.length === 0
+      } else if (def.kind === 'predictable') {
+        const tol = DRIFT_TOL
+        const exp = def.expect ?? {}
+        if (liveTop == null || svgTop == null || canvasTop == null) {
+          errors.push('missing scan row')
+        } else {
+          for (const [key, expected] of [
+            ['liveTop', exp.liveTop],
+            ['svgTop', exp.svgTop],
+            ['canvasTop', exp.canvasTop],
+          ]) {
+            if (!Number.isFinite(expected)) continue
+            const actual = key === 'liveTop' ? liveTop : key === 'svgTop' ? svgTop : canvasTop
+            if (Math.abs(actual - expected) > tol) {
+              errors.push(`${key} row ${actual} expected ${expected}`)
+            }
+          }
+        }
+        pass = errors.length === 0
+      } else {
+        const tol = DRIFT_TOL
+        const exp = def.expect ?? {}
+        if (liveTop == null || svgTop == null || canvasTop == null) {
+          errors.push('missing scan row')
+        } else {
+          if (Math.abs(liveTop - def.inkTop) > tol) {
+            errors.push(`live row ${liveTop} expected ${def.inkTop}`)
+          }
+          if (Number.isFinite(exp.canvasHigherPx)) {
+            if (canvasHigherPx == null || Math.abs(canvasHigherPx - exp.canvasHigherPx) > tol) {
+              errors.push(
+                `canvasHigherPx ${canvasHigherPx} expected ${exp.canvasHigherPx}`,
+              )
+            }
+          }
+          if (Number.isFinite(exp.svgHigherPx)) {
+            const svgHigher = liveTop - svgTop
+            if (Math.abs(svgHigher - exp.svgHigherPx) > tol) {
+              errors.push(`svgHigherPx ${svgHigher} expected ${exp.svgHigherPx}`)
+            }
+          }
+          if (Number.isFinite(exp.deltaCanvasVsLive)) {
+            if (
+              deltaCanvasVsLive == null ||
+              Math.abs(deltaCanvasVsLive - exp.deltaCanvasVsLive) > tol
+            ) {
+              errors.push(
+                `deltaCanvasVsLive ${deltaCanvasVsLive} expected ${exp.deltaCanvasVsLive}`,
+              )
+            }
+          }
+          if (exp.canvasLowerThanLive === true) {
+            if (!(canvasTop < liveTop)) {
+              errors.push(`expected canvas Y (${canvasTop}) < live Y (${liveTop})`)
+            }
+          }
+          if (exp.svgHigherThanLive === true) {
+            if (!(svgTop < liveTop)) {
+              errors.push(`expected svg Y (${svgTop}) < live Y (${liveTop}) — svg higher on screen`)
+            }
+          }
+          if (exp.canvasHigherThanSvg === true) {
+            if (!(canvasTop < svgTop)) {
+              errors.push(`expected canvas Y (${canvasTop}) < svg Y (${svgTop}) — canvas higher on screen`)
+            }
+          }
+        }
+        pass = errors.length === 0
+      }
+
+      return {
+        id: def.id,
+        inkTop: def.inkTop,
+        liveShift,
+        svgShift,
+        canvasShift,
+        liveTop,
+        svgTop,
+        canvasTop,
+        deltaSvgVsLive,
+        deltaCanvasVsLive,
+        canvasHigherPx,
+        pass,
+        errors,
+      }
+    }
+
+    window.__foStageInkE2e = {
+      ready: true,
+      bootError: null,
+      bandW: BAND_W,
+      bandH: BAND_H,
+      alignedTol: ALIGNED_TOL,
+      driftTol: DRIFT_TOL,
+      cases: CASES.map((c) => c.id),
+      async run() {
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        await ensureInkScanBackend('auto')
+
+        const urlCase = caseFromUrlParams()
+        const defs = urlCase ? [urlCase] : CASES
+
+        const results = []
+        for (const def of defs) {
+          results.push(await runCase(def))
+        }
+        const pass = results.every((r) => r.pass)
+        return {
+          alignedTol: ALIGNED_TOL,
+          driftTol: DRIFT_TOL,
+          urlParams: urlCase != null,
+          matrix: results,
+          pass,
+        }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foStageInkE2e.ready = true
+    } catch (e) {
+      window.__foStageInkE2e.bootError = String(e?.message || e)
+      window.__foStageInkE2e.ready = true
+    }
+  </script>
+</body>
+</html>

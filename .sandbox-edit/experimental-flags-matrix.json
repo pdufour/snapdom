@@ -1,0 +1,246 @@
+{
+  "generatedAt": "2026-06-03T07:27:45.356Z",
+  "headed": true,
+  "port": 9360,
+  "plateauReferencePx": 2.797,
+  "beatersPlateau": [
+    {
+      "id": "product-baseline",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalFoTextLayout",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalFoLeadingTrim",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalFoTextBoxEdgeAuto",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalRasterDecodeSettle",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalRasterBackingCeil",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "experimentalRasterDoubleDecode",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "capture-flags",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "raster-flags",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    },
+    {
+      "id": "all-flags",
+      "canvasDelta": -1.003,
+      "absCanvasDelta": 1.003
+    }
+  ],
+  "fixture": "mini-nav-product-path",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "srcExperimentalFlagsWired": true,
+  "baselineCanvasDeltaPx": -1.0031250000000007,
+  "rows": [
+    {
+      "id": "product-baseline",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalFoTextLayout",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": true,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalFoLeadingTrim",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": true,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalFoTextBoxEdgeAuto",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": true,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalRasterDecodeSettle",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": true,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalRasterBackingCeil",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "experimentalRasterDoubleDecode",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": true
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "capture-flags",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": true,
+        "experimentalFoLeadingTrim": true,
+        "experimentalFoTextBoxEdgeAuto": true,
+        "experimentalRasterDecodeSettle": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDoubleDecode": false
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "raster-flags",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": false,
+        "experimentalFoLeadingTrim": false,
+        "experimentalFoTextBoxEdgeAuto": false,
+        "experimentalRasterDecodeSettle": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDoubleDecode": true
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    },
+    {
+      "id": "all-flags",
+      "path": "snapdom",
+      "recipeId": null,
+      "flags": {
+        "experimentalFoTextLayout": true,
+        "experimentalFoLeadingTrim": true,
+        "experimentalFoTextBoxEdgeAuto": true,
+        "experimentalRasterDecodeSettle": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDoubleDecode": true
+      },
+      "canvasDelta": -1.0031250000000007,
+      "svgDelta": -2.8078125000000007,
+      "absCanvasDelta": 1.0031250000000007,
+      "deltaFromBaselinePx": 0,
+      "beatsPlateau": true
+    }
+  ]
+}

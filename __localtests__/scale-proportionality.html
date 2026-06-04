@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale proportionality (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe, runFoFixProbe } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const root = document.getElementById('capture-target')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = params.get('landmark') || 'Home'
+
+    window.__scaleProportionalityProbe = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+        const row = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+        return {
+          recipeId: 'product-baseline',
+          landmark,
+          dpr,
+          scale,
+          liveVsCanvasTopPx: row.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.liveVsSvgTopPx,
+          svgVsCanvasTopPx:
+            row.liveVsCanvasTopPx != null && row.liveVsSvgTopPx != null
+              ? row.liveVsCanvasTopPx - row.liveVsSvgTopPx
+              : null,
+          livePaintedTopInBorder: row.livePaintedTopInBorder,
+          svgPaintedTopInBorder: row.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: row.canvasPaintedTopInBorder,
+        }
+      },
+    }
+
+    document.fonts.ready
+      .then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+      .then(() => {
+        window.__scaleProportionalityProbe.ready = true
+      })
+      .catch((err) => {
+        window.__scaleProportionalityProbe.bootError = String(err?.message || err)
+        window.__scaleProportionalityProbe.ready = true
+      })
+  </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO font metrics probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    window.snapdom = snapdom
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureLivePaintedInk,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import { computeHalfLeadingLhFs } from './fo-fix-toCanvas.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmarks = (params.get('landmarks') || 'Home,Products')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function fontMetricsFromCanvas(el, text) {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return null
+      const cs = getComputedStyle(el)
+      ctx.font = cs.font || `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      const m = ctx.measureText(text || el.textContent || '')
+      return {
+        actualBoundingBoxAscent: roundPx(m.actualBoundingBoxAscent),
+        actualBoundingBoxDescent: roundPx(m.actualBoundingBoxDescent),
+        fontBoundingBoxAscent: roundPx(m.fontBoundingBoxAscent),
+        fontBoundingBoxDescent: roundPx(m.fontBoundingBoxDescent),
+        emHeightAscent: roundPx(m.emHeightAscent),
+        emHeightDescent: roundPx(m.emHeightDescent),
+        width: roundPx(m.width),
+      }
+    }
+
+    async function probeLandmark(root, landmark) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const row = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const el = findLandmarkElement(root, landmark)
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+      const live = measureLivePaintedInk(el, root)
+      const cap = cmp.liveCapModel
+      const cs = getComputedStyle(el)
+      const fs = parseFloat(cs.fontSize)
+      const lh = parseFloat(cs.lineHeight)
+      const halfLeadingLhFs = computeHalfLeadingLhFs(fs, lh)
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const rr = range.getBoundingClientRect()
+      const box = el.getBoundingClientRect()
+      const rootBox = root.getBoundingClientRect()
+      const rangeTop = rr.top - rootBox.top
+      const rangeH = rr.height
+      const halfLeadingFromRange = lh != null && fs != null ? roundPx((lh - fs) / 2) : null
+      const halfLeadingFromRangeLine = rangeH != null && fs != null ? roundPx((rangeH - fs) / 2) : null
+      const metrics = fontMetricsFromCanvas(el, landmark)
+      const ascentPlusHalfLeading =
+        metrics?.actualBoundingBoxAscent != null && halfLeadingLhFs != null
+          ? roundPx(metrics.actualBoundingBoxAscent + halfLeadingLhFs)
+          : null
+
+      return {
+        landmark,
+        canvasOffsetPx: roundPx(cmp.liveVsCanvasTopPx),
+        svgOffsetPx: roundPx(cmp.liveVsSvgTopPx),
+        fontSizePx: roundPx(fs),
+        lineHeightPx: roundPx(lh),
+        halfLeadingLhFsPx: roundPx(halfLeadingLhFs),
+        halfLeadingFromRangePx: halfLeadingFromRange,
+        halfLeadingFromRangeLinePx: halfLeadingFromRangeLine,
+        rangeLineHeightPx: roundPx(rangeH),
+        rangeTopInBorderPx: roundPx(rangeTop),
+        livePaintedTopInBorderPx: roundPx(live?.topInBorder),
+        capModelTopInBorderPx: roundPx(cap?.topInBorder),
+        fontMetrics: metrics,
+        predictors: {
+          halfLeadingLhFsDeltaAbs:
+            cmp.liveVsCanvasTopPx != null && halfLeadingLhFs != null
+              ? roundPx(Math.abs(cmp.liveVsCanvasTopPx - halfLeadingLhFs))
+              : null,
+          ascentPlusHalfLeadingDeltaAbs:
+            cmp.liveVsCanvasTopPx != null && ascentPlusHalfLeading != null
+              ? roundPx(Math.abs(cmp.liveVsCanvasTopPx - ascentPlusHalfLeading))
+              : null,
+          capModelDeltaAbs:
+            cmp.liveVsCanvasTopPx != null && cap?.topInBorder != null && live?.topInBorder != null
+              ? roundPx(Math.abs(cmp.liveVsCanvasTopPx - (cap.topInBorder - live.topInBorder)))
+              : null,
+        },
+      }
+    }
+
+    window.__foFontMetricsProbe = { ready: false, bootError: null, result: null }
+
+    async function run() {
+      await document.fonts.ready
+      const root = document.getElementById('capture-target')
+      const rows = []
+      for (const lm of landmarks) rows.push(await probeLandmark(root, lm))
+
+      const bestPredictor = rows.every(
+        (r) =>
+          r.predictors.halfLeadingLhFsDeltaAbs != null &&
+          r.predictors.halfLeadingLhFsDeltaAbs <= 0.06,
+      )
+        ? 'halfLeadingLhFs'
+        : 'mixed'
+
+      return {
+        probe: 'fo-font-metrics-probe',
+        dpr,
+        scale,
+        landmarks: rows,
+        synthesis: {
+          halfLeadingExplainsCanvasDelta: bestPredictor === 'halfLeadingLhFs',
+          bestPredictor,
+          meanCanvasOffsetPx: roundPx(
+            rows.reduce((s, r) => s + (r.canvasOffsetPx ?? 0), 0) / rows.length,
+          ),
+          note:
+            'actualBoundingBoxAscent/Descent from measureText; half-leading from (lh−fs)/2 and Range line height.',
+        },
+      }
+    }
+
+    run()
+      .then((result) => {
+        window.__foFontMetricsProbe.result = result
+        window.__foFontMetricsProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foFontMetricsProbe.bootError = String(err?.message || err)
+        window.__foFontMetricsProbe.ready = true
+      })
+  </script>
+</body>
+</html>

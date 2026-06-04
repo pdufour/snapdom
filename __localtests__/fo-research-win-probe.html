@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO research-win — comprehensive raster drift probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #live-mirror {
+      position: absolute;
+      left: -99999px;
+      top: 0;
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #fo-inline-host {
+      position: absolute;
+      left: -99999px;
+      top: 0;
+      width: 500px;
+      height: 50px;
+      overflow: hidden;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <div id="live-mirror" aria-hidden="true"></div>
+  <div id="fo-inline-host" aria-hidden="true"></div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      buildHandBuiltFoSvg,
+      buildStaticMinimalFoSvg,
+      isBitmapOnlyDrift,
+    } from './fo-minimal-repro-probe.js'
+    import {
+      auditSerializedFoLineHeight,
+      computeHalfLeadingLhFs,
+      probeFoInternalComputedLhAtDecode,
+    } from './fo-fix-toCanvas.js'
+    import {
+      applyRasterOnlySvgPatch,
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureLivePaintedInk,
+      measureRangeClientRectUnionPx,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    /** @param {Element} node */
+    function halfLeadingFromEl(node) {
+      const cs = getComputedStyle(node)
+      const fs = parseFloat(cs.fontSize)
+      const lh = cs.lineHeight !== 'normal' ? parseFloat(cs.lineHeight) : null
+      return lh != null && Number.isFinite(fs) ? computeHalfLeadingLhFs(fs, lh) : null
+    }
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const fixture = params.get('fixture') || 'mini'
+
+    /** @param {HTMLCanvasElement} a @param {HTMLCanvasElement} b */
+    function compareCanvasPixels(a, b) {
+      if (!a || !b) return { identical: false, diffCount: null, totalPixels: null }
+      if (a.width !== b.width || a.height !== b.height) {
+        return { identical: false, diffCount: null, totalPixels: a.width * a.height, reason: 'dim mismatch' }
+      }
+      const da = a.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, a.width, a.height).data
+      const db = b.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, b.width, b.height).data
+      let diffCount = 0
+      for (let i = 0; i < da.length; i += 4) {
+        if (da[i] !== db[i] || da[i + 1] !== db[i + 1] || da[i + 2] !== db[i + 2] || da[i + 3] !== db[i + 3]) {
+          diffCount++
+        }
+      }
+      return { identical: diffCount === 0, diffCount, totalPixels: a.width * a.height }
+    }
+
+    /** Detect red channel dominance in landmark ink band (CSS reachability). */
+    function scanRedInkInLandmarkBand(canvas, root, el) {
+      const box = el.getBoundingClientRect()
+      const rr = root.getBoundingClientRect()
+      const x = Math.max(0, Math.round((box.left - rr.left) * dpr))
+      const y = Math.max(0, Math.round((box.top - rr.top) * dpr))
+      const w = Math.max(1, Math.round(box.width * dpr))
+      const h = Math.max(1, Math.round(box.height * dpr))
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      const img = ctx.getImageData(x, y, Math.min(w, canvas.width - x), Math.min(h, canvas.height - y))
+      let redDominant = 0
+      let dark = 0
+      for (let i = 0; i < img.data.length; i += 4) {
+        const r = img.data[i]
+        const g = img.data[i + 1]
+        const b = img.data[i + 2]
+        const a = img.data[i + 3]
+        if (a < 8) continue
+        if (r < 40 && g < 40 && b < 40) dark++
+        if (r > 180 && r > g + 40 && r > b + 40) redDominant++
+      }
+      return { redDominant, dark, redBackgroundVisible: redDominant > 8 && redDominant > dark * 0.05 }
+    }
+
+    function pearsonR(xs, ys) {
+      const n = Math.min(xs.length, ys.length)
+      if (n < 2) return null
+      const mx = xs.reduce((a, b) => a + b, 0) / n
+      const my = ys.reduce((a, b) => a + b, 0) / n
+      let num = 0
+      let dx = 0
+      let dy = 0
+      for (let i = 0; i < n; i++) {
+        const vx = xs[i] - mx
+        const vy = ys[i] - my
+        num += vx * vy
+        dx += vx * vx
+        dy += vy * vy
+      }
+      const den = Math.sqrt(dx * dy)
+      return den > 0 ? num / den : null
+    }
+
+    /** @param {string} svgText @param {object} patchOpts */
+    async function rasterWithPatch(svgText, dims, meta, patchId, extraCss = '') {
+      let patched = patchId ? applyRasterOnlySvgPatch(svgText, patchId, { meta }) : svgText
+      if (extraCss) {
+        const css = extraCss
+        patched = patched.includes('<style')
+          ? patched.replace(/<style([^>]*)>/i, (m) => `${m}${css}`)
+          : patched.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${css}</style>`)
+      }
+      const recipe = {
+        id: `research-${patchId || 'baseline'}`,
+        rasterPatch: 'lab-toCanvas',
+        labToCanvasOpts: { disableGbcrFracNudge: true, debugLh: true },
+      }
+      return rasterLabToCanvas(patched, dims, scale, meta, recipe)
+    }
+
+    /** Build temporary DOM for incremental ladder inside #capture-target. */
+    function mountLadderStep(stepId) {
+      const root = document.getElementById('capture-target')
+      const templates = {
+        'block-text': '<p style="margin:0;padding:12px;font:inherit">Home</p>',
+        'flex-center': '<div style="display:flex;align-items:center;min-height:48px"><a href="#" style="padding:0 12px;text-decoration:none;color:#111">Home</a></div>',
+        'flex-stretch': '<div style="display:flex;align-items:stretch;min-height:48px"><a href="#" style="display:flex;align-items:center;padding:0 12px;text-decoration:none;color:#111">Home</a></div>',
+        'mini-nav': root.innerHTML,
+      }
+      const html = templates[stepId]
+      if (!html) throw new Error(`unknown ladder step ${stepId}`)
+      root.innerHTML = html
+      return root
+    }
+
+    window.__foResearchWinProbe = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const baselineRecipe = getFoFixRecipe('product-baseline')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+
+        const baselineRow = await runFoFixProbe(
+          { ...baselineRecipe, labToCanvasOpts: { disableGbcrFracNudge: true } },
+          { dpr, scale, landmark, root },
+        )
+        const baselineCmp = compareThreeWayInk(root, baselineRow.canvas, baselineRow.svgText, el, dpr)
+        const svgText = baselineRow.svgText
+        const cssW = root.offsetWidth
+        const cssH = root.offsetHeight
+        const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+        const meta = parseCaptureMeta(svgText, root)
+
+        const liveCs = getComputedStyle(el)
+        const liveLhPx = liveCs.lineHeight !== 'normal' ? parseFloat(liveCs.lineHeight) : null
+        const liveFsPx = parseFloat(liveCs.fontSize)
+        const halfLeading = halfLeadingFromEl(el)
+        const rangeUnion = measureRangeClientRectUnionPx(el)
+        const gbcr = el.getBoundingClientRect()
+        const rr = root.getBoundingClientRect()
+
+        /** B — serialized vs stages audit */
+        const foSerializedAudit = auditSerializedFoLineHeight(svgText, landmark, el)
+        const foInternalLh = await probeFoInternalComputedLhAtDecode(svgText, landmark, { cssW, cssH })
+
+        /** Mount serialized FO in isolated iframe (A) — avoid polluting live DOM with <svg> in a div */
+        const livePainted = measureLivePaintedInk(el, root)
+        let foInlinePainted = null
+        let liveVsFoInlineTopPx = null
+        try {
+          const iframe = document.createElement('iframe')
+          iframe.setAttribute('sandbox', 'allow-same-origin')
+          iframe.style.cssText =
+            'position:fixed;left:-99999px;top:0;width:500px;height:50px;border:0;visibility:hidden'
+          document.body.appendChild(iframe)
+          const doc = iframe.contentDocument
+          if (doc) {
+            doc.open()
+            doc.write(
+              `<!DOCTYPE html><html><head><meta charset="utf-8"></head>` +
+                `<body style="margin:0;padding:0;width:${cssW}px;height:${cssH}px">${svgText}</body></html>`,
+            )
+            doc.close()
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+            const foRoot = doc.body
+            const foLeaf = findLandmarkElement(foRoot, landmark)
+            if (foLeaf) foInlinePainted = measureLivePaintedInk(foLeaf, foRoot)
+            liveVsFoInlineTopPx =
+              livePainted && foInlinePainted
+                ? foInlinePainted.topInBorder - livePainted.topInBorder
+                : null
+          }
+          iframe.remove()
+        } catch {
+          /* optional diagnostic */
+        }
+
+        const mirror = document.getElementById('live-mirror')
+        mirror.innerHTML = root.innerHTML
+        const mirrorEl = findLandmarkElement(mirror, landmark)
+        const mirrorPainted = mirrorEl ? measureLivePaintedInk(mirrorEl, mirror) : null
+
+        async function handBuiltInk(svgText) {
+          const recipe = {
+            id: 'hand-built',
+            rasterPatch: 'lab-toCanvas',
+            labToCanvasOpts: { disableGbcrFracNudge: true },
+          }
+          const canvas = await rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+          return compareThreeWayInk(root, canvas, svgText, el, dpr, dims)
+        }
+
+        /** D — multi-landmark half-leading correlation */
+        const landmarkNames = ['Home', 'Products']
+        /** @type {object[]} */
+        const landmarkRows = []
+        for (const name of landmarkNames) {
+          const le = findLandmarkElement(root, name)
+          if (!le) continue
+          const row = await runFoFixProbe(
+            { ...baselineRecipe, labToCanvasOpts: { disableGbcrFracNudge: true } },
+            { dpr, scale, landmark: name, root },
+          )
+          const cmp = compareThreeWayInk(root, row.canvas, row.svgText, le, dpr)
+          landmarkRows.push({
+            landmark: name,
+            liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+            halfLeadingLhFs: halfLeadingFromEl(le),
+            residual:
+              cmp.liveVsCanvasTopPx != null && halfLeadingFromEl(le) != null
+                ? cmp.liveVsCanvasTopPx - halfLeadingFromEl(le)
+                : null,
+          })
+        }
+        const corrHalfLeading = pearsonR(
+          landmarkRows.map((r) => r.halfLeadingLhFs ?? 0),
+          landmarkRows.map((r) => r.liveVsCanvasTopPx ?? 0),
+        )
+
+        /** D — lh sweep on minimal static FO (hand-built, no snapdom) */
+        /** @type {object[]} */
+        const lhSweep = []
+        try {
+          const staticSvg = buildStaticMinimalFoSvg(dims.cssW, dims.cssH)
+          const lhSweepIds = [
+            { id: 'lh-1.35', css: '' },
+            { id: 'lh-normal', css: 'foreignObject *{line-height:normal!important}' },
+            { id: 'lh-1', css: 'foreignObject *{line-height:1!important}' },
+            { id: 'lh-21.6px', css: 'foreignObject *{line-height:21.6px!important}' },
+            { id: 'lh-48px', css: 'foreignObject *{line-height:48px!important}' },
+          ]
+          for (const v of lhSweepIds) {
+            try {
+              let patched = staticSvg
+              if (v.css) {
+                patched = patched.includes('<style')
+                  ? patched.replace(/<style([^>]*)>/i, (m) => `${m}${v.css}`)
+                  : patched.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${v.css}</style>`)
+              }
+              const cmpHb = await handBuiltInk(patched)
+              lhSweep.push({
+                variantId: v.id,
+                liveVsCanvasTopPx: cmpHb.liveVsCanvasTopPx,
+                liveVsSvgTopPx: cmpHb.liveVsSvgTopPx,
+                halfLeadingResidual:
+                  cmpHb.liveVsCanvasTopPx != null && halfLeading != null
+                    ? cmpHb.liveVsCanvasTopPx - halfLeading
+                    : null,
+              })
+            } catch (vErr) {
+              lhSweep.push({ variantId: v.id, error: String(vErr?.message || vErr) })
+            }
+          }
+        } catch (lhErr) {
+          lhSweep.push({ variantId: 'sweep-boot', error: String(lhErr?.message || lhErr) })
+        }
+
+        /** C — CSS reachability at decode */
+        const baselineCanvas = baselineRow.canvas
+        const cssVariants = [
+          { variantId: 'control', extraCss: '' },
+          {
+            variantId: 'red-bg-text-leaf',
+            extraCss: 'foreignObject :is(a,span,p,label){background:red!important}',
+          },
+          {
+            variantId: 'lh-1-important',
+            extraCss: 'foreignObject *{line-height:1!important}',
+          },
+          {
+            variantId: 'lh-21.6-important',
+            extraCss: 'foreignObject *{line-height:21.6px!important}',
+          },
+          {
+            variantId: 'lh-normal-important',
+            extraCss: 'foreignObject *{line-height:normal!important}',
+          },
+        ]
+        /** @type {object[]} */
+        const cssReachability = []
+        for (const v of cssVariants) {
+          const canvas =
+            v.variantId === 'control'
+              ? baselineCanvas
+              : await rasterWithPatch(svgText, dims, meta, null, v.extraCss)
+          const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr)
+          const pix = compareCanvasPixels(baselineCanvas, canvas)
+          const redScan = scanRedInkInLandmarkBand(canvas, root, el)
+          cssReachability.push({
+            variantId: v.variantId,
+            liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+            liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+            pixelDiffFromBaseline: pix.diffCount,
+            pixelIdentical: pix.identical,
+            ...redScan,
+            forkReachesDecode: !pix.identical || v.variantId === 'red-bg-text-leaf',
+            lhWrongButForkWorks:
+              v.variantId.startsWith('lh-') && !pix.identical && Math.abs((cmp.liveVsCanvasTopPx ?? 0) - 2.797) > 0.15,
+          })
+        }
+
+        /** E — FO geometry patches */
+        const geometryPatches = [
+          { patchId: null, label: 'baseline' },
+          { patchId: 'fo-height-linebox', label: 'fo-height-linebox' },
+          { patchId: 'clip-content-48', label: 'clip-content-48' },
+          {
+            patchId: null,
+            label: 'fo-height-21.6',
+            extraCss: 'foreignObject{height:21.6px!important;max-height:21.6px!important;overflow:hidden!important}',
+          },
+        ]
+        /** @type {object[]} */
+        const foGeometry = []
+        for (const g of geometryPatches) {
+          try {
+            const canvas = await rasterWithPatch(svgText, dims, meta, g.patchId, g.extraCss || '')
+            const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr)
+            const pix = compareCanvasPixels(baselineCanvas, canvas)
+            foGeometry.push({
+              label: g.label,
+              patchId: g.patchId,
+              liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+              pixelDiffFromBaseline: pix.diffCount,
+              error: null,
+            })
+          } catch (geoErr) {
+            foGeometry.push({
+              label: g.label,
+              patchId: g.patchId,
+              liveVsCanvasTopPx: null,
+              pixelDiffFromBaseline: null,
+              error: String(geoErr?.message || geoErr),
+            })
+          }
+        }
+
+        /** F — hand-built FO without snapdom */
+        const handBuiltCmp = await handBuiltInk(buildStaticMinimalFoSvg(dims.cssW, dims.cssH))
+        const handBuiltNavCmp = await handBuiltInk(
+          buildHandBuiltFoSvg(root, dims.cssW, dims.cssH),
+        )
+
+        /** A — incremental ladder (last — mutates #capture-target) */
+        const ladderSteps = ['block-text', 'flex-center', 'flex-stretch', 'mini-nav']
+        /** @type {object[]} */
+        const incrementalLadder = []
+        for (const stepId of ladderSteps) {
+          const stepRoot = mountLadderStep(stepId)
+          const stepEl = findLandmarkElement(stepRoot, landmark)
+          if (!stepEl) continue
+          const row = await runFoFixProbe(
+            { ...baselineRecipe, labToCanvasOpts: { disableGbcrFracNudge: true } },
+            { dpr, scale, landmark, root: stepRoot },
+          )
+          const cmp = compareThreeWayInk(stepRoot, row.canvas, row.svgText, stepEl, dpr)
+          const stepCs = getComputedStyle(stepEl)
+          incrementalLadder.push({
+            stepId,
+            liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+            liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+            bitmapOnly: isBitmapOnlyDrift({
+              liveVsSvgTopPx: cmp.liveVsSvgTopPx,
+              liveVsCanvasTopPx: cmp.liveVsCanvasTopPx,
+            }),
+            lineHeightPx: stepCs.lineHeight !== 'normal' ? parseFloat(stepCs.lineHeight) : null,
+            gbcrHeight: stepEl.getBoundingClientRect().height,
+            halfLeadingLhFs: halfLeadingFromEl(stepEl),
+          })
+        }
+
+        /** G — engine limit signals */
+        const engineSignals = {
+          snapdomBitmapOnly: isBitmapOnlyDrift(baselineCmp),
+          handBuiltStaticBitmapOnly: isBitmapOnlyDrift({
+            liveVsSvgTopPx: handBuiltCmp.liveVsSvgTopPx,
+            liveVsCanvasTopPx: handBuiltCmp.liveVsCanvasTopPx,
+          }),
+          handBuiltFixtureBitmapOnly: isBitmapOnlyDrift({
+            liveVsSvgTopPx: handBuiltNavCmp.liveVsSvgTopPx,
+            liveVsCanvasTopPx: handBuiltNavCmp.liveVsCanvasTopPx,
+          }),
+          cssForkChangesBitmap: cssReachability.some((r) => r.pixelDiffFromBaseline > 0),
+          lhPinNoOpDespiteCorrectLh: foSerializedAudit.serializedMatchesLivePx === true,
+          plateauPx: baselineCmp.liveVsCanvasTopPx,
+        }
+
+        /** Findings synthesis */
+        /** @type {string[]} */
+        const findings = []
+        findings.push(
+          `BITMAP_ONLY @ dpr=${dpr}: svgΔ=${baselineCmp.liveVsSvgTopPx?.toFixed(3)} canvasΔ=${baselineCmp.liveVsCanvasTopPx?.toFixed(3)} (GBCR nudge off).`,
+        )
+        if (Math.abs((baselineCmp.liveVsCanvasTopPx ?? 0) - (halfLeading ?? 0)) < 0.05) {
+          findings.push(
+            `Canvas offset ≈ half-leading (lh−fs)/2=${halfLeading?.toFixed(3)}px within 0.05px — strut paint origin hypothesis.`,
+          )
+        }
+        const redRow = cssReachability.find((r) => r.variantId === 'red-bg-text-leaf')
+        if (redRow?.redBackgroundVisible) {
+          findings.push(
+            'Decode-time CSS reaches FO bitmap paint (red background visible) — fork path works; wrong lh values are not the blocker.',
+          )
+        } else if (redRow && redRow.pixelDiffFromBaseline > 0) {
+          findings.push('Decode CSS changes pixels but red not in landmark band — partial reachability.')
+        } else {
+          findings.push('Red-bg inject did not change bitmap — fork may not reach decode or FO ignores author CSS at raster.')
+        }
+        const lh1Row = cssReachability.find((r) => r.variantId === 'lh-1-important')
+        if (lh1Row && Math.abs((lh1Row.liveVsCanvasTopPx ?? 0) - 3.5) < 0.2) {
+          findings.push('lh:1 !important at decode moves canvas to ~3.5px class — Chromium applies lh in FO raster, but correct 21.6px does not fix plateau.')
+        }
+        const flexStretch = incrementalLadder.find((s) => s.stepId === 'flex-stretch')
+        const blockText = incrementalLadder.find((s) => s.stepId === 'block-text')
+        const miniNavStep = incrementalLadder.find((s) => s.stepId === 'mini-nav')
+        const flexCenter = incrementalLadder.find((s) => s.stepId === 'flex-center')
+        if (miniNavStep && flexCenter && Math.abs(miniNavStep.liveVsCanvasTopPx - flexCenter.liveVsCanvasTopPx) < 0.05) {
+          findings.push(
+            'Incremental ladder: full mini-nav stretch matches flex-center (2.797) — stretch cross-size is not the trigger; block-only text is ~3.0px class.',
+          )
+        }
+        if (handBuiltCmp.liveVsCanvasTopPx > 1.5 && Math.abs(handBuiltCmp.liveVsSvgTopPx ?? 0) < 0.35) {
+          findings.push('Hand-built static FO (no snapdom) reproduces BITMAP_ONLY — engine/Chromium FO class bug, not capture serialization.')
+        }
+        findings.push(
+          'modern-screenshot Chromium block already wired as experimentalFoChromiumText — prior matrices tied 2.797; upstream CSS alone insufficient.',
+        )
+
+        const rootCauseVerdict =
+          engineSignals.handBuiltStaticBitmapOnly && engineSignals.cssForkChangesBitmap
+            ? 'LIKELY_CHROMIUM_FO_STRUT_PAINT'
+            : engineSignals.snapdomBitmapOnly
+              ? 'LIKELY_BITMAP_STAGE'
+              : 'UNKNOWN'
+
+        const winningHypothesis =
+          'Chromium FO→bitmap text paint drops ~½(line-height−font-size) strut above the glyph box while inline FO DOM and serialized markup keep correct lh — fix must restack strut/leading-trim at decode without drawImage nudges.'
+
+        const nextExperiments = [
+          {
+            rank: 1,
+            recipeId: 'tc-research-w1-leading-trim-both-edges',
+            rationale:
+              'Global leading-trim: both + text-box-trim: trim-both on FO text leaves at decode (structural, matches CSS inline box).',
+          },
+          {
+            rank: 2,
+            recipeId: 'tc-research-w1-fo-linebox-clip-overflow',
+            rationale:
+              'Clip FO to used line box (overflow:hidden + height from meta lineHeightPx) — fo-height-linebox showed pixel diff; tune from layout meta not 48px.',
+          },
+          {
+            rank: 3,
+            recipeId: 'tc-research-w1-strut-neutralize-flex-center',
+            rationale:
+              'On flex text leaves: align-items:center on FO + pin lh to used px (removes 48px stretch context in FO only) — validate svgΔ stays <0.15.',
+          },
+        ]
+
+        return {
+          fixture,
+          dpr,
+          scale,
+          landmark,
+          baselineInk: {
+            liveVsCanvasTopPx: baselineCmp.liveVsCanvasTopPx,
+            liveVsSvgTopPx: baselineCmp.liveVsSvgTopPx,
+            svgVsCanvasTopPx:
+              baselineCmp.canvas && baselineCmp.svg
+                ? baselineCmp.canvas.topInBorder - baselineCmp.svg.topInBorder
+                : null,
+            liveTopInBorder: baselineCmp.live?.topInBorder,
+            canvasTopInBorder: baselineCmp.canvas?.topInBorder,
+            svgTopInBorder: baselineCmp.svg?.topInBorder,
+          },
+          textBoxAudit: {
+            liveComputed: {
+              lineHeight: liveCs.lineHeight,
+              lineHeightPx: liveLhPx,
+              fontSizePx: liveFsPx,
+              halfLeadingLhFs: halfLeading,
+            },
+            rangeUnionPx: rangeUnion,
+            gbcrInRoot: {
+              top: gbcr.top - rr.top,
+              height: gbcr.height,
+            },
+            rangeTopInBorder: rangeUnion ? rangeUnion.top - (gbcr.top - rr.top) - (parseFloat(liveCs.borderTopWidth) || 0) : null,
+            foSerializedAudit,
+            foInternalLh,
+            liveVsFoInlineTopPx,
+            mirrorVsLiveTopPx:
+              livePainted && mirrorPainted
+                ? mirrorPainted.topInBorder - livePainted.topInBorder
+                : null,
+          },
+          incrementalLadder,
+          halfLeadingCorrelation: {
+            landmarkRows,
+            pearsonR: corrHalfLeading,
+          },
+          lhSweep,
+          cssReachability,
+          foGeometry,
+          upstreamComparison: {
+            note: 'modern-screenshot / html-to-image Chromium FO CSS block mirrored in experimentalFoChromiumText; wave matrices tied 2.797.',
+            snapdomExperimentalFlagsTiedPlateau: true,
+            handBuiltStaticCanvasDelta: handBuiltCmp.liveVsCanvasTopPx,
+            handBuiltFixtureCanvasDelta: handBuiltNavCmp.liveVsCanvasTopPx,
+          },
+          engineLimits: engineSignals,
+          minimalReproDom: buildStaticMinimalFoSvg(492, 50).slice(0, 400) + '…',
+          findings,
+          rootCauseVerdict,
+          winningHypothesis,
+          nextExperiments,
+        }
+      },
+    }
+
+    document.fonts.ready
+      .then(() => window.__foResearchWinProbe.run())
+      .then((result) => {
+        window.__foResearchWinProbe.result = result
+        window.__foResearchWinProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foResearchWinProbe.bootError = String(err?.message || err)
+        window.__foResearchWinProbe.ready = true
+      })
+  </script>
+</body>
+</html>

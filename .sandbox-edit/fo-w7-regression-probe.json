@@ -1,0 +1,111 @@
+{
+  "generatedAt": "2026-06-03T07:00:47.194Z",
+  "headed": true,
+  "recipes": [
+    "product-baseline",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta"
+  ],
+  "landmarks": [
+    "Blocks"
+  ],
+  "dprs": [
+    1,
+    2
+  ],
+  "thresholds": {
+    "baselineCanvasMin": 1,
+    "w7CanvasMax": 0.5,
+    "svgNearLiveMax": 0.06
+  },
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Blocks",
+      "dpr": 1,
+      "liveVsCanvasTopPx": -4.187,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13,
+      "rasterForkApplied": true,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Blocks",
+      "dpr": 2,
+      "liveVsCanvasTopPx": -3.687,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13.5,
+      "rasterForkApplied": true,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "landmark": "Blocks",
+      "dpr": 1,
+      "liveVsCanvasTopPx": -4.187,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13,
+      "rasterForkApplied": true,
+      "pass": false,
+      "errors": [
+        "w7 |canvas layout Δ|=4.187 expected ≤0.5"
+      ]
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "landmark": "Blocks",
+      "dpr": 2,
+      "liveVsCanvasTopPx": -3.687,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13.5,
+      "rasterForkApplied": true,
+      "pass": false,
+      "errors": [
+        "w7 |canvas layout Δ|=3.687 expected ≤0.5"
+      ]
+    },
+    {
+      "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+      "landmark": "Blocks",
+      "dpr": 1,
+      "liveVsCanvasTopPx": -4.187,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13,
+      "rasterForkApplied": true,
+      "pass": false,
+      "errors": [
+        "w7 |canvas layout Δ|=4.187 expected ≤0.5"
+      ]
+    },
+    {
+      "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+      "landmark": "Blocks",
+      "dpr": 2,
+      "liveVsCanvasTopPx": -3.687,
+      "liveVsSvgTopPx": -1.187,
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 13.5,
+      "rasterForkApplied": true,
+      "pass": false,
+      "errors": [
+        "w7 |canvas layout Δ|=3.687 expected ≤0.5"
+      ]
+    }
+  ],
+  "pass": false,
+  "failCount": 4
+}

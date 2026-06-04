@@ -1,0 +1,215 @@
+{
+  "probe": "fo-metric-bridge",
+  "generatedAt": "2026-06-03T00:25:28.511Z",
+  "headed": true,
+  "landmark": "Home",
+  "miniNav": [
+    {
+      "probe": "fo-metric-bridge",
+      "generatedAt": "2026-06-03T00:25:29.113Z",
+      "fixture": "mini-nav",
+      "dpr": 1,
+      "scale": 1,
+      "landmark": "Home",
+      "rulers": {
+        "rangeRootTopPx": 15.203,
+        "capLabRootTopPx": 19.727,
+        "canvasIntegerRootTopPx": 18,
+        "w7CanvasIntegerRootTopPx": 15
+      },
+      "baseline": {
+        "label": "product-baseline",
+        "liveReference": {
+          "rangeTopInBorder": 14.203,
+          "capLabTopInBorder": 18.727,
+          "rangeMinusCapLab": -4.523
+        },
+        "canvas": {
+          "integerTopInBorder": 17,
+          "integerDeviceRow": 17,
+          "fractionalTopInBorder": 17
+        },
+        "deltas": {
+          "labRangeLiveVsCanvasTopPx": 2.797,
+          "labCapModelCanvasDeltaPx": -1.727,
+          "reconciliationRangeMinusCapDelta": 4.523
+        },
+        "fractionalVsRange": {
+          "integer": 2.797,
+          "fractionalThreshold": 1.909,
+          "fractionalCom": 4.547
+        }
+      },
+      "w7": {
+        "label": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "liveReference": {
+          "rangeTopInBorder": 14.203,
+          "capLabTopInBorder": 18.727,
+          "rangeMinusCapLab": -4.523
+        },
+        "canvas": {
+          "integerTopInBorder": 14,
+          "integerDeviceRow": 14,
+          "fractionalTopInBorder": 14
+        },
+        "deltas": {
+          "labRangeLiveVsCanvasTopPx": -0.203,
+          "labCapModelCanvasDeltaPx": -4.727,
+          "reconciliationRangeMinusCapDelta": 4.523
+        },
+        "fractionalVsRange": {
+          "integer": -0.203,
+          "fractionalThreshold": -1.091,
+          "fractionalCom": 1.547
+        }
+      },
+      "w7Effect": {
+        "baselineRangeDelta": 2.797,
+        "w7RangeDelta": -0.203,
+        "baselineCapDelta": -1.727,
+        "w7CapDelta": -4.727,
+        "baselineCanvasRow": 17,
+        "w7CanvasRow": 14,
+        "rangeSubpixelResidual": 0.203
+      },
+      "formula": {
+        "labRange": "canvas(integer device row / dpr) − live(Range union topInBorder)",
+        "labCap": "canvas(integer) − live(cap lab model topInBorder)",
+        "blackbox": "canvas(integer) − live(measureCapInk product) — see checkout structure report"
+      },
+      "verdict": "METRIC_FAMILIES_RECONCILED"
+    },
+    {
+      "probe": "fo-metric-bridge",
+      "generatedAt": "2026-06-03T00:25:29.764Z",
+      "fixture": "mini-nav",
+      "dpr": 2,
+      "scale": 1,
+      "landmark": "Home",
+      "rulers": {
+        "rangeRootTopPx": 15.203,
+        "capLabRootTopPx": 19.727,
+        "canvasIntegerRootTopPx": 18.5,
+        "w7CanvasIntegerRootTopPx": 15.5
+      },
+      "baseline": {
+        "label": "product-baseline",
+        "liveReference": {
+          "rangeTopInBorder": 14.203,
+          "capLabTopInBorder": 18.727,
+          "rangeMinusCapLab": -4.523
+        },
+        "canvas": {
+          "integerTopInBorder": 17.5,
+          "integerDeviceRow": 35,
+          "fractionalTopInBorder": 17.5
+        },
+        "deltas": {
+          "labRangeLiveVsCanvasTopPx": 3.297,
+          "labCapModelCanvasDeltaPx": -1.227,
+          "reconciliationRangeMinusCapDelta": 4.523
+        },
+        "fractionalVsRange": {
+          "integer": 3.297,
+          "fractionalThreshold": 2.867,
+          "fractionalCom": 4.086
+        }
+      },
+      "w7": {
+        "label": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "liveReference": {
+          "rangeTopInBorder": 14.203,
+          "capLabTopInBorder": 18.727,
+          "rangeMinusCapLab": -4.523
+        },
+        "canvas": {
+          "integerTopInBorder": 14.5,
+          "integerDeviceRow": 29,
+          "fractionalTopInBorder": 14.5
+        },
+        "deltas": {
+          "labRangeLiveVsCanvasTopPx": 0.297,
+          "labCapModelCanvasDeltaPx": -4.227,
+          "reconciliationRangeMinusCapDelta": 4.523
+        },
+        "fractionalVsRange": {
+          "integer": 0.297,
+          "fractionalThreshold": -0.133,
+          "fractionalCom": 1.086
+        }
+      },
+      "w7Effect": {
+        "baselineRangeDelta": 3.297,
+        "w7RangeDelta": 0.297,
+        "baselineCapDelta": -1.227,
+        "w7CapDelta": -4.227,
+        "baselineCanvasRow": 35,
+        "w7CanvasRow": 29,
+        "rangeSubpixelResidual": -0.297
+      },
+      "formula": {
+        "labRange": "canvas(integer device row / dpr) − live(Range union topInBorder)",
+        "labCap": "canvas(integer) − live(cap lab model topInBorder)",
+        "blackbox": "canvas(integer) − live(measureCapInk product) — see checkout structure report"
+      },
+      "verdict": "METRIC_FAMILIES_RECONCILED"
+    }
+  ],
+  "checkout": [
+    {
+      "fixture": "checkout-example",
+      "dpr": 2,
+      "landmark": "Home",
+      "structureReport": {
+        "paintCanvasVsBorderTop": {
+          "live": 5.16,
+          "compare": 4.25,
+          "delta": -0.91
+        },
+        "paintCapVsBorderTop": {
+          "live": 5.16,
+          "compare": 5.41,
+          "delta": 0.25
+        },
+        "paintRangeVsBorderTop": {
+          "live": 0,
+          "compare": 0,
+          "delta": 0
+        },
+        "boxTop": {
+          "live": 27.25,
+          "compare": 27.25,
+          "delta": 0
+        }
+      },
+      "documentRulers": {
+        "liveRangeGuideTopPx": 226,
+        "capGuideTopPx": 238,
+        "note": "checkout ink-guide-live = Range; ink-guide-cap = canvas/cap after capture"
+      },
+      "canvasPresent": true,
+      "captureTargetHeight": 771,
+      "elBorderTopPx": 0
+    }
+  ],
+  "synthesis": {
+    "whyLabPlus2797VsBlackboxMinus091": {
+      "labRangeDeltaMiniDpr1": 2.797,
+      "labCapDeltaMiniDpr1": -1.727,
+      "blackboxCheckoutDpr2": -0.91,
+      "rangeMinusCapLiveOffsetPx": -4.523,
+      "explanation": "Same BITMAP_ONLY FO raster; lab gates on Range union vs integer canvas row; blackbox gates on measureCapInk vs same integer scan. Signed Δ differs by live reference offset (~4.5px mini) plus fixture border/layout and product blit path at dpr=2."
+    },
+    "w7EffectSummary": {
+      "baselineRangeDelta": 2.797,
+      "w7RangeDelta": -0.203,
+      "baselineCapDelta": -1.727,
+      "w7CapDelta": -4.727,
+      "baselineCanvasRow": 17,
+      "w7CanvasRow": 14,
+      "rangeSubpixelResidual": 0.203,
+      "verdict": "w7 closes ~2.8px strut on Range metric; residual ~0.203px = Range subpixel vs integer device row; cap-model Δ shifts equally because canvas row moves, cap live unchanged"
+    }
+  },
+  "chromeVersion": "148.0.7778.216"
+}

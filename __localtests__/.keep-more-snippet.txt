@@ -1,0 +1,363 @@
+
+  // --- keep-more batch: gap-fill leader derivatives (next-from-rank / fix435+ / leader-deriv; no text-bypass) ---
+  {
+    id: 'keep-more-001-rank001-from-font',
+    label: 'h2 int viewBox + from-font + decode',
+    idea: 'next-from-rank-001-h2-int-decode + fix419 line-height:from-font on FO *',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;line-height:from-font!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-001 + fix419 — font-metrics line box on h2 bundle.',
+  },
+  {
+    id: 'keep-more-002-rank001-minwidth',
+    label: 'h2 int viewBox + flex min-width 0 + decode',
+    idea: 'next-from-rank-001 + notext-flex-minwidth-decode shrink guard',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;min-width:0!important;min-height:0!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-001 + notext-flex-minwidth-decode.',
+  },
+  {
+    id: 'keep-more-003-rank004-from-font',
+    label: 'flex+contain+int viewBox + from-font + decode',
+    idea: 'next-from-rank-004-flex-contain-int-decode + fix419 line-height:from-font',
+    css:
+      'foreignObject{contain:paint!important}' +
+      'foreignObject *{min-width:0!important;min-height:0!important;' +
+      'box-sizing:border-box!important;line-height:from-font!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-004 + fix419.',
+  },
+  {
+    id: 'keep-more-004-rank004-device-grid',
+    label: 'flex+contain+int viewBox + device-grid floor',
+    idea: 'next-from-rank-004 with device-grid-floor raster',
+    css:
+      'foreignObject{contain:paint!important}' +
+      'foreignObject *{min-width:0!important;min-height:0!important;' +
+      'box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'device-grid-floor',
+    notes: 'Parent next-from-rank-004 + notext-device-grid-decode.',
+  },
+  {
+    id: 'keep-more-005-rank001-contain-h2',
+    label: 'h2 int viewBox + contain:paint + decode',
+    idea: 'next-from-rank-001 + notext-contain-paint-decode on FO root',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important;contain:paint!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-001 + notext-contain-paint-decode.',
+  },
+  {
+    id: 'keep-more-006-rank002-decode-interval',
+    label: 'Chromium + int viewBox + decode-interval',
+    idea: 'next-from-rank-002 with decode-interval instead of fonts.ready-interval',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-002 — timing swap vs fonts.ready-interval.',
+  },
+  {
+    id: 'keep-more-007-fix435-blob',
+    label: 'Chromium font + blob decode-interval',
+    idea: 'fix435-chromium-decode-interval with blob-url-decode-interval raster',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    rasterPatch: 'blob-url-decode-interval',
+    notes: 'Parent fix435 + notext-blob-decode-interval — no int viewBox.',
+  },
+  {
+    id: 'keep-more-008-fix435-device-grid',
+    label: 'Chromium font + device-grid floor',
+    idea: 'fix435 with device-grid-floor before drawImage',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    rasterPatch: 'device-grid-floor',
+    notes: 'Parent fix435 + notext-device-grid-decode.',
+  },
+  {
+    id: 'keep-more-009-fix435-two-stage',
+    label: 'Chromium font + two-stage raster',
+    idea: 'fix435 with harness two-stage offscreen blit',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    rasterPatch: 'two-stage',
+    notes: 'Parent fix435 + notext-two-stage-decode.',
+  },
+  {
+    id: 'keep-more-010-fix435-pre-decode-int',
+    label: 'Chromium font + pre-decode DOM + int viewBox',
+    idea: 'fix435 with pre-decode-dom raster and integer viewBox snap',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'pre-decode-dom',
+    notes: 'Parent fix435 + notext-pre-decode-dom + fix439 int viewBox.',
+  },
+  {
+    id: 'keep-more-011-rank014-snap',
+    label: 'h2 int Chromium + FO rect snap + decode',
+    idea: 'leader-deriv-014-h2-int-chromium-decode + integer-snap-all-rects',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    radicalPatch: 'integer-snap-all-rects',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent leader-deriv-014 + radical-007.',
+  },
+  {
+    id: 'keep-more-012-rank014-stretch',
+    label: 'h2 int Chromium + stretch + decode',
+    idea: 'leader-deriv-014 + fix413 align-items:stretch on FO *',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;align-items:stretch!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent leader-deriv-014 + fix413 stretch.',
+  },
+  {
+    id: 'keep-more-013-fix441-stretch',
+    label: 'h2 frac draw + Chromium + stretch',
+    idea: 'fix441-h2-frac-draw-chromium + fix413 align-items:stretch',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;min-width:0!important;' +
+      'align-items:stretch!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    rasterPatch: 'h2-frac-draw',
+    notes: 'Parent fix441 + fix413 — stretch on frac-draw path.',
+  },
+  {
+    id: 'keep-more-014-fix441-shape-auto',
+    label: 'h2 frac draw + Chromium + FO shape-rendering auto',
+    idea: 'fix441 + fix440 fo-shape-rendering-auto SVG patch',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;min-width:0!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    foSvgPatch: 'fo-shape-rendering-auto',
+    rasterPatch: 'h2-frac-draw',
+    notes: 'Parent fix441 + fix440 — shape-rendering:auto before frac-draw.',
+  },
+  {
+    id: 'keep-more-015-pin-width-int-decode',
+    label: 'pin width from live + int viewBox + decode',
+    idea: 'h2-weird-pin-width-live with h2 bundle and integer viewBox snap',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    radicalPatch: 'h2-pin-width-from-live',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent h2-weird-pin-width-live + next-from-rank-001 viewBox/timing.',
+  },
+  {
+    id: 'keep-more-016-fp016-decode-raf',
+    label: 'h2 FO percent int viewBox + decode-interval-raf',
+    idea: 'next-fp-016-h2-percent-int-decode with decode-interval-raf raster',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    radicalPatch: 'h2-fo-percent-int-viewbox',
+    rasterPatch: 'decode-interval-raf',
+    notes: 'Parent next-fp-016 — rAF timing on percent int viewBox probe.',
+  },
+  {
+    id: 'keep-more-017-fix436-stretch',
+    label: 'Chromium int viewBox + stretch + decode',
+    idea: 'fix436-chromium-integer-viewbox-decode + fix413 align-items:stretch',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;min-width:0!important;' +
+      'align-items:stretch!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent fix436 + fix413 — leader-deriv-004 equivalent.',
+  },
+  {
+    id: 'keep-more-018-rank004-fonts-ready',
+    label: 'flex+contain+int viewBox + fonts.ready-interval',
+    idea: 'next-from-rank-004 with fonts.ready-interval instead of decode-interval',
+    css:
+      'foreignObject{contain:paint!important}' +
+      'foreignObject *{min-width:0!important;min-height:0!important;' +
+      'box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'fonts-ready-interval',
+    notes: 'Parent next-from-rank-004 — font-load gate timing swap.',
+  },
+  {
+    id: 'keep-more-019-rank005-mp-decode',
+    label: 'MP h2 + int viewBox + decode-interval',
+    idea: 'next-from-rank-005-mp-h2-fonts-ready-int with decode-interval raster',
+    css: '',
+    inject: 'both',
+    category: 'no-text-bypass',
+    monkeypatch: 'h2-fo-normalize-full',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent next-from-rank-005 — decode-interval vs fonts.ready-interval.',
+  },
+  {
+    id: 'keep-more-020-fix435-stretch-raf',
+    label: 'Chromium + stretch + decode-interval-raf',
+    idea: 'fix435 + fix413 stretch + decode-interval-raf raster',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;align-items:stretch!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    rasterPatch: 'decode-interval-raf',
+    notes: 'Parent fix435 + fix413 + fix437 — stretch + rAF decode merge.',
+  },
+  {
+    id: 'keep-more-021-fix434-int-decode',
+    label: 'overflow-clip-margin 0 + int viewBox + decode',
+    idea: 'fix434-overflow-clip-margin-zero with integer viewBox and decode-interval',
+    css: 'foreignObject{overflow-clip-margin:0px!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent fix434 + fix439 — clip-margin reset + int viewBox.',
+  },
+  {
+    id: 'keep-more-022-h2-container-lang-int',
+    label: 'h2 container lang + int viewBox + decode',
+    idea: 'h2-weird-container-lang radical with h2 bundle and integer viewBox',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    radicalPatch: 'h2-container-lang',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent h2-weird-container-lang + next-from-rank-001.',
+  },
+  {
+    id: 'keep-more-023-mp-decode-proto-int',
+    label: 'MP decode prototype + h2 int viewBox + decode',
+    idea: 'mp-decode-interval-prototype with h2 FO bundle and integer viewBox',
+    css:
+      'svg{display:block!important;overflow:visible!important}' +
+      'foreignObject{overflow:visible!important}' +
+      'foreignObject>div{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    monkeypatch: 'decode-interval-prototype',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'decode-interval',
+    notes: 'Parent mp-decode-interval-prototype + next-from-rank-001.',
+  },
+  {
+    id: 'keep-more-024-rank004-supersample',
+    label: 'flex+contain + int viewBox + h2 supersample dpr<2',
+    idea: 'next-from-rank-004 with fix442 h2-supersample-dpr-lt2 raster',
+    css:
+      'foreignObject{contain:paint!important}' +
+      'foreignObject *{min-width:0!important;min-height:0!important;' +
+      'box-sizing:border-box!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'h2-supersample-dpr-lt2',
+    notes: 'Parent next-from-rank-004 + fix442 — supersample on flex+contain stack.',
+  },
+  {
+    id: 'keep-more-025-rank008-chromium-int',
+    label: 'h2 + device-grid + int viewBox + Chromium font',
+    idea: 'next-from-rank-008 with fix435 Chromium font block and integer viewBox',
+    css:
+      FO_BASELINE_CSS +
+      'foreignObject{font-kerning:normal!important;font-synthesis:none!important}' +
+      'foreignObject *{box-sizing:border-box!important;' +
+      'text-rendering:optimizeSpeed!important;font-kerning:none!important}',
+    inject: 'both',
+    category: 'no-text-bypass',
+    svgRootRound: 'integer-viewbox',
+    rasterPatch: 'device-grid-floor',
+    notes: 'Parent next-from-rank-008 + fix435 — device-grid with Chromium + int viewBox.',
+  },

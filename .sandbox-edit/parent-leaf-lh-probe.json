@@ -1,0 +1,98 @@
+{
+  "fixture": "fo-parent-leaf-lh-probe",
+  "recipe": "product-baseline",
+  "dpr": 1,
+  "generatedAt": "2026-06-02T16:32:14.966Z",
+  "rows": [
+    {
+      "mode": "inherit",
+      "metrics": {
+        "leafLineHeightComputed": "normal",
+        "leafLhPx": null,
+        "leafHalfLeading": null,
+        "parentLineHeightComputed": "normal",
+        "parentLhPx": null,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.5
+      }
+    },
+    {
+      "mode": "leaf-1.35",
+      "metrics": {
+        "leafLineHeightComputed": "21.6px",
+        "leafLhPx": 21.6,
+        "leafHalfLeading": 2.8,
+        "parentLineHeightComputed": "normal",
+        "parentLhPx": null,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875
+      }
+    },
+    {
+      "mode": "parent-1.35",
+      "metrics": {
+        "leafLineHeightComputed": "21.6px",
+        "leafLhPx": 21.6,
+        "leafHalfLeading": 2.8,
+        "parentLineHeightComputed": "21.6px",
+        "parentLhPx": 21.6,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875
+      }
+    },
+    {
+      "mode": "leaf-21.6",
+      "metrics": {
+        "leafLineHeightComputed": "21.6px",
+        "leafLhPx": 21.6,
+        "leafHalfLeading": 2.8,
+        "parentLineHeightComputed": "normal",
+        "parentLhPx": null,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.8046875
+      }
+    },
+    {
+      "mode": "parent-48",
+      "metrics": {
+        "leafLineHeightComputed": "48px",
+        "leafLhPx": 48,
+        "leafHalfLeading": 16,
+        "parentLineHeightComputed": "48px",
+        "parentLhPx": 48,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.5
+      }
+    },
+    {
+      "mode": "both-21.6",
+      "metrics": {
+        "leafLineHeightComputed": "21.6px",
+        "leafLhPx": 21.6,
+        "leafHalfLeading": 2.8,
+        "parentLineHeightComputed": "21.6px",
+        "parentLhPx": 21.6,
+        "leafHeightGbcr": 48
+      },
+      "threeWay": {
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.8046875
+      }
+    }
+  ]
+}

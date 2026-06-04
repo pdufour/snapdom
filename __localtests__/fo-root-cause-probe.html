@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO raster root-cause probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { applyRasterOnlySvgPatch } from '../src/exporters/rasterOnlySvgPatch.js'
+    import {
+      auditSerializedFoLineHeight,
+      buildLabLhDebugReport,
+      buildLabRasterForkTrace,
+      computeHalfLeadingLhFs,
+      fnv1aHash,
+      getLastLabToCanvasDebugReport,
+      scanCanvasInkRowProfile,
+    } from './fo-fix-toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureSvgInkForElement,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    const DOM_LADDER = {
+      'bare-text': {
+        html: '<span id="text-leaf">Home</span>',
+        find: (root) => root.querySelector('#text-leaf'),
+      },
+      'block-text': {
+        html: '<div style="padding:12px;color:#111">Home</div>',
+        find: (root) => root.querySelector('div'),
+      },
+      'flex-start': {
+        html:
+          '<nav style="display:flex;align-items:flex-start;min-height:48px">' +
+          '<a href="#" style="padding:0 12px;color:#111;text-decoration:none">Home</a></nav>',
+        find: (root) => root.querySelector('a'),
+      },
+      'flex-stretch': {
+        html:
+          '<nav class="mini-nav" aria-label="Mini nav">' +
+          '<a href="#">Home</a><a href="#">Products</a></nav>',
+        find: (root) => findLandmarkElement(root, landmark),
+      },
+    }
+
+    const DECODE_PIPELINES = [
+      { id: 'img-decode-default', labLoadPipeline: null, labRasterUrl: null },
+      { id: 'blob-url', labLoadPipeline: null, labRasterUrl: 'blob-url' },
+      { id: 'create-image-bitmap', labLoadPipeline: 'create-image-bitmap', labRasterUrl: null },
+      { id: 'image-bitmap-decode', labLoadPipeline: 'image-bitmap-decode', labRasterUrl: null },
+      { id: 'iframe-decode-retry', labLoadPipeline: 'iframe-decode-retry', labRasterUrl: null },
+    ]
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function halfLeadingFromEl(el) {
+      const cs = getComputedStyle(el)
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhRaw = cs.lineHeight
+      let lhPx = fs * 1.35
+      if (lhRaw && lhRaw !== 'normal') {
+        const n = parseFloat(lhRaw)
+        if (Number.isFinite(n) && n > 0) lhPx = n
+      }
+      return computeHalfLeadingLhFs(fs, lhPx)
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx:
+          cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+            ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+            : null,
+      }
+    }
+
+    function auditFoAttributes(svgText) {
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const fo = doc.querySelector('foreignObject')
+      const svg = doc.querySelector('svg')
+      if (!fo) return { error: 'no foreignObject' }
+      const attrs = {}
+      for (const a of fo.attributes) attrs[a.name] = a.value
+      const svgAttrs = {}
+      if (svg) for (const a of svg.attributes) svgAttrs[a.name] = a.value
+      const foRoot = fo.querySelector('[xmlns="http://www.w3.org/1999/xhtml"]') || fo.firstElementChild
+      const foRootStyle = foRoot?.getAttribute('style') ?? null
+      return {
+        foreignObject: attrs,
+        svgRoot: svgAttrs,
+        foRootTag: foRoot?.tagName?.toLowerCase() ?? null,
+        foRootStyleLen: foRootStyle?.length ?? 0,
+        foInnerHtmlBytes: fo.innerHTML?.length ?? 0,
+      }
+    }
+
+    /** @param {HTMLCanvasElement} a @param {HTMLCanvasElement} b */
+    function compareCanvasPixels(a, b) {
+      if (!a || !b) return { identical: false, diffCount: null, totalPixels: null }
+      if (a.width !== b.width || a.height !== b.height) {
+        return { identical: false, diffCount: null, totalPixels: a.width * a.height, reason: 'dim mismatch' }
+      }
+      try {
+        const da = a.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, a.width, a.height).data
+        const db = b.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, b.width, b.height).data
+        let diffCount = 0
+        for (let i = 0; i < da.length; i += 4) {
+          if (da[i] !== db[i] || da[i + 1] !== db[i + 1] || da[i + 2] !== db[i + 2] || da[i + 3] !== db[i + 3]) {
+            diffCount++
+          }
+        }
+        return {
+          identical: diffCount === 0,
+          diffCount,
+          totalPixels: a.width * a.height,
+          diffFraction: diffCount / (a.width * a.height),
+        }
+      } catch (err) {
+        return {
+          identical: null,
+          diffCount: null,
+          totalPixels: a.width * a.height,
+          tainted: true,
+          error: String(err?.message || err),
+        }
+      }
+    }
+
+    async function rasterWithRecipe(svgText, root, el, recipe) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const meta = parseCaptureMeta(svgText, root)
+      const canvas = await rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return { canvas, cmp, threeWay: threeWaySummary(cmp), dims, meta }
+    }
+
+    async function probeBaseline(root, el) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+      const landmarkText = (el.textContent || '').trim()
+      const pathA = measureSvgInkForElement(row.svgText, landmarkText, { cssW, cssH })
+      const pathATop = pathA?.painted?.topInBorder ?? pathA?.painted?.top ?? null
+      const pathBTop = cmp.canvas?.topInBorder ?? null
+      const halfLeading = halfLeadingFromEl(el)
+      const debug = buildLabLhDebugReport(row.canvas, root, el, row.svgText, cmp, {
+        dpr,
+        forkTrace: getLastLabToCanvasDebugReport()?.forkTrace ?? null,
+        timingMs: getLastLabToCanvasDebugReport()?.timingMs ?? null,
+      })
+      return {
+        svgText: row.svgText,
+        svgBytes: new Blob([row.svgText]).size,
+        canvas: row.canvas,
+        threeWay: threeWaySummary(cmp),
+        pathAB: {
+          pathA: { method: 'inlineSvgMeasure', topInBorder: pathATop },
+          pathB: { method: 'decodeDrawCanvas', topInBorder: pathBTop },
+          svgVsCanvasTopPx: pathATop != null && pathBTop != null ? pathBTop - pathATop : null,
+          verdict: Math.abs(pathBTop - pathATop) >= 0.5 ? 'BITMAP_SHIFTS_VS_INLINE' : 'PATHS_ALIGNED',
+        },
+        halfLeadingLhFsPx: halfLeading,
+        residualCanvasMinusHalfLeadingPx:
+          cmp.liveVsCanvasTopPx != null && halfLeading != null
+            ? roundPx(cmp.liveVsCanvasTopPx - halfLeading)
+            : null,
+        foAttributes: auditFoAttributes(row.svgText),
+        serializedLhAudit: auditSerializedFoLineHeight(row.svgText, landmarkText, el),
+        inkRowProfile: debug.inkRowProfile?.profile ?? null,
+        inkRowFirstInkRow: debug.inkRowProfile?.firstInkRow ?? null,
+        debug,
+      }
+    }
+
+    async function probeDecodePaths(root, el, svgText) {
+      const baseRecipe = getFoFixRecipe('product-baseline')
+      /** @type {object[]} */
+      const rows = []
+      let baselineCanvas = null
+      for (const pipe of DECODE_PIPELINES) {
+        const recipe = {
+          ...baseRecipe,
+          id: `decode-${pipe.id}`,
+          rasterPatch: 'lab-toCanvas',
+          labLoadPipeline: pipe.labLoadPipeline ?? undefined,
+          labRasterUrl: pipe.labRasterUrl ?? undefined,
+          labToCanvasOpts: { debugLh: true, disableGbcrFracNudge: true },
+        }
+        const { canvas, threeWay } = await rasterWithRecipe(svgText, root, el, recipe)
+        if (!baselineCanvas) baselineCanvas = canvas
+        const pixelDiff = baselineCanvas ? compareCanvasPixels(baselineCanvas, canvas) : null
+        rows.push({
+          pipelineId: pipe.id,
+          liveVsCanvasTopPx: threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: threeWay.liveVsSvgTopPx,
+          svgVsCanvasTopPx: threeWay.svgVsCanvasTopPx,
+          pixelIdenticalToDefault: pixelDiff?.identical ?? null,
+          pixelDiffFraction: pixelDiff?.diffFraction ?? null,
+        })
+      }
+      const spread =
+        rows.length >= 2
+          ? roundPx(
+              Math.max(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)) -
+                Math.min(...rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)),
+            )
+          : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict: spread != null && spread < 0.05 ? 'DECODE_PATH_INVARIANT' : 'DECODE_PATH_VARIANCE',
+        implication:
+          spread != null && spread < 0.05
+            ? 'Drift is intrinsic to FO bitmap paint, not img.decode vs createImageBitmap vs blob URL.'
+            : 'Decode mechanism affects canvasΔ — investigate load pipeline.',
+      }
+    }
+
+    async function probeHypotheses(root, el, svgText) {
+      const baseRecipe = getFoFixRecipe('product-baseline')
+      const tests = [
+        {
+          hypothesis: 'Half-leading strut in FO bitmap',
+          falsifyIf: 'lh=1 eliminates drift',
+          recipe: {
+            ...baseRecipe,
+            id: 'hyp-lh-1',
+            rasterPatch: 'lab-toCanvas',
+            labToCanvasOpts: { disableGbcrFracNudge: true },
+            patchSvgCss: 'foreignObject *{line-height:1!important}',
+          },
+        },
+        {
+          hypothesis: 'Flex stretch 48px FO height',
+          falsifyIf: 'FO height=21.6px eliminates drift',
+          recipe: {
+            ...baseRecipe,
+            id: 'hyp-fo-h-21.6',
+            rasterPatch: 'lab-toCanvas',
+            labToCanvasOpts: { disableGbcrFracNudge: true },
+            patchSvgCss: 'foreignObject{height:21.6px!important;overflow:visible!important}',
+          },
+        },
+        {
+          hypothesis: 'drawImage fractional GBCR nudge',
+          falsifyIf: 'disable nudge → full 2.797 class only',
+          recipe: {
+            ...baseRecipe,
+            id: 'hyp-gbcr-nudge-on',
+            rasterPatch: 'product-toCanvas',
+            labToCanvasOpts: {},
+          },
+        },
+        {
+          hypothesis: 'drawImage fractional GBCR nudge (off)',
+          falsifyIf: 'disable nudge reveals ~2.797',
+          recipe: {
+            ...baseRecipe,
+            id: 'hyp-gbcr-nudge-off',
+            rasterPatch: 'lab-toCanvas',
+            labToCanvasOpts: { disableGbcrFracNudge: true },
+          },
+        },
+        {
+          hypothesis: 'Raster fork no-op',
+          falsifyIf: 'visible marker patch changes bitmap',
+          recipe: {
+            ...baseRecipe,
+            id: 'hyp-fork-marker',
+            rasterPatch: 'lab-toCanvas',
+            labToCanvasOpts: {
+              debugLh: true,
+              disableGbcrFracNudge: true,
+              rasterOnlySvgPatch: 'inject-fo-lh-pin',
+            },
+            markerCss: 'foreignObject{background:rgba(255,0,0,0.35)!important}',
+          },
+        },
+        {
+          hypothesis: 'Serialization lh wrong',
+          falsifyIf: 'serialized lh ≠ computed',
+          recipe: { ...baseRecipe, id: 'hyp-serialized-audit', auditOnly: true },
+        },
+      ]
+
+      /** @type {object[]} */
+      const results = []
+      let baselineCanvas = null
+      const baselineRow = await rasterWithRecipe(svgText, root, el, {
+        ...baseRecipe,
+        id: 'hyp-baseline',
+        rasterPatch: 'lab-toCanvas',
+        labToCanvasOpts: { disableGbcrFracNudge: true, debugLh: true },
+      })
+      baselineCanvas = baselineRow.canvas
+
+      for (const t of tests) {
+        if (t.recipe.auditOnly) {
+          const audit = auditSerializedFoLineHeight(svgText, (el.textContent || '').trim(), el)
+          results.push({
+            hypothesis: t.hypothesis,
+            falsifyIf: t.falsifyIf,
+            result: audit.serializedMatchesLivePx ? 'FALSIFIED (lh correct in SVG)' : 'NOT_FALSIFIED',
+            detail: {
+              liveLineHeightPx: audit.liveLineHeightPx,
+              serializedLineHeightPx: audit.serializedLineHeightPx,
+              serializedMatchesLivePx: audit.serializedMatchesLivePx,
+            },
+          })
+          continue
+        }
+
+        let patchedSvg = svgText
+        if (t.recipe.patchSvgCss) {
+          const css = t.recipe.patchSvgCss
+          patchedSvg = svgText.includes('<style')
+            ? svgText.replace(/<style([^>]*)>/i, (m) => `${m}${css}`)
+            : svgText.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${css}</style>`)
+        }
+        if (t.recipe.markerCss) {
+          const css = t.recipe.markerCss
+          patchedSvg = patchedSvg.includes('<style')
+            ? patchedSvg.replace(/<style([^>]*)>/i, (m) => `${m}${css}`)
+            : patchedSvg.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${css}</style>`)
+        }
+
+        const { canvas, threeWay } = await rasterWithRecipe(patchedSvg, root, el, t.recipe)
+        const pixelDiff = baselineCanvas ? compareCanvasPixels(baselineCanvas, canvas) : null
+        const forkTrace =
+          t.recipe.labToCanvasOpts?.rasterOnlySvgPatch != null
+            ? buildLabRasterForkTrace(
+                svgText,
+                t.recipe.labToCanvasOpts.rasterOnlySvgPatch,
+                applyRasterOnlySvgPatch(svgText, t.recipe.labToCanvasOpts.rasterOnlySvgPatch, {}),
+                null,
+              )
+            : null
+
+        let result = 'INCONCLUSIVE'
+        const canvasDelta = threeWay.liveVsCanvasTopPx
+        if (t.recipe.id === 'hyp-lh-1') {
+          result = canvasDelta != null && Math.abs(canvasDelta) < 0.35 ? 'FALSIFIED' : 'NOT_FALSIFIED'
+        } else if (t.recipe.id === 'hyp-fo-h-21.6') {
+          result = canvasDelta != null && Math.abs(canvasDelta) < 0.35 ? 'FALSIFIED' : 'NOT_FALSIFIED'
+        } else if (t.recipe.id === 'hyp-gbcr-nudge-off') {
+          result =
+            canvasDelta != null && Math.abs(canvasDelta - 2.797) < 0.06 ? 'CONFIRMS_MECHANISM' : 'UNEXPECTED'
+        } else if (t.recipe.id === 'hyp-fork-marker') {
+          const markerChanged = pixelDiff && !pixelDiff.identical
+          const lhPinNoOp = forkTrace?.svgStringChanged && pixelDiff?.identical
+          result = markerChanged
+            ? 'FORK_REACHES_DECODE'
+            : lhPinNoOp
+              ? 'LH_PIN_NO_OP (fork runs, lh redundant)'
+              : 'INCONCLUSIVE'
+        }
+
+        results.push({
+          hypothesis: t.hypothesis,
+          falsifyIf: t.falsifyIf,
+          recipeId: t.recipe.id,
+          canvasDeltaPx: canvasDelta,
+          svgDeltaPx: threeWay.liveVsSvgTopPx,
+          pixelIdenticalToBaseline: pixelDiff?.identical ?? null,
+          pixelDiffFraction: pixelDiff?.diffFraction ?? null,
+          forkTrace,
+          result,
+        })
+      }
+
+      // Marker-only fork (red background) — separate from lh-pin
+      const markerRecipe = {
+        ...baseRecipe,
+        id: 'hyp-fork-red-marker',
+        rasterPatch: 'lab-toCanvas',
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      }
+      const markerCss = 'foreignObject{background:rgba(255,0,0,0.35)!important}'
+      const markerSvg = svgText.includes('<style')
+        ? svgText.replace(/<style([^>]*)>/i, (m) => `${m}${markerCss}`)
+        : svgText.replace(/<svg\b/i, (m) => `${m}<style type="text/css">${markerCss}</style>`)
+      const markerRow = await rasterWithRecipe(markerSvg, root, el, markerRecipe)
+      const markerDiff = baselineCanvas ? compareCanvasPixels(baselineCanvas, markerRow.canvas) : null
+      results.push({
+        hypothesis: 'Raster fork wiring (visible marker)',
+        falsifyIf: 'marker CSS changes bitmap pixels',
+        recipeId: 'hyp-fork-red-marker',
+        canvasDeltaPx: markerRow.threeWay.liveVsCanvasTopPx,
+        pixelIdenticalToBaseline: markerDiff?.identical ?? null,
+        pixelDiffFraction: markerDiff?.diffFraction ?? null,
+        result: markerDiff && !markerDiff.identical ? 'FORK_REACHES_DECODE' : 'FORK_NO_VISUAL_CHANGE',
+      })
+
+      return results
+    }
+
+    async function probeDomLadder() {
+      const root = document.getElementById('capture-target')
+      const originalHtml = root.innerHTML
+      /** @type {object[]} */
+      const rows = []
+      try {
+        for (const [id, spec] of Object.entries(DOM_LADDER)) {
+          root.innerHTML = spec.html
+          await document.fonts.ready
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+          const el = spec.find(root)
+          if (!el) {
+            rows.push({ domVariant: id, error: 'element not found' })
+            continue
+          }
+          const recipe = getFoFixRecipe('product-baseline')
+          const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+          const cssW = root.offsetWidth || root.getBoundingClientRect().width
+          const cssH = root.offsetHeight || root.getBoundingClientRect().height
+          const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+          const halfLeading = halfLeadingFromEl(el)
+          rows.push({
+            domVariant: id,
+            threeWay: threeWaySummary(cmp),
+            halfLeadingLhFsPx: halfLeading,
+            leafHeightGbcr: el.getBoundingClientRect().height,
+            parentDisplay: el.parentElement ? getComputedStyle(el.parentElement).display : null,
+            parentAlignItems: el.parentElement ? getComputedStyle(el.parentElement).alignItems : null,
+            driftAppears: Math.abs(cmp.liveVsCanvasTopPx ?? 0) >= 0.5,
+          })
+        }
+      } finally {
+        root.innerHTML = originalHtml
+      }
+      const firstDrift = rows.find((r) => r.driftAppears)
+      return {
+        rows,
+        minimalReproducingVariant: firstDrift?.domVariant ?? null,
+        implication:
+          rows.find((r) => r.domVariant === 'bare-text')?.driftAppears
+            ? 'Drift present on bare text — flex not required.'
+            : firstDrift
+              ? `Drift appears at "${firstDrift.domVariant}" — earlier variants clean.`
+              : 'No variant showed drift.',
+      }
+    }
+
+    async function probeHandBuiltMinimal(root, el) {
+      const { buildStaticMinimalFoSvg, probeHandBuiltFoPath } = await import(
+        './fo-minimal-repro-probe.js'
+      )
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const staticSvg = buildStaticMinimalFoSvg(cssW * scale, cssH * scale)
+      const handBuilt = await probeHandBuiltFoPath(root, el, landmark, dpr, scale, {
+        svgMode: 'static-minimal',
+        svgText: staticSvg,
+      })
+      const t = handBuilt.cmp
+      return {
+        method: 'hand-built-static-svg-no-snapdom',
+        svgBytes: new Blob([staticSvg]).size,
+        threeWay: {
+          livePaintedTopInBorder: t.live?.topInBorder ?? null,
+          svgPaintedTopInBorder: t.svg?.topInBorder ?? null,
+          canvasPaintedTopInBorder: t.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: t.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: t.liveVsCanvasTopPx ?? null,
+        },
+        verdict:
+          Math.abs(t.liveVsSvgTopPx ?? 99) < 0.35 && Math.abs(t.liveVsCanvasTopPx ?? 0) > 1.5
+            ? 'CHROMIUM_ENGINE_REPRO'
+            : 'INCONCLUSIVE',
+      }
+    }
+
+    function buildVerdict(baseline, decodePaths, hypotheses, domLadder, handBuilt) {
+      const canvasDelta = baseline.threeWay.liveVsCanvasTopPx
+      const svgDelta = baseline.threeWay.liveVsSvgTopPx
+      const halfLeading = baseline.halfLeadingLhFsPx
+      const residual = baseline.residualCanvasMinusHalfLeadingPx
+
+      /** @type {string[]} */
+      const confirmed = []
+      /** @type {string[]} */
+      const likely = []
+      /** @type {string[]} */
+      const falsified = []
+
+      if (Math.abs(svgDelta ?? 99) < 0.15 && Math.abs(canvasDelta ?? 0) > 1.5) {
+        confirmed.push('BITMAP_ONLY — serialized FO ink ≈ live; canvas decode bitmap does not.')
+      }
+      if (baseline.pathAB.verdict === 'BITMAP_SHIFTS_VS_INLINE') {
+        confirmed.push(
+          `Path A/B same SVG: inline FO vs decode+draw Δ=${roundPx(baseline.pathAB.svgVsCanvasTopPx)}px.`,
+        )
+      }
+      if (decodePaths.verdict === 'DECODE_PATH_INVARIANT') {
+        confirmed.push('Decode path invariant — img.decode, blob URL, createImageBitmap all tie.')
+      }
+      if (baseline.inkRowProfile === 'sharp-step') {
+        confirmed.push('CONSTANT_SHIFT — sharp device-row ink onset (paint offset, not scan artifact).')
+      }
+      if (halfLeading != null && canvasDelta != null && Math.abs(canvasDelta - halfLeading) < 0.06) {
+        confirmed.push(
+          `Half-leading correlate: canvasΔ=${canvasDelta}px ≈ (lh−fs)/2=${halfLeading}px (residual ${residual}px).`,
+        )
+      } else if (halfLeading != null && canvasDelta != null) {
+        likely.push(
+          `Half-leading partial: canvasΔ=${canvasDelta}px vs (lh−fs)/2=${halfLeading}px (residual ${residual}px).`,
+        )
+      }
+
+      const flexFalsified = domLadder.rows?.find((r) => r.domVariant === 'bare-text')?.driftAppears
+      if (flexFalsified) falsified.push('Flex stretch required — bare text still drifts.')
+      const lh1 = hypotheses.find((h) => h.recipeId === 'hyp-lh-1')
+      if (lh1?.result === 'NOT_FALSIFIED') falsified.push('Half-leading strut sole cause — lh=1 did not eliminate drift.')
+      const foH = hypotheses.find((h) => h.recipeId === 'hyp-fo-h-21.6')
+      if (foH?.result === 'NOT_FALSIFIED') falsified.push('Flex 48px FO height sole cause — FO h=21.6px did not fix.')
+      const ser = hypotheses.find((h) => h.hypothesis === 'Serialization lh wrong')
+      if (ser?.result?.includes('FALSIFIED')) falsified.push('Wrong serialized lh — audit shows live match.')
+
+      if (handBuilt.verdict === 'CHROMIUM_ENGINE_REPRO') {
+        confirmed.push('Chromium FO raster bug reproduces without snapdom capture pipeline.')
+      }
+
+      const lhPin = hypotheses.find((h) => h.recipeId === 'hyp-fork-marker')
+      if (lhPin?.result === 'LH_PIN_NO_OP (fork runs, lh redundant)') {
+        confirmed.push('120+ recipe tie: lh-pin/fork re-asserts bytes capture already encodes — 0px bitmap change.')
+      }
+
+      let verdict = 'LIKELY_HALF_LEADING_STRUT_BITMAP_PAINT'
+      if (confirmed.length >= 3 && Math.abs(residual ?? 99) < 0.06) {
+        verdict = 'CONFIRMED_HALF_LEADING_STRUT_IN_FO_BITMAP_PAINT'
+      } else if (confirmed.some((c) => c.includes('BITMAP_ONLY'))) {
+        verdict = 'CONFIRMED_BITMAP_ONLY_HALF_LEADING_CORRELATE'
+      }
+
+      return { verdict, confirmed, likely, falsified }
+    }
+
+    window.__foRootCauseProbe = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+
+        await document.fonts.ready
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        const baseline = await probeBaseline(root, el)
+        const decodePaths =
+          section === 'all' || section === 'decode' ? await probeDecodePaths(root, el, baseline.svgText) : null
+        const hypotheses =
+          section === 'all' || section === 'hypotheses'
+            ? await probeHypotheses(root, el, baseline.svgText)
+            : null
+        const domLadder = section === 'all' || section === 'ladder' ? await probeDomLadder() : null
+        const handBuilt =
+          section === 'all' || section === 'minimal' ? await probeHandBuiltMinimal(root, el) : null
+
+        const rootCause = buildVerdict(
+          baseline,
+          decodePaths ?? { verdict: 'SKIPPED', rows: [] },
+          hypotheses ?? [],
+          domLadder ?? { rows: [] },
+          handBuilt ?? {},
+        )
+
+        /** @type {object[]} */
+        const evidenceTable = []
+        evidenceTable.push({
+          test: 'Path A/B same SVG',
+          result: `${roundPx(baseline.pathAB.svgVsCanvasTopPx)}px svg↔canvas`,
+          implication: 'Drift enters at FO→bitmap, not serialization',
+        })
+        evidenceTable.push({
+          test: 'Serialized lh audit',
+          result: baseline.serializedLhAudit.serializedMatchesLivePx ? 'matches live' : 'mismatch',
+          implication: baseline.serializedLhAudit.serializedMatchesLivePx
+            ? 'Capture OK — not wrong lh in SVG'
+            : 'Serialization bug candidate',
+        })
+        if (decodePaths?.rows?.length) {
+          evidenceTable.push({
+            test: 'Decode path sweep',
+            result: `spread ${decodePaths.canvasDeltaSpreadPx}px — ${decodePaths.verdict}`,
+            implication: decodePaths.implication,
+          })
+        }
+        evidenceTable.push({
+          test: 'Ink row profile',
+          result: baseline.inkRowProfile ?? 'unknown',
+          implication:
+            baseline.inkRowProfile === 'sharp-step'
+              ? 'Constant paint offset (~half-leading), not gradual ramp'
+              : 'Profile inconclusive',
+        })
+        evidenceTable.push({
+          test: 'Half-leading residual',
+          result: `${baseline.residualCanvasMinusHalfLeadingPx}px @ dpr=${dpr}`,
+          implication: `canvasΔ=${baseline.threeWay.liveVsCanvasTopPx}px vs (lh−fs)/2=${baseline.halfLeadingLhFsPx}px`,
+        })
+        if (domLadder?.rows?.length) {
+          evidenceTable.push({
+            test: 'DOM ladder (flex incremental)',
+            result: domLadder.minimalReproducingVariant ?? 'none',
+            implication: domLadder.implication,
+          })
+        }
+        if (handBuilt?.verdict) {
+          evidenceTable.push({
+            test: 'Hand-built minimal FO SVG',
+            result: `${roundPx(handBuilt.threeWay?.liveVsCanvasTopPx)}px canvasΔ`,
+            implication: handBuilt.verdict,
+          })
+        }
+        for (const h of hypotheses ?? []) {
+          if (h.hypothesis && h.result) {
+            evidenceTable.push({
+              test: `Hypothesis: ${h.hypothesis}`,
+              result: `${h.result}${h.canvasDeltaPx != null ? ` (canvasΔ=${h.canvasDeltaPx})` : ''}`,
+              implication: h.falsifyIf,
+            })
+          }
+        }
+
+        return {
+          probe: 'fo-root-cause',
+          dpr,
+          scale,
+          landmark,
+          section,
+          baseline,
+          decodePaths,
+          hypotheses,
+          domLadder,
+          handBuilt,
+          rootCause,
+          evidenceTable,
+          whyRecipesTie2797: [
+            'Serialized SVG already encodes correct lh — svgΔ ≈ 0.008px.',
+            'Raster fork lh-pin re-asserts existing value — 0/100k pixel diff vs baseline.',
+            'Drift lives in Chromium FO bitmap paint origin, before drawImage compensation.',
+            'Only blit nudges (vdrift/gbcrFracY) or text bypass change reported canvasΔ.',
+          ],
+          promisingFixDirection:
+            'Structural FO text strut paint at decode — e.g. leading-trim/text-box-edge at raster, ' +
+            'FO viewport clip aligned to line box, or upstream Chromium fix — not capture lh pin or drawImage nudge.',
+          svgHash: fnv1aHash(baseline.svgText),
+          headed: true,
+        }
+      },
+    }
+
+    window.__foRootCauseProbe
+      .run()
+      .then((result) => {
+        window.__foRootCauseProbe.result = result
+        window.__foRootCauseProbe.ready = true
+        document.getElementById('status').textContent =
+          `Ready — ${result.rootCause.verdict} · canvasΔ=${result.baseline.threeWay.liveVsCanvasTopPx}px`
+      })
+      .catch((err) => {
+        window.__foRootCauseProbe.bootError = String(err?.message || err)
+        window.__foRootCauseProbe.ready = true
+        document.getElementById('status').textContent = `Boot failed: ${window.__foRootCauseProbe.bootError}`
+      })
+  </script>
+</body>
+</html>

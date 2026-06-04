@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-06-03T06:37:50.891Z",
+  "note": "Mini lab landmark H (██████). Checkout Home/Products: checkout-example.html?recipe=product-baseline&auto=1&landmarks=Home,Products",
+  "blockChars": "██████",
+  "landmark": "H",
+  "reloadUrl": "http://127.0.0.1:19904/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=H&includeInactive=1",
+  "pass": true,
+  "metrics": {
+    "live": 17.1875,
+    "svg": 16,
+    "canvas": 16,
+    "svgVsLive": -1.1875,
+    "canvasVsLive": -1.1875,
+    "svgHigher": true,
+    "canvasHigher": true,
+    "svgHigherPx": 1.1875,
+    "canvasHigherPx": 1.1875,
+    "verdict": "SVG 1.19px higher than liveCanvas 1.19px higher than liveRoot Δ stage−live: svg -1.19 · canvas -1.19 · gate FAIL"
+  },
+  "views": {
+    "live": {
+      "text": "██████",
+      "blockOk": true,
+      "panelVisible": true,
+      "noLegacyOverlay": true,
+      "markerLineCount": 0,
+      "lineOverTable": false,
+      "tableRows": 3,
+      "pass": true,
+      "reasons": [],
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-live.png"
+    },
+    "svg": {
+      "text": "██████",
+      "blockOk": true,
+      "panelVisible": true,
+      "noLegacyOverlay": true,
+      "markerLineCount": 0,
+      "lineOverTable": false,
+      "tableRows": 3,
+      "pass": true,
+      "reasons": [],
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-svg.png"
+    },
+    "canvas": {
+      "text": "██████",
+      "blockOk": true,
+      "panelVisible": true,
+      "noLegacyOverlay": true,
+      "markerLineCount": 0,
+      "lineOverTable": false,
+      "tableRows": 3,
+      "pass": true,
+      "reasons": [],
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-canvas.png"
+    }
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "fixture": "mini-nav-flex-stretch",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "flagScope": [
+    "experimentalFoTextBaselineFix",
+    "experimentalFoTextLineHeightNormal"
+  ],
+  "variants": [
+    {
+      "id": "baseline",
+      "flags": {
+        "experimentalFoTextBaselineFix": false,
+        "experimentalFoTextLineHeightNormal": false
+      },
+      "liveLeaf": {
+        "computedLineHeight": "21.6px",
+        "verticalAlign": "baseline"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      },
+      "svgHasLeadingTrim": false,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "textBaselineFix",
+      "flags": {
+        "experimentalFoTextBaselineFix": true,
+        "experimentalFoTextLineHeightNormal": false
+      },
+      "liveLeaf": {
+        "computedLineHeight": "21.6px",
+        "verticalAlign": "baseline"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": 0.296875,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.5
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      },
+      "svgHasLeadingTrim": true,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "lineHeightNormal",
+      "flags": {
+        "experimentalFoTextBaselineFix": false,
+        "experimentalFoTextLineHeightNormal": true
+      },
+      "liveLeaf": {
+        "computedLineHeight": "21.6px",
+        "verticalAlign": "baseline"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": 0.296875,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.5
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      },
+      "svgHasLeadingTrim": false,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "both",
+      "flags": {
+        "experimentalFoTextBaselineFix": true,
+        "experimentalFoTextLineHeightNormal": true
+      },
+      "liveLeaf": {
+        "computedLineHeight": "21.6px",
+        "verticalAlign": "baseline"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": 0.296875,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.5
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      },
+      "svgHasLeadingTrim": true,
+      "svgHasBaselineFixCss": true
+    }
+  ],
+  "baselineCanvasDeltaPx": 1.796875,
+  "comparisons": [
+    {
+      "id": "baseline",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "deltaFromBaselinePx": 0,
+      "svgHasLeadingTrim": false,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "textBaselineFix",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": 0.296875,
+      "svgVsCanvasPx": 2.5,
+      "deltaFromBaselinePx": 1,
+      "svgHasLeadingTrim": true,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "lineHeightNormal",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": 0.296875,
+      "svgVsCanvasPx": 2.5,
+      "deltaFromBaselinePx": 1,
+      "svgHasLeadingTrim": false,
+      "svgHasBaselineFixCss": true
+    },
+    {
+      "id": "both",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": 0.296875,
+      "svgVsCanvasPx": 2.5,
+      "deltaFromBaselinePx": 1,
+      "svgHasLeadingTrim": true,
+      "svgHasBaselineFixCss": true
+    }
+  ],
+  "verdict": "BASELINE_MOVED_NOT_PLATEAU",
+  "interpretation": [
+    "Baseline canvasΔ=1.797px (|Δ|=1.797px).",
+    "textBaselineFix: canvasΔ=2.797px (Δ from baseline +1px).",
+    "textBaselineFix: svgHasBaselineFixCss=true, svgHasLeadingTrim=true.",
+    "lineHeightNormal: canvasΔ=2.797px (Δ from baseline +1px).",
+    "both: canvasΔ=2.797px (Δ from baseline +1px).",
+    "both: svgHasBaselineFixCss=true, svgHasLeadingTrim=true."
+  ],
+  "generatedAt": "2026-06-02T16:24:30.959Z",
+  "port": 8765,
+  "headless": false
+}

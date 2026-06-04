@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# FO-fix agent loop wake chain — __localtests__ only (no src/).
+export LOOP_DISABLED=1
+# LOOP DISABLED — do not arm arm-immediate, daemon, or AGENT_LOOP_* (user stop).
+if [[ "${LOOP_DISABLED}" == "1" && "${1:-}" != "stop" ]]; then
+  exit 0
+fi
+set -euo pipefail
+
+
+# LOOPS DISABLED — user requested manual try-fix / re-run only.
+# Do not arm AGENT_LOOP_WAKE_* or background sleepers from this script.
+
+disabled_arm() {
+  echo "fo-fix-loop: DISABLED — run fixes manually:" >&2
+  echo "  npm run compile && node __localtests__/fo-fix-lab.mjs --matrix --ids product-baseline,<recipe-id>" >&2
+  exit 0
+}
+
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+PIDFILE="$DIR/.fo-fix-loop.pid"
+STATUS="$DIR/.loop-last-status.json"
+RECIPES="$DIR/fo-fix-recipes.js"
+WAKE_SEC=2
+FALLBACK_SEC=120
+
+LOOP_PROMPT='Add one novel fo-fix recipe (loop-auto), probe, update status, re-arm fo-fix-loop.sh arm-immediate. No src.'
+
+emit_wake() {
+  printf '%s\n' "AGENT_LOOP_WAKE_FOFIX {\"prompt\":\"${LOOP_PROMPT}\"}"
+}
+
+save_pid() {
+  echo "$1" >"$PIDFILE"
+}
+
+arm_immediate() {
+  disabled_arm
+  # Mode A: 2s immediate chain after each agent iteration.
+  local pid
+  (
+    sleep "$WAKE_SEC"
+    emit_wake
+  ) &
+  pid=$!
+  save_pid "$pid"
+  echo "fo-fix-loop: arm-immediate pid=$pid wake in ${WAKE_SEC}s"
+}
+
+last_mtime() {
+  local f
+  for f in "$RECIPES" "$STATUS"; do
+    [[ -f "$f" ]] || continue
+    stat -f '%m' "$f" 2>/dev/null || stat -c '%Y' "$f"
+  done | tr '\n' ' '
+}
+
+daemon_watch() {
+  disabled_arm
+  # Mode B + fallback heartbeat: wake on recipe/status mtime change, else every FALLBACK_SEC.
+  echo "fo-fix-loop: watch daemon (wake ${WAKE_SEC}s debounce, ${FALLBACK_SEC}s fallback)"
+  local prev last_wake now m
+  prev="$(last_mtime)"
+  last_wake=$(date +%s)
+  while true; do
+    sleep 1
+    m="$(last_mtime)"
+    now=$(date +%s)
+    if [[ "$m" != "$prev" ]]; then
+      prev="$m"
+      last_wake=$now
+      sleep "$WAKE_SEC"
+      emit_wake
+      continue
+    fi
+    if (( now - last_wake >= FALLBACK_SEC )); then
+      last_wake=$now
+      emit_wake
+    fi
+  done
+}
+
+stop_loop() {
+  if [[ -f "$PIDFILE" ]]; then
+    local pid
+    pid=$(cat "$PIDFILE" 2>/dev/null || true)
+    if [[ -n "${pid:-}" ]]; then
+      kill "$pid" 2>/dev/null || true
+      pkill -P "$pid" 2>/dev/null || true
+    fi
+    rm -f "$PIDFILE"
+  fi
+  pkill -f 'AGENT_LOOP_WAKE_FOFIX' 2>/dev/null || true
+  pkill -f 'AGENT_LOOP_TICK_FOFIX' 2>/dev/null || true
+  pkill -f 'fo-fix-loop.sh' 2>/dev/null || true
+  echo "fo-fix-loop: stopped"
+}
+
+usage() {
+  cat <<EOF
+Usage: $0 <command>
+  arm-immediate   sleep ${WAKE_SEC}s then emit AGENT_LOOP_WAKE_FOFIX (preferred after each iteration)
+  daemon          poll recipe/status mtimes; ${FALLBACK_SEC}s idle fallback heartbeat
+  wake-now        emit wake line immediately
+  stop            kill sleeper / watch daemon
+EOF
+}
+
+cmd="${1:-help}"
+case "$cmd" in
+  arm-immediate) arm_immediate ;;
+  daemon) daemon_watch ;;
+  wake-now) disabled_arm ;;
+  stop) stop_loop ;;
+  -h|--help|help) usage ;;
+  *) echo "Unknown command: $cmd" >&2; usage >&2; exit 1 ;;
+esac

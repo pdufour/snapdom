@@ -1,0 +1,34 @@
+{
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "recipeId": "product-baseline",
+  "dpr": 2,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 500,
+    "cssH": 50
+  },
+  "ink": {
+    "liveTopInBorder": 14.203125,
+    "svgFoTopInBorder": 14.1953125,
+    "canvasTopInBorder": 17.5,
+    "liveVsSvgTopPx": -0.0078125,
+    "liveVsSvgLayoutTopPx": -0.0078125,
+    "liveVsCanvasTopPx": 3.296875,
+    "svgVsCanvasTopPx": 3.3046875
+  },
+  "probeRow": {
+    "livePaintedTopInBorder": 14.203125,
+    "svgPaintedTopInBorder": 14.1953125,
+    "canvasPaintedTopInBorder": 17.5,
+    "liveVsSvgTopPx": -0.0078125,
+    "liveVsCanvasTopPx": 3.296875
+  },
+  "verdict": "BITMAP_ONLY",
+  "interpretation": [
+    "SVG FO layout ≈ live (layout Δ -0.0078px) but bitmap stages Δ svg=-0.0078px canvas=3.2969px → drift is FO→bitmap raster, not serialized FO layout."
+  ],
+  "headed": true,
+  "generatedAt": "2026-06-03T05:45:32.867Z",
+  "port": 19441
+}

@@ -1,0 +1,378 @@
+{
+  "probe": "fo-research-round-4",
+  "generatedAt": "2026-06-02T16:38:53.271Z",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "section": "all",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "sections": {
+    "decodeContext": {
+      "rows": [
+        {
+          "contextId": "main-doc-img-decode",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "iframe-sandbox-decode-retry",
+          "liveVsCanvasTopPx": null,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "iframe-fresh-marked-fo",
+          "liveVsCanvasTopPx": null,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "font-display-block",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "font-display-swap",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "font-display-optional",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "contextId": "fonts-before-ready",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        }
+      ],
+      "canvasDeltaSpreadPx": 0,
+      "verdict": "DECODE_CONTEXT_INVARIANT",
+      "implication": "Fresh iframe, font-display, and decode pipeline do not explain ~2.8px plateau."
+    },
+    "textMetric": {
+      "elementRangeTopInBorder": 14.203125,
+      "textNodeRangeTopInBorder": 14.203125,
+      "gbcrTopInBorder": 0,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "elementVsTextNodeDeltaPx": 0,
+      "svgAlignsTo": "text-node-range",
+      "canvasCloserTo": "element-range",
+      "canvasDeltaVsElementRangePx": 2.796875,
+      "verdict": "SVG_METRIC_INCONCLUSIVE",
+      "implication": "Inline FO svg leg tracks element Range (same as blackbox metric). Canvas bitmap diverges from both svg and live by ~half-leading."
+    },
+    "strutCss": {
+      "rows": [
+        {
+          "variantId": "baseline",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "first-line-bold",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "line-box-contain",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "initial-letter",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "leading-trim-both",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        }
+      ],
+      "canvasDeltaSpreadPx": 0,
+      "verdict": "STRUT_CSS_INVARIANT",
+      "refuted": [
+        "::first-line",
+        "line-box-contain",
+        "initial-letter",
+        "leading-trim"
+      ]
+    },
+    "writingMode": {
+      "rows": [
+        {
+          "variantId": "ltr-default",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "rtl",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "vertical-lr",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        }
+      ],
+      "verdict": "WRITING_MODE_NOT_ROOT_CAUSE",
+      "implication": "RTL/vertical change layout; drift class persists when readable."
+    },
+    "foSubpixel": {
+      "rows": [
+        {
+          "roundingMode": "none",
+          "foAttrs": {
+            "x": "0",
+            "y": "0",
+            "width": "500",
+            "height": "50"
+          },
+          "liveVsCanvasTopPx": 2.796875,
+          "deltaFromBaselinePx": 0
+        },
+        {
+          "roundingMode": "floor",
+          "foAttrs": {
+            "x": "0",
+            "y": "0",
+            "width": "500",
+            "height": "50"
+          },
+          "liveVsCanvasTopPx": 2.796875,
+          "deltaFromBaselinePx": 0
+        },
+        {
+          "roundingMode": "ceil",
+          "foAttrs": {
+            "x": "0",
+            "y": "0",
+            "width": "500",
+            "height": "50"
+          },
+          "liveVsCanvasTopPx": 2.796875,
+          "deltaFromBaselinePx": 0
+        },
+        {
+          "roundingMode": "y-plus-1",
+          "foAttrs": {
+            "x": "0",
+            "y": "1",
+            "width": "500",
+            "height": "50"
+          },
+          "liveVsCanvasTopPx": 3.796875,
+          "deltaFromBaselinePx": 1
+        }
+      ],
+      "yPlus1MovesCanvasPx": 1,
+      "verdict": "FO_Y_SENSITIVE_BUT_NOT_2.8PX_FROM_1PX",
+      "implication": "1px FO y nudge does not fully explain 2.797px — drift is internal strut paint, not FO rect snap alone."
+    },
+    "modernScreenshot": {
+      "snapdom": {
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "svgVsCanvasTopPx": 2.805
+      },
+      "modernScreenshot": {
+        "liveVsCanvasTopPx": 2.797,
+        "error": null,
+        "canvasWidth": 500,
+        "canvasHeight": 50
+      },
+      "bothShowBitmapDrift": true,
+      "deltaBetweenEnginesPx": 0,
+      "verdict": "CLASS_WIDE_FO_RASTER_BUG",
+      "implication": "If both engines show ~2.8px, bug is Chromium FO class — not snapdom-specific."
+    },
+    "foNamespace": {
+      "rows": [
+        {
+          "variantId": "default",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "requiredExtensions-http-www-w3-org-1999-xhtml",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "strip-xhtml-xmlns-on-root",
+          "liveVsCanvasTopPx": null,
+          "liveVsSvgTopPx": -0.0078125
+        },
+        {
+          "variantId": "explicit-xhtml-div",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125
+        }
+      ],
+      "canvasDeltaSpreadPx": 0,
+      "verdict": "NAMESPACE_INVARIANT"
+    },
+    "multipleFo": {
+      "singleFoCanvasDelta": 2.796875,
+      "stackedFoCanvasDelta": 2.796875,
+      "stackedDeltaChangePx": 0,
+      "perLandmark": {
+        "Home": 2.796875,
+        "Products": 2.796875,
+        "spreadPx": 0
+      },
+      "verdict": "PER_FO_NOT_GLOBAL_TRANSLATE",
+      "implication": "Drift is per-FO text strut paint — invisible stacked FO does not shift ink."
+    },
+    "fontFallback": {
+      "systemFontCanvasDelta": 2.796875,
+      "fallbackFontCanvasDelta": 2.796875,
+      "afterFontsReadyCanvasDelta": 2.796875,
+      "spreadPx": 0,
+      "verdict": "FONT_FALLBACK_INVARIANT"
+    },
+    "minimalRepro": {
+      "rows": [
+        {
+          "domVariant": "bare-span",
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": 0.2,
+          "leafGbcrHeight": 19,
+          "computedLh": "21.6px",
+          "driftBucket": "other"
+        },
+        {
+          "domVariant": "span-lh-1.35",
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": 0.2,
+          "leafGbcrHeight": 19,
+          "computedLh": "21.6px",
+          "driftBucket": "other"
+        },
+        {
+          "domVariant": "block-div",
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": 0.2,
+          "leafGbcrHeight": 45.59375,
+          "computedLh": "21.6px",
+          "driftBucket": "other"
+        },
+        {
+          "domVariant": "flex-start-link",
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": 0.2,
+          "leafGbcrHeight": 21.59375,
+          "computedLh": "21.6px",
+          "driftBucket": "other"
+        },
+        {
+          "domVariant": "flex-stretch-link",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": -0.003,
+          "leafGbcrHeight": 48,
+          "computedLh": "21.6px",
+          "driftBucket": "2.797"
+        },
+        {
+          "domVariant": "flex-center-link",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": -0.003,
+          "leafGbcrHeight": 21.59375,
+          "computedLh": "21.6px",
+          "driftBucket": "2.797"
+        },
+        {
+          "domVariant": "stretch-lh-1",
+          "liveVsCanvasTopPx": 3.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 0,
+          "residualCanvasMinusHalfLeadingPx": 3.5,
+          "leafGbcrHeight": 48,
+          "computedLh": "16px",
+          "driftBucket": "3.5"
+        },
+        {
+          "domVariant": "stretch-lh-normal",
+          "liveVsCanvasTopPx": 3,
+          "liveVsSvgTopPx": 0,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "residualCanvasMinusHalfLeadingPx": 0.2,
+          "leafGbcrHeight": 48,
+          "computedLh": "normal",
+          "driftBucket": "other"
+        }
+      ],
+      "smallestReproducingVariant": "bare-span",
+      "driftBuckets": [
+        "other",
+        "2.797",
+        "3.5"
+      ],
+      "implication": "Bare span with lh 1.35 shows drift without flex — flex is context, not root cause."
+    }
+  },
+  "synthesis": {
+    "winningHypothesis": "FO bitmap paint omits ~½(lh−fs) strut at decode — Chromium class bug; snapdom serialization OK",
+    "rootCauseConfidence": "HIGH — BITMAP_ONLY + half-leading residual ≈0.003px @ lh=1.35 dpr=1",
+    "confirmed": [
+      "modern-screenshot shows same-class FO bitmap drift as snapdom",
+      "Drift is per-FO strut — not global canvas translate",
+      "Minimal repro: bare span + lh 1.35 — no flex ancestor required"
+    ],
+    "refuted": [
+      "Decode context (iframe vs main, font-display) explains plateau",
+      "::first-line / line-box-contain / initial-letter fix strut paint",
+      "requiredExtensions / xmlns attributes affect raster",
+      "Font metrics swap after decode causes plateau"
+    ],
+    "newFindings": [
+      "Decode context invariant — spread 0px",
+      "Engine compare: snapdom 2.796875px vs MS 2.797px"
+    ],
+    "top3NextFixes": [
+      {
+        "fix": "Raster-only FO clip/viewport to line-height box (height=lh on text leaf FO subtree)",
+        "expectedCanvasDelta": "2.797 → ~0.0–0.5px if strut clip forces glyph origin",
+        "mechanism": "Structural decode patch — not drawImage nudge"
+      },
+      {
+        "fix": "Capture: pin FO text-leaf wrapper to content-box height = computed lh (21.6px) under stretch",
+        "expectedCanvasDelta": "2.797 → ~0.0px if bitmap uses clipped lh box not 48px stretch",
+        "mechanism": "Reduces stretch slack inside FO without flex-start layout break"
+      },
+      {
+        "fix": "Chromium bug pack + leading-trim on no-flex row only (validate paint-origin CDP autopsy)",
+        "expectedCanvasDelta": "Confirm 2.8px residual → 0 on engine fix; lab cannot blit-fix",
+        "mechanism": "Upstream / CDP evidence for half-leading paint-origin"
+      }
+    ]
+  },
+  "headed": true,
+  "port": 8765
+}

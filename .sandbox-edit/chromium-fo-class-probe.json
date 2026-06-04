@@ -1,0 +1,1351 @@
+{
+  "probe": "fo-chromium-class-probe",
+  "generatedAt": "2026-06-03T00:13:49.087Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+  "landmark": "Home",
+  "scale": 1,
+  "dprs": [
+    1,
+    2
+  ],
+  "reproFixtures": {
+    "svg": "__localtests__/fixtures/chromium-fo-strut-repro.svg",
+    "html": "__localtests__/fixtures/chromium-fo-strut-repro.html"
+  },
+  "staticSvgBytes": 572,
+  "byDpr": [
+    {
+      "dpr": 1,
+      "typography": {
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "halfLeadingLhFsPx": 2.8
+      },
+      "rows": [
+        {
+          "path": "hand-built-static",
+          "patchId": null,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 2.797,
+          "svgVsCanvasTopPx": 2.797,
+          "liveTop": 14.203,
+          "svgTop": 14.203,
+          "canvasTop": 17,
+          "bitmapOnly": true
+        },
+        {
+          "path": "hand-built+w7:fo-y-half-leading-meta",
+          "patchId": "fo-y-half-leading-meta",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": -0.203,
+          "svgVsCanvasTopPx": -0.203,
+          "liveTop": 14.203,
+          "svgTop": 14.203,
+          "canvasTop": 14,
+          "bitmapOnly": false
+        },
+        {
+          "path": "snapdom:product-baseline",
+          "recipeId": "product-baseline",
+          "liveVsSvgTopPx": -0.008,
+          "liveVsCanvasTopPx": 2.797,
+          "svgVsCanvasTopPx": 2.805,
+          "liveTop": 14.203,
+          "svgTop": 14.195,
+          "canvasTop": 17,
+          "bitmapOnly": true
+        },
+        {
+          "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "liveVsSvgTopPx": -0.008,
+          "liveVsCanvasTopPx": -0.203,
+          "svgVsCanvasTopPx": -0.195,
+          "liveTop": 14.203,
+          "svgTop": 14.195,
+          "canvasTop": 14,
+          "bitmapOnly": false
+        },
+        {
+          "path": "modern-screenshot",
+          "error": null,
+          "liveVsCanvasTopPx": 2.797,
+          "liveTop": 14.203,
+          "canvasTop": 17,
+          "bitmapOnly": true
+        }
+      ],
+      "cssDomFactors": {
+        "rows": [
+          {
+            "path": "css-factor:baseline",
+            "factorId": "baseline",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-geometricPrecision",
+            "factorId": "text-rendering-geometricPrecision",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeLegibility",
+            "factorId": "text-rendering-optimizeLegibility",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeSpeed",
+            "factorId": "text-rendering-optimizeSpeed",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:direction-rtl",
+            "factorId": "direction-rtl",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": null,
+            "svgVsCanvasTopPx": null,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": null,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          },
+          {
+            "path": "css-factor:writing-mode-vertical-lr",
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsSvgTopPx": -14.203,
+            "liveVsCanvasTopPx": -13.203,
+            "svgVsCanvasTopPx": 1,
+            "liveTop": 14.203,
+            "svgTop": 0,
+            "canvasTop": 1,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          }
+        ],
+        "horizontalNavCanvasDeltaSpreadPx": 0,
+        "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+        "refutedAsRootCause": [
+          "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+        ],
+        "nonComparableOnHorizontalInkProbe": [
+          {
+            "factorId": "direction-rtl",
+            "liveVsCanvasTopPx": null,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          },
+          {
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsCanvasTopPx": -13.203,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          }
+        ]
+      },
+      "classWide": true,
+      "snapdomMatchesHandBuilt": true,
+      "modernScreenshotMatchesSnapdom": true,
+      "canvasDeltaSpreadPx": 3,
+      "w7ClosesGap": true
+    },
+    {
+      "dpr": 2,
+      "typography": {
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "halfLeadingLhFsPx": 2.8
+      },
+      "rows": [
+        {
+          "path": "hand-built-static",
+          "patchId": null,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.297,
+          "svgVsCanvasTopPx": 3.297,
+          "liveTop": 14.203,
+          "svgTop": 14.203,
+          "canvasTop": 17.5,
+          "bitmapOnly": true
+        },
+        {
+          "path": "hand-built+w7:fo-y-half-leading-meta",
+          "patchId": "fo-y-half-leading-meta",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 0.297,
+          "svgVsCanvasTopPx": 0.297,
+          "liveTop": 14.203,
+          "svgTop": 14.203,
+          "canvasTop": 14.5,
+          "bitmapOnly": false
+        },
+        {
+          "path": "snapdom:product-baseline",
+          "recipeId": "product-baseline",
+          "liveVsSvgTopPx": -0.008,
+          "liveVsCanvasTopPx": 3.297,
+          "svgVsCanvasTopPx": 3.305,
+          "liveTop": 14.203,
+          "svgTop": 14.195,
+          "canvasTop": 17.5,
+          "bitmapOnly": true
+        },
+        {
+          "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "liveVsSvgTopPx": -0.008,
+          "liveVsCanvasTopPx": 0.297,
+          "svgVsCanvasTopPx": 0.305,
+          "liveTop": 14.203,
+          "svgTop": 14.195,
+          "canvasTop": 14.5,
+          "bitmapOnly": false
+        },
+        {
+          "path": "modern-screenshot",
+          "error": null,
+          "liveVsCanvasTopPx": 3.297,
+          "liveTop": 14.203,
+          "canvasTop": 17.5,
+          "bitmapOnly": true
+        }
+      ],
+      "cssDomFactors": {
+        "rows": [
+          {
+            "path": "css-factor:baseline",
+            "factorId": "baseline",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.297,
+            "svgVsCanvasTopPx": 3.297,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17.5,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-geometricPrecision",
+            "factorId": "text-rendering-geometricPrecision",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.297,
+            "svgVsCanvasTopPx": 3.297,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17.5,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeLegibility",
+            "factorId": "text-rendering-optimizeLegibility",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.297,
+            "svgVsCanvasTopPx": 3.297,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17.5,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeSpeed",
+            "factorId": "text-rendering-optimizeSpeed",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 3.297,
+            "svgVsCanvasTopPx": 3.297,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17.5,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:direction-rtl",
+            "factorId": "direction-rtl",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": null,
+            "svgVsCanvasTopPx": null,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": null,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          },
+          {
+            "path": "css-factor:writing-mode-vertical-lr",
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsSvgTopPx": -14.203,
+            "liveVsCanvasTopPx": -13.203,
+            "svgVsCanvasTopPx": 1,
+            "liveTop": 14.203,
+            "svgTop": 0,
+            "canvasTop": 1,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          }
+        ],
+        "horizontalNavCanvasDeltaSpreadPx": 0,
+        "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+        "refutedAsRootCause": [
+          "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+        ],
+        "nonComparableOnHorizontalInkProbe": [
+          {
+            "factorId": "direction-rtl",
+            "liveVsCanvasTopPx": null,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          },
+          {
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsCanvasTopPx": -13.203,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          }
+        ]
+      },
+      "classWide": true,
+      "snapdomMatchesHandBuilt": true,
+      "modernScreenshotMatchesSnapdom": true,
+      "canvasDeltaSpreadPx": 3,
+      "w7ClosesGap": true
+    }
+  ],
+  "cssDomFactorsSummary": {
+    "horizontalNavCanvasDeltaSpreadPx": 0,
+    "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+    "refutedAsRootCause": [
+      "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+    ],
+    "rows": [
+      {
+        "path": "css-factor:baseline",
+        "factorId": "baseline",
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "liveTop": 14.203,
+        "svgTop": 14.203,
+        "canvasTop": 17,
+        "bitmapOnly": true,
+        "horizontalNavComparable": true
+      },
+      {
+        "path": "css-factor:text-rendering-geometricPrecision",
+        "factorId": "text-rendering-geometricPrecision",
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "liveTop": 14.203,
+        "svgTop": 14.203,
+        "canvasTop": 17,
+        "bitmapOnly": true,
+        "horizontalNavComparable": true
+      },
+      {
+        "path": "css-factor:text-rendering-optimizeLegibility",
+        "factorId": "text-rendering-optimizeLegibility",
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "liveTop": 14.203,
+        "svgTop": 14.203,
+        "canvasTop": 17,
+        "bitmapOnly": true,
+        "horizontalNavComparable": true
+      },
+      {
+        "path": "css-factor:text-rendering-optimizeSpeed",
+        "factorId": "text-rendering-optimizeSpeed",
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "liveTop": 14.203,
+        "svgTop": 14.203,
+        "canvasTop": 17,
+        "bitmapOnly": true,
+        "horizontalNavComparable": true
+      },
+      {
+        "path": "css-factor:direction-rtl",
+        "factorId": "direction-rtl",
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": null,
+        "svgVsCanvasTopPx": null,
+        "liveTop": 14.203,
+        "svgTop": 14.203,
+        "canvasTop": null,
+        "bitmapOnly": false,
+        "horizontalNavComparable": false
+      },
+      {
+        "path": "css-factor:writing-mode-vertical-lr",
+        "factorId": "writing-mode-vertical-lr",
+        "liveVsSvgTopPx": -14.203,
+        "liveVsCanvasTopPx": -13.203,
+        "svgVsCanvasTopPx": 1,
+        "liveTop": 14.203,
+        "svgTop": 0,
+        "canvasTop": 1,
+        "bitmapOnly": false,
+        "horizontalNavComparable": false
+      }
+    ],
+    "nonComparableOnHorizontalInkProbe": [
+      {
+        "factorId": "direction-rtl",
+        "liveVsCanvasTopPx": null,
+        "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+      },
+      {
+        "factorId": "writing-mode-vertical-lr",
+        "liveVsCanvasTopPx": -13.203,
+        "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+      }
+    ]
+  },
+  "synthesis": {
+    "verdict": "CHROMIUM_CLASS_WIDE_FO_STRUT_BITMAP",
+    "plateauPxAtDpr1": 2.797,
+    "halfLeadingCorrelatePx": 2.8,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "snapdomMatchesHandBuilt": true,
+    "modernScreenshotMatchesSnapdom": true,
+    "w7ClosesMostGap": true,
+    "implication": "Identical canvasΔ across hand-built FO, snapdom, and modern-screenshot → Chromium FO bitmap strut paint; not capture-library-specific.",
+    "bugDraft": "__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md"
+  },
+  "browserChannel": "chrome",
+  "channelsTested": [
+    "chrome",
+    "chromium"
+  ],
+  "channelCompare": [
+    {
+      "channel": "chrome",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "canvasDeltaPx": 2.797,
+      "svgDeltaPx": 0
+    },
+    {
+      "channel": "chromium",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "canvasDeltaPx": 2.797,
+      "svgDeltaPx": 0
+    }
+  ],
+  "channelCompareSpreadPx": 0,
+  "channelCompareVerdict": "CHROME_CHROMIUM_SAME_CLASS",
+  "channelRuns": [
+    {
+      "probe": "fo-chromium-class-probe",
+      "generatedAt": "2026-06-03T00:13:49.087Z",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "landmark": "Home",
+      "scale": 1,
+      "dprs": [
+        1,
+        2
+      ],
+      "reproFixtures": {
+        "svg": "__localtests__/fixtures/chromium-fo-strut-repro.svg",
+        "html": "__localtests__/fixtures/chromium-fo-strut-repro.html"
+      },
+      "staticSvgBytes": 572,
+      "byDpr": [
+        {
+          "dpr": 1,
+          "typography": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingLhFsPx": 2.8
+          },
+          "rows": [
+            {
+              "path": "hand-built-static",
+              "patchId": null,
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 2.797,
+              "svgVsCanvasTopPx": 2.797,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            },
+            {
+              "path": "hand-built+w7:fo-y-half-leading-meta",
+              "patchId": "fo-y-half-leading-meta",
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": -0.203,
+              "svgVsCanvasTopPx": -0.203,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 14,
+              "bitmapOnly": false
+            },
+            {
+              "path": "snapdom:product-baseline",
+              "recipeId": "product-baseline",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 2.797,
+              "svgVsCanvasTopPx": 2.805,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            },
+            {
+              "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": -0.203,
+              "svgVsCanvasTopPx": -0.195,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 14,
+              "bitmapOnly": false
+            },
+            {
+              "path": "modern-screenshot",
+              "error": null,
+              "liveVsCanvasTopPx": 2.797,
+              "liveTop": 14.203,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            }
+          ],
+          "cssDomFactors": {
+            "rows": [
+              {
+                "path": "css-factor:baseline",
+                "factorId": "baseline",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-geometricPrecision",
+                "factorId": "text-rendering-geometricPrecision",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeLegibility",
+                "factorId": "text-rendering-optimizeLegibility",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeSpeed",
+                "factorId": "text-rendering-optimizeSpeed",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:direction-rtl",
+                "factorId": "direction-rtl",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": null,
+                "svgVsCanvasTopPx": null,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": null,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              },
+              {
+                "path": "css-factor:writing-mode-vertical-lr",
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsSvgTopPx": -14.203,
+                "liveVsCanvasTopPx": -13.203,
+                "svgVsCanvasTopPx": 1,
+                "liveTop": 14.203,
+                "svgTop": 0,
+                "canvasTop": 1,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              }
+            ],
+            "horizontalNavCanvasDeltaSpreadPx": 0,
+            "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+            "refutedAsRootCause": [
+              "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+            ],
+            "nonComparableOnHorizontalInkProbe": [
+              {
+                "factorId": "direction-rtl",
+                "liveVsCanvasTopPx": null,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              },
+              {
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsCanvasTopPx": -13.203,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              }
+            ]
+          },
+          "classWide": true,
+          "snapdomMatchesHandBuilt": true,
+          "modernScreenshotMatchesSnapdom": true,
+          "canvasDeltaSpreadPx": 3,
+          "w7ClosesGap": true
+        },
+        {
+          "dpr": 2,
+          "typography": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingLhFsPx": 2.8
+          },
+          "rows": [
+            {
+              "path": "hand-built-static",
+              "patchId": null,
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 3.297,
+              "svgVsCanvasTopPx": 3.297,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            },
+            {
+              "path": "hand-built+w7:fo-y-half-leading-meta",
+              "patchId": "fo-y-half-leading-meta",
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 0.297,
+              "svgVsCanvasTopPx": 0.297,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 14.5,
+              "bitmapOnly": false
+            },
+            {
+              "path": "snapdom:product-baseline",
+              "recipeId": "product-baseline",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 3.297,
+              "svgVsCanvasTopPx": 3.305,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            },
+            {
+              "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 0.297,
+              "svgVsCanvasTopPx": 0.305,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 14.5,
+              "bitmapOnly": false
+            },
+            {
+              "path": "modern-screenshot",
+              "error": null,
+              "liveVsCanvasTopPx": 3.297,
+              "liveTop": 14.203,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            }
+          ],
+          "cssDomFactors": {
+            "rows": [
+              {
+                "path": "css-factor:baseline",
+                "factorId": "baseline",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-geometricPrecision",
+                "factorId": "text-rendering-geometricPrecision",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeLegibility",
+                "factorId": "text-rendering-optimizeLegibility",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeSpeed",
+                "factorId": "text-rendering-optimizeSpeed",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:direction-rtl",
+                "factorId": "direction-rtl",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": null,
+                "svgVsCanvasTopPx": null,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": null,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              },
+              {
+                "path": "css-factor:writing-mode-vertical-lr",
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsSvgTopPx": -14.203,
+                "liveVsCanvasTopPx": -13.203,
+                "svgVsCanvasTopPx": 1,
+                "liveTop": 14.203,
+                "svgTop": 0,
+                "canvasTop": 1,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              }
+            ],
+            "horizontalNavCanvasDeltaSpreadPx": 0,
+            "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+            "refutedAsRootCause": [
+              "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+            ],
+            "nonComparableOnHorizontalInkProbe": [
+              {
+                "factorId": "direction-rtl",
+                "liveVsCanvasTopPx": null,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              },
+              {
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsCanvasTopPx": -13.203,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              }
+            ]
+          },
+          "classWide": true,
+          "snapdomMatchesHandBuilt": true,
+          "modernScreenshotMatchesSnapdom": true,
+          "canvasDeltaSpreadPx": 3,
+          "w7ClosesGap": true
+        }
+      ],
+      "cssDomFactorsSummary": {
+        "horizontalNavCanvasDeltaSpreadPx": 0,
+        "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+        "refutedAsRootCause": [
+          "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+        ],
+        "rows": [
+          {
+            "path": "css-factor:baseline",
+            "factorId": "baseline",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-geometricPrecision",
+            "factorId": "text-rendering-geometricPrecision",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeLegibility",
+            "factorId": "text-rendering-optimizeLegibility",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeSpeed",
+            "factorId": "text-rendering-optimizeSpeed",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:direction-rtl",
+            "factorId": "direction-rtl",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": null,
+            "svgVsCanvasTopPx": null,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": null,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          },
+          {
+            "path": "css-factor:writing-mode-vertical-lr",
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsSvgTopPx": -14.203,
+            "liveVsCanvasTopPx": -13.203,
+            "svgVsCanvasTopPx": 1,
+            "liveTop": 14.203,
+            "svgTop": 0,
+            "canvasTop": 1,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          }
+        ],
+        "nonComparableOnHorizontalInkProbe": [
+          {
+            "factorId": "direction-rtl",
+            "liveVsCanvasTopPx": null,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          },
+          {
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsCanvasTopPx": -13.203,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          }
+        ]
+      },
+      "synthesis": {
+        "verdict": "CHROMIUM_CLASS_WIDE_FO_STRUT_BITMAP",
+        "plateauPxAtDpr1": 2.797,
+        "halfLeadingCorrelatePx": 2.8,
+        "residualCanvasMinusHalfLeadingPx": -0.003,
+        "snapdomMatchesHandBuilt": true,
+        "modernScreenshotMatchesSnapdom": true,
+        "w7ClosesMostGap": true,
+        "implication": "Identical canvasΔ across hand-built FO, snapdom, and modern-screenshot → Chromium FO bitmap strut paint; not capture-library-specific.",
+        "bugDraft": "__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md"
+      },
+      "browserChannel": "chrome"
+    },
+    {
+      "probe": "fo-chromium-class-probe",
+      "generatedAt": "2026-06-03T00:13:50.511Z",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "landmark": "Home",
+      "scale": 1,
+      "dprs": [
+        1,
+        2
+      ],
+      "reproFixtures": {
+        "svg": "__localtests__/fixtures/chromium-fo-strut-repro.svg",
+        "html": "__localtests__/fixtures/chromium-fo-strut-repro.html"
+      },
+      "staticSvgBytes": 572,
+      "byDpr": [
+        {
+          "dpr": 1,
+          "typography": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingLhFsPx": 2.8
+          },
+          "rows": [
+            {
+              "path": "hand-built-static",
+              "patchId": null,
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 2.797,
+              "svgVsCanvasTopPx": 2.797,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            },
+            {
+              "path": "hand-built+w7:fo-y-half-leading-meta",
+              "patchId": "fo-y-half-leading-meta",
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": -0.203,
+              "svgVsCanvasTopPx": -0.203,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 14,
+              "bitmapOnly": false
+            },
+            {
+              "path": "snapdom:product-baseline",
+              "recipeId": "product-baseline",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 2.797,
+              "svgVsCanvasTopPx": 2.805,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            },
+            {
+              "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": -0.203,
+              "svgVsCanvasTopPx": -0.195,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 14,
+              "bitmapOnly": false
+            },
+            {
+              "path": "modern-screenshot",
+              "error": null,
+              "liveVsCanvasTopPx": 2.797,
+              "liveTop": 14.203,
+              "canvasTop": 17,
+              "bitmapOnly": true
+            }
+          ],
+          "cssDomFactors": {
+            "rows": [
+              {
+                "path": "css-factor:baseline",
+                "factorId": "baseline",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-geometricPrecision",
+                "factorId": "text-rendering-geometricPrecision",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeLegibility",
+                "factorId": "text-rendering-optimizeLegibility",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeSpeed",
+                "factorId": "text-rendering-optimizeSpeed",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 2.797,
+                "svgVsCanvasTopPx": 2.797,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:direction-rtl",
+                "factorId": "direction-rtl",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": null,
+                "svgVsCanvasTopPx": null,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": null,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              },
+              {
+                "path": "css-factor:writing-mode-vertical-lr",
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsSvgTopPx": -14.203,
+                "liveVsCanvasTopPx": -13.203,
+                "svgVsCanvasTopPx": 1,
+                "liveTop": 14.203,
+                "svgTop": 0,
+                "canvasTop": 1,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              }
+            ],
+            "horizontalNavCanvasDeltaSpreadPx": 0,
+            "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+            "refutedAsRootCause": [
+              "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+            ],
+            "nonComparableOnHorizontalInkProbe": [
+              {
+                "factorId": "direction-rtl",
+                "liveVsCanvasTopPx": null,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              },
+              {
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsCanvasTopPx": -13.203,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              }
+            ]
+          },
+          "classWide": true,
+          "snapdomMatchesHandBuilt": true,
+          "modernScreenshotMatchesSnapdom": true,
+          "canvasDeltaSpreadPx": 3,
+          "w7ClosesGap": true
+        },
+        {
+          "dpr": 2,
+          "typography": {
+            "fontSizePx": 16,
+            "lineHeightPx": 21.6,
+            "halfLeadingLhFsPx": 2.8
+          },
+          "rows": [
+            {
+              "path": "hand-built-static",
+              "patchId": null,
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 3.297,
+              "svgVsCanvasTopPx": 3.297,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            },
+            {
+              "path": "hand-built+w7:fo-y-half-leading-meta",
+              "patchId": "fo-y-half-leading-meta",
+              "liveVsSvgTopPx": 0,
+              "liveVsCanvasTopPx": 0.297,
+              "svgVsCanvasTopPx": 0.297,
+              "liveTop": 14.203,
+              "svgTop": 14.203,
+              "canvasTop": 14.5,
+              "bitmapOnly": false
+            },
+            {
+              "path": "snapdom:product-baseline",
+              "recipeId": "product-baseline",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 3.297,
+              "svgVsCanvasTopPx": 3.305,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            },
+            {
+              "path": "snapdom:tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+              "liveVsSvgTopPx": -0.008,
+              "liveVsCanvasTopPx": 0.297,
+              "svgVsCanvasTopPx": 0.305,
+              "liveTop": 14.203,
+              "svgTop": 14.195,
+              "canvasTop": 14.5,
+              "bitmapOnly": false
+            },
+            {
+              "path": "modern-screenshot",
+              "error": null,
+              "liveVsCanvasTopPx": 3.297,
+              "liveTop": 14.203,
+              "canvasTop": 17.5,
+              "bitmapOnly": true
+            }
+          ],
+          "cssDomFactors": {
+            "rows": [
+              {
+                "path": "css-factor:baseline",
+                "factorId": "baseline",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-geometricPrecision",
+                "factorId": "text-rendering-geometricPrecision",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeLegibility",
+                "factorId": "text-rendering-optimizeLegibility",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:text-rendering-optimizeSpeed",
+                "factorId": "text-rendering-optimizeSpeed",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": 3.297,
+                "svgVsCanvasTopPx": 3.297,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": 17.5,
+                "bitmapOnly": true,
+                "horizontalNavComparable": true
+              },
+              {
+                "path": "css-factor:direction-rtl",
+                "factorId": "direction-rtl",
+                "liveVsSvgTopPx": 0,
+                "liveVsCanvasTopPx": null,
+                "svgVsCanvasTopPx": null,
+                "liveTop": 14.203,
+                "svgTop": 14.203,
+                "canvasTop": null,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              },
+              {
+                "path": "css-factor:writing-mode-vertical-lr",
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsSvgTopPx": -14.203,
+                "liveVsCanvasTopPx": -13.203,
+                "svgVsCanvasTopPx": 1,
+                "liveTop": 14.203,
+                "svgTop": 0,
+                "canvasTop": 1,
+                "bitmapOnly": false,
+                "horizontalNavComparable": false
+              }
+            ],
+            "horizontalNavCanvasDeltaSpreadPx": 0,
+            "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+            "refutedAsRootCause": [
+              "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+            ],
+            "nonComparableOnHorizontalInkProbe": [
+              {
+                "factorId": "direction-rtl",
+                "liveVsCanvasTopPx": null,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              },
+              {
+                "factorId": "writing-mode-vertical-lr",
+                "liveVsCanvasTopPx": -13.203,
+                "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+              }
+            ]
+          },
+          "classWide": true,
+          "snapdomMatchesHandBuilt": true,
+          "modernScreenshotMatchesSnapdom": true,
+          "canvasDeltaSpreadPx": 3,
+          "w7ClosesGap": true
+        }
+      ],
+      "cssDomFactorsSummary": {
+        "horizontalNavCanvasDeltaSpreadPx": 0,
+        "verdict": "CSS_DOM_INVARIANT_HORIZONTAL_NAV",
+        "refutedAsRootCause": [
+          "text-rendering (geometricPrecision / optimizeLegibility / optimizeSpeed)"
+        ],
+        "rows": [
+          {
+            "path": "css-factor:baseline",
+            "factorId": "baseline",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-geometricPrecision",
+            "factorId": "text-rendering-geometricPrecision",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeLegibility",
+            "factorId": "text-rendering-optimizeLegibility",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:text-rendering-optimizeSpeed",
+            "factorId": "text-rendering-optimizeSpeed",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": 2.797,
+            "svgVsCanvasTopPx": 2.797,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": 17,
+            "bitmapOnly": true,
+            "horizontalNavComparable": true
+          },
+          {
+            "path": "css-factor:direction-rtl",
+            "factorId": "direction-rtl",
+            "liveVsSvgTopPx": 0,
+            "liveVsCanvasTopPx": null,
+            "svgVsCanvasTopPx": null,
+            "liveTop": 14.203,
+            "svgTop": 14.203,
+            "canvasTop": null,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          },
+          {
+            "path": "css-factor:writing-mode-vertical-lr",
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsSvgTopPx": -14.203,
+            "liveVsCanvasTopPx": -13.203,
+            "svgVsCanvasTopPx": 1,
+            "liveTop": 14.203,
+            "svgTop": 0,
+            "canvasTop": 1,
+            "bitmapOnly": false,
+            "horizontalNavComparable": false
+          }
+        ],
+        "nonComparableOnHorizontalInkProbe": [
+          {
+            "factorId": "direction-rtl",
+            "liveVsCanvasTopPx": null,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          },
+          {
+            "factorId": "writing-mode-vertical-lr",
+            "liveVsCanvasTopPx": -13.203,
+            "note": "RTL / vertical writing-mode change layout; use round-4 probe for drift class on readable ink"
+          }
+        ]
+      },
+      "synthesis": {
+        "verdict": "CHROMIUM_CLASS_WIDE_FO_STRUT_BITMAP",
+        "plateauPxAtDpr1": 2.797,
+        "halfLeadingCorrelatePx": 2.8,
+        "residualCanvasMinusHalfLeadingPx": -0.003,
+        "snapdomMatchesHandBuilt": true,
+        "modernScreenshotMatchesSnapdom": true,
+        "w7ClosesMostGap": true,
+        "implication": "Identical canvasΔ across hand-built FO, snapdom, and modern-screenshot → Chromium FO bitmap strut paint; not capture-library-specific.",
+        "bugDraft": "__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md"
+      },
+      "browserChannel": "chromium"
+    }
+  ]
+}

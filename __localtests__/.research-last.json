@@ -1,0 +1,40 @@
+{
+  "at": "2026-06-02T17:00:00.000Z",
+  "probe": "fo-fix-lab-matrix-retry",
+  "probes": ["fo-fix-lab-matrix-retry"],
+  "args": ["--matrix", "--no-text-bypass", "--ids", "product-baseline,tc-blh-w1-*,tc-text-w1-*,tc-fix-w6-*,tc-blh-w2-*"],
+  "results": {
+    "fo-fix-lab-matrix-retry": {
+      "rowCount": 57,
+      "verdict": "NOT_FIXED",
+      "baselineCanvasDeltaPx": 2.797,
+      "bestAbsCanvasDeltaPx": 2.203,
+      "bestRecipeId": "tc-fix-w6-meta-ink-align",
+      "bestPromotableAbsCanvasDeltaPx": 2.797,
+      "forkWiringConfirmed": true
+    }
+  },
+  "summary": [
+    {
+      "probe": "fo-fix-lab-matrix-retry",
+      "label": "baseline",
+      "metric": "|canvasΔ|",
+      "value": "2.797",
+      "signal": "plateau unchanged"
+    },
+    {
+      "probe": "fo-fix-lab-matrix-retry",
+      "label": "bestPromotable",
+      "metric": "|canvasΔ|",
+      "value": "2.797",
+      "signal": "no structural fix"
+    },
+    {
+      "probe": "fo-fix-lab-matrix-retry",
+      "label": "forkRedMarker",
+      "metric": "canvasΔ",
+      "value": "-14.203",
+      "signal": "decode fork reaches FO bitmap"
+    }
+  ]
+}

@@ -1,0 +1,764 @@
+{
+  "generatedAt": "2026-06-02T16:24:25.408Z",
+  "headed": true,
+  "port": 8799,
+  "plateauReferencePx": 2.797,
+  "svgPromoteMaxPx": 0.15,
+  "promoteCandidates": [
+    {
+      "id": "combo-0001",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-0010",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-0011",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-1000",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-1001",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-1010",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    },
+    {
+      "id": "combo-1011",
+      "absCanvasDeltaPx": 1.797,
+      "absSvgDeltaPx": 0.008
+    }
+  ],
+  "fixture": "mini-nav",
+  "wave": 5,
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "flagKeys": [
+    "experimentalFoPinLineHeightFromLive",
+    "experimentalRasterSvgPatch",
+    "experimentalRasterBackingCeil",
+    "experimentalRasterDisableGbcrNudge"
+  ],
+  "flagsWired": {
+    "experimentalFoPinLineHeightFromLive": true,
+    "experimentalRasterSvgPatch": true,
+    "experimentalRasterDisableGbcrNudge": true,
+    "experimentalRasterBackingCeil": true
+  },
+  "variants": [
+    {
+      "id": "baseline",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0001",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0010",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0011",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0100",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0101",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0110",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-0111",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": null
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1000",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1001",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1010",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1011",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": false,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 16,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 1.796875,
+        "svgVsCanvasTopPx": 1.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1100",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1101",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": false,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1110",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": false,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    },
+    {
+      "id": "combo-1111",
+      "flags": {
+        "experimentalFoPinLineHeightFromLive": true,
+        "experimentalRasterBackingCeil": true,
+        "experimentalRasterDisableGbcrNudge": true,
+        "experimentalRasterSvgPatch": "fo-lh-pin"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "canvasBacking": {
+        "width": 500,
+        "height": 50
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "gbcrLeft": 14,
+        "gbcrTop": 92.875,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875
+      }
+    }
+  ],
+  "baselineCanvasDeltaPx": 1.796875,
+  "comparisons": [
+    {
+      "id": "baseline",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-0001",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-0010",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-0011",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-0100",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-0101",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-0110",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-0111",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-1000",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-1001",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-1010",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-1011",
+      "canvasDeltaPx": 1.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 1.8046875,
+      "absCanvasDeltaPx": 1.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "combo-1100",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-1101",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-1110",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    },
+    {
+      "id": "combo-1111",
+      "canvasDeltaPx": 2.796875,
+      "svgDeltaPx": -0.0078125,
+      "svgVsCanvasPx": 2.8046875,
+      "absCanvasDeltaPx": 2.796875,
+      "absSvgDeltaPx": 0.0078125,
+      "deltaFromBaselinePx": 1
+    }
+  ],
+  "evaluation": {
+    "verdict": "PROMOTE_CANDIDATES",
+    "atPlateau": false,
+    "promoteCandidates": [
+      {
+        "id": "combo-0001",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-0010",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-0011",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-1000",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-1001",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-1010",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      },
+      {
+        "id": "combo-1011",
+        "absCanvasDeltaPx": 1.797,
+        "absSvgDeltaPx": 0.008
+      }
+    ],
+    "lines": [
+      "Baseline canvasΔ=1.797px (|Δ|=1.797px).",
+      "experimentalFoPinLineHeightFromLive: wired (effect observed).",
+      "experimentalRasterSvgPatch: wired (effect observed).",
+      "experimentalRasterDisableGbcrNudge: wired (effect observed).",
+      "experimentalRasterBackingCeil: wired (effect observed).",
+      "combo-0100: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-0101: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-0110: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-0111: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-1100: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-1101: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-1110: canvasΔ=2.797px (Δ from baseline +1px).",
+      "combo-1111: canvasΔ=2.797px (Δ from baseline +1px).",
+      "PROMOTE CANDIDATES (7): combo-0001, combo-0010, combo-0011, combo-1000, combo-1001, combo-1010, combo-1011 — beat 2.797px with |svgΔ| < 0.15."
+    ],
+    "fixed": false
+  }
+}

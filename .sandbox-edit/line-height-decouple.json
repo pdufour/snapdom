@@ -1,0 +1,212 @@
+{
+  "fixture": "line-height-decouple",
+  "probe": "three-way",
+  "baseRecipe": "product-baseline",
+  "rasterPatch": "product-toCanvas",
+  "injectMode": "fo-css-only",
+  "port": 9929,
+  "dpr": 2,
+  "scale": 1,
+  "landmarks": [
+    "Home",
+    "Products"
+  ],
+  "lhVariants": [
+    "21.6px",
+    "48px",
+    "from-live"
+  ],
+  "generatedAt": "2026-06-02T16:17:19.423Z",
+  "variants": [
+    {
+      "fixture": "line-height-decouple",
+      "probe": "three-way",
+      "lhVariant": "21.6px",
+      "baseRecipe": "product-baseline",
+      "injectMode": "fo-css-only",
+      "textLeafSelector": "foreignObject a",
+      "dpr": 2,
+      "scale": 1,
+      "rows": [
+        {
+          "landmark": "Home",
+          "lhVariant": "21.6px",
+          "injectLineHeight": "21.6px",
+          "injectCss": "foreignObject a{line-height:21.6px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-21-6px",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.1953125,
+            "canvasPaintedTopInBorder": 17.5,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPx": 3.296875,
+            "pass": false
+          }
+        },
+        {
+          "landmark": "Products",
+          "lhVariant": "21.6px",
+          "injectLineHeight": "21.6px",
+          "injectCss": "foreignObject a{line-height:21.6px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-21-6px",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.1953125,
+            "canvasPaintedTopInBorder": 17.5,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPx": 3.296875,
+            "pass": false
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "line-height-decouple",
+      "probe": "three-way",
+      "lhVariant": "48px",
+      "baseRecipe": "product-baseline",
+      "injectMode": "fo-css-only",
+      "textLeafSelector": "foreignObject a",
+      "dpr": 2,
+      "scale": 1,
+      "rows": [
+        {
+          "landmark": "Home",
+          "lhVariant": "48px",
+          "injectLineHeight": "48px",
+          "injectCss": "foreignObject a{line-height:48px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-48px",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.5,
+            "canvasPaintedTopInBorder": 18.5,
+            "liveVsSvgTopPx": 0.296875,
+            "liveVsCanvasTopPx": 4.296875,
+            "pass": false
+          }
+        },
+        {
+          "landmark": "Products",
+          "lhVariant": "48px",
+          "injectLineHeight": "48px",
+          "injectCss": "foreignObject a{line-height:48px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-48px",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.5,
+            "canvasPaintedTopInBorder": 18.5,
+            "liveVsSvgTopPx": 0.296875,
+            "liveVsCanvasTopPx": 4.296875,
+            "pass": false
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "line-height-decouple",
+      "probe": "three-way",
+      "lhVariant": "from-live",
+      "baseRecipe": "product-baseline",
+      "injectMode": "fo-css-only",
+      "textLeafSelector": "foreignObject a",
+      "dpr": 2,
+      "scale": 1,
+      "rows": [
+        {
+          "landmark": "Home",
+          "lhVariant": "from-live",
+          "injectLineHeight": "21.6px",
+          "injectCss": "foreignObject a{line-height:21.6px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-from-live",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.1953125,
+            "canvasPaintedTopInBorder": 17.5,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPx": 3.296875,
+            "pass": false
+          }
+        },
+        {
+          "landmark": "Products",
+          "lhVariant": "from-live",
+          "injectLineHeight": "21.6px",
+          "injectCss": "foreignObject a{line-height:21.6px!important}",
+          "liveLeaf": {
+            "tag": "A",
+            "computedLineHeight": "21.6px",
+            "fontSize": "16px",
+            "heightGbcr": 48,
+            "alignSelf": "auto",
+            "display": "flex"
+          },
+          "recipeId": "lab-lh-decouple-from-live",
+          "rasterPatch": "product-toCanvas",
+          "threeWay": {
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.1953125,
+            "canvasPaintedTopInBorder": 17.5,
+            "liveVsSvgTopPx": -0.0078125,
+            "liveVsCanvasTopPx": 3.296875,
+            "pass": false
+          }
+        }
+      ]
+    }
+  ],
+  "comparison": {
+    "interpretation": [
+      "Home: canvasΔ lh21.6=3.297 svgΔ=-0.008 | lh48 canvasΔ=4.297 svgΔ=0.297 | from-live canvasΔ=3.297 svgΔ=-0.008",
+      "Home: canvasΔ spread across lh variants = 1px — FO lh inject moves raster ink.",
+      "Home: 21.6px inject ≈ from-live (21.6px) for canvas ink.",
+      "Products: canvasΔ lh21.6=3.297 svgΔ=-0.008 | lh48 canvasΔ=4.297 svgΔ=0.297 | from-live canvasΔ=3.297 svgΔ=-0.008",
+      "Products: canvasΔ spread across lh variants = 1px — FO lh inject moves raster ink.",
+      "Products: 21.6px inject ≈ from-live (21.6px) for canvas ink."
+    ]
+  }
+}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raster fork pixel diff — same SVG decode</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      applyRasterOnlySvgPatch,
+      RASTER_ONLY_SVG_PATCH_IDS,
+    } from '../src/exporters/rasterOnlySvgPatch.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      rasterLabToCanvas,
+      runFoFixProbe,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const LAB_BASE = {
+      id: 'lab-baseline-no-patch',
+      rasterPatch: 'lab-toCanvas',
+      css: '',
+      inject: 'raster',
+    }
+
+    /** @param {HTMLCanvasElement} a @param {HTMLCanvasElement} b */
+    function compareCanvasPixels(a, b) {
+      if (!a || !b) return { identical: false, diffCount: null, totalPixels: null, reason: 'missing canvas' }
+      if (a.width !== b.width || a.height !== b.height) {
+        return {
+          identical: false,
+          diffCount: null,
+          totalPixels: a.width * a.height,
+          reason: `dim mismatch ${a.width}x${a.height} vs ${b.width}x${b.height}`,
+        }
+      }
+      const da = a.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, a.width, a.height).data
+      const db = b.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, b.width, b.height).data
+      let diffCount = 0
+      for (let i = 0; i < da.length; i += 4) {
+        if (da[i] !== db[i] || da[i + 1] !== db[i + 1] || da[i + 2] !== db[i + 2] || da[i + 3] !== db[i + 3]) {
+          diffCount++
+        }
+      }
+      const totalPixels = a.width * a.height
+      return {
+        identical: diffCount === 0,
+        diffCount,
+        totalPixels,
+        diffFraction: totalPixels ? diffCount / totalPixels : null,
+      }
+    }
+
+    /** @param {string} svgText */
+    function analyzeInlineFoCss(svgText) {
+      const foMatch = svgText.match(/<foreignObject[\s\S]*?<\/foreignObject>/i)
+      const foBlock = foMatch?.[0] ?? ''
+      const styleBlocks = [...svgText.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1])
+      const inlineLh = [...foBlock.matchAll(/line-height:\s*([^;"']+)/gi)].map((m) => m[1].trim())
+      const styleLh = [...styleBlocks.join('\n').matchAll(/line-height:\s*([^;{}]+)/gi)].map((m) =>
+        m[1].trim(),
+      )
+      const hasFlexCenter =
+        /align-items:\s*center/i.test(styleBlocks.join('')) ||
+        /align-items:\s*center/i.test(foBlock)
+      return {
+        foreignObjectBytes: foBlock.length,
+        inlineLineHeights: [...new Set(inlineLh)],
+        styleLineHeights: [...new Set(styleLh)],
+        hasFlexAlignCenter: hasFlexCenter,
+        patchCssLhPinPresent: /line-height:\s*21\.6px/i.test(svgText),
+        patchCssFlexCenterPresent: /foreignObject\{[^}]*align-items:\s*center/i.test(svgText),
+      }
+    }
+
+    /** @param {string} svgText @param {string} patchId */
+    function patchDiagnostics(svgText, patchId) {
+      const patched = applyRasterOnlySvgPatch(svgText, patchId)
+      const changed = patched !== svgText
+      const bytesDelta = new Blob([patched]).size - new Blob([svgText]).size
+      return {
+        patchId,
+        svgStringChanged: changed,
+        bytesDelta,
+        patchedHasLhPin: /line-height:\s*21\.6px/i.test(patched),
+        patchedHasFlexCenter: /foreignObject\{[^}]*align-items:\s*center/i.test(patched),
+      }
+    }
+
+    async function rasterSameSvg(svgText, root, el, dims, meta, recipe) {
+      return rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+    }
+
+    window.__foRasterForkPixelDiff = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const el = findLandmarkElement(root, landmark)
+        if (!el) throw new Error(`landmark ${landmark} not found`)
+
+        const baselineRecipe = getFoFixRecipe('product-baseline')
+        const probeRow = await runFoFixProbe(baselineRecipe, { dpr, scale, landmark, root })
+        const svgText = probeRow.svgText
+        const cssW = root.offsetWidth || root.getBoundingClientRect().width
+        const cssH = root.offsetHeight || root.getBoundingClientRect().height
+        const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+        const meta = parseCaptureMeta(svgText, root)
+        const inlineFo = analyzeInlineFoCss(svgText)
+
+        const baselineCanvas = await rasterSameSvg(svgText, root, el, dims, meta, LAB_BASE)
+        const baselineCmp = compareThreeWayInk(root, baselineCanvas, svgText, el, dpr, { cssW, cssH })
+
+        const patchIds = [
+          'inject-fo-lh-pin',
+          'inject-flex-center',
+          'fo-y-nudge',
+          'combo-lh-center',
+        ]
+
+        /** @type {object[]} */
+        const patches = []
+        for (const patchId of patchIds) {
+          const diag = patchDiagnostics(svgText, patchId)
+          const forkRecipe = {
+            ...LAB_BASE,
+            id: `tc-fork-w1-${patchId}`,
+            labToCanvasOpts: { rasterOnlySvgPatch: patchId },
+          }
+          const patchedCanvas = await rasterSameSvg(svgText, root, el, dims, meta, forkRecipe)
+          const pixelDiff = compareCanvasPixels(baselineCanvas, patchedCanvas)
+          const cmp = compareThreeWayInk(root, patchedCanvas, svgText, el, dpr, { cssW, cssH })
+          patches.push({
+            patchId,
+            patchDiagnostics: diag,
+            pixelDiff,
+            ink: {
+              liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+              liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+              canvasTopInBorder: cmp.canvas?.topInBorder ?? null,
+              deltaCanvasTopFromBaselinePx:
+                baselineCmp.canvas?.topInBorder != null && cmp.canvas?.topInBorder != null
+                  ? cmp.canvas.topInBorder - baselineCmp.canvas.topInBorder
+                  : null,
+            },
+            canvasBacking: {
+              width: patchedCanvas.width,
+              height: patchedCanvas.height,
+            },
+          })
+        }
+
+        const baselineInk = {
+          liveVsSvgTopPx: baselineCmp.liveVsSvgTopPx ?? probeRow.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: baselineCmp.liveVsCanvasTopPx ?? probeRow.liveVsCanvasTopPx ?? null,
+          canvasTopInBorder: baselineCmp.canvas?.topInBorder ?? probeRow.canvasPaintedTopInBorder ?? null,
+        }
+
+        /** @type {string[]} */
+        const interpretation = []
+        if (Math.abs(baselineInk.liveVsSvgTopPx ?? 99) < 0.35) {
+          interpretation.push(
+            `Inline FO ink ≈ live (svgΔ ${baselineInk.liveVsSvgTopPx?.toFixed(3)}px) — serialized layout already matches live.`,
+          )
+        }
+
+        for (const row of patches) {
+          const px = row.pixelDiff
+          const inkCh = row.ink.deltaCanvasTopFromBaselinePx
+          if (px.identical) {
+            interpretation.push(
+              `${row.patchId}: bitmap identical to baseline (0/${px.totalPixels} pixels differ) — decode ignores injected CSS or CSS is redundant with inline FO.`,
+            )
+          } else if (px.diffCount != null) {
+            interpretation.push(
+              `${row.patchId}: ${px.diffCount}/${px.totalPixels} pixels differ (${((px.diffFraction ?? 0) * 100).toFixed(2)}%); canvas top Δ ${inkCh?.toFixed(3) ?? '—'}px vs baseline.`,
+            )
+          }
+        }
+
+        const lhPin = patches.find((p) => p.patchId === 'inject-fo-lh-pin')
+        const flexCenter = patches.find((p) => p.patchId === 'inject-flex-center')
+        let verdict = 'INCONCLUSIVE'
+        if (lhPin?.pixelDiff?.identical && flexCenter?.pixelDiff?.identical) {
+          verdict = 'DECODE_IGNORES_CSS_OR_REDUNDANT'
+        } else if (lhPin?.pixelDiff?.identical && !flexCenter?.pixelDiff?.identical) {
+          verdict = 'LH_PIN_REDUNDANT_FLEX_CENTER_AFFECTS_BITMAP'
+        } else if (!lhPin?.pixelDiff?.identical) {
+          verdict = 'LH_PIN_AFFECTS_BITMAP'
+        }
+
+        return {
+          fixture: 'mini-nav',
+          landmark,
+          dpr,
+          scale,
+          fixtureDims: { cssW, cssH },
+          mechanism: 'same-svg lab-toCanvas raster fork pixel diff',
+          sameCaptureSvg: true,
+          svgBytes: new Blob([svgText]).size,
+          inlineFo,
+          baseline: {
+            recipe: LAB_BASE.id,
+            canvasBacking: { width: baselineCanvas.width, height: baselineCanvas.height },
+            ink: baselineInk,
+            productBaselineProbeInk: {
+              liveVsSvgTopPx: probeRow.liveVsSvgTopPx ?? null,
+              liveVsCanvasTopPx: probeRow.liveVsCanvasTopPx ?? null,
+            },
+          },
+          patches,
+          patchIds: RASTER_ONLY_SVG_PATCH_IDS,
+          verdict,
+          interpretation,
+          headed: true,
+        }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foRasterForkPixelDiff.ready = true
+    } catch (e) {
+      window.__foRasterForkPixelDiff.bootError = String(e?.message || e)
+      window.__foRasterForkPixelDiff.ready = true
+    }
+  </script>
+</body>
+</html>

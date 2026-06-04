@@ -1,0 +1,50 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-fo-namespace.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "variantId": "hand-built-default",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "svgBytes": 572
+      },
+      {
+        "variantId": "requiredExtensions-xhtml",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "svgBytes": 622
+      },
+      {
+        "variantId": "strip-xhtml-xmlns",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": 0,
+        "svgBytes": 535
+      },
+      {
+        "variantId": "explicit-svg-xmlns-only",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "svgBytes": 572
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "NAMESPACE_INVARIANT_CHROMIUM_ONLY",
+    "implication": "Confirms round-4 on pure hand-built FO — no snapdom bytes in path."
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "runAt": "2026-06-03",
+  "recipeRows": [
+    {
+      "recipeId": "product-baseline",
+      "patch": "product-baseline",
+      "query": null,
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-decode-interval",
+      "patch": "fix321-decode-interval",
+      "query": "experimentalRasterSvgPatch=decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-decode-interval-raf",
+      "patch": "fix321-decode-interval-raf",
+      "query": "experimentalRasterSvgPatch=decode-interval-raf",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-double-decode",
+      "patch": "fix321-double-decode",
+      "query": "experimentalRasterSvgPatch=double-decode",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-triple-decode",
+      "patch": "fix321-triple-decode",
+      "query": "experimentalRasterSvgPatch=triple-decode",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-fonts-ready",
+      "patch": "fix321-fonts-ready",
+      "query": "experimentalRasterSvgPatch=fonts-ready",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-fonts-ready-interval",
+      "patch": "fix321-fonts-ready-interval",
+      "query": "experimentalRasterSvgPatch=fonts-ready-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-decode-microtask-twice",
+      "patch": "fix321-decode-microtask-twice",
+      "query": "experimentalRasterSvgPatch=decode-microtask-twice",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-load-event-interval",
+      "patch": "fix321-load-event-interval",
+      "query": "experimentalRasterSvgPatch=load-event-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "fix321-decode-interval-prototype",
+      "patch": "fix321-decode-interval-prototype",
+      "query": "experimentalRasterSvgPatch=decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-001-product-decode-settle",
+      "patch": "tc-decode-001-product-decode-settle",
+      "query": "experimentalRasterDecodeSettle=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-002-product-double-decode",
+      "patch": "tc-decode-002-product-double-decode",
+      "query": "experimentalRasterDoubleDecode=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-003-product-pre-decode-raf",
+      "patch": "tc-decode-003-product-pre-decode-raf",
+      "query": "experimentalRasterPreDecodeRaf=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-004-wait-decode-3pass",
+      "patch": "tc-decode-004-wait-decode-3pass",
+      "query": "experimentalRasterSvgPatch=lab-toCanvas-wait-decode",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-005-safari-raf-mp",
+      "patch": "tc-decode-005-safari-raf-mp",
+      "query": null,
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-006-two-stage",
+      "patch": "tc-decode-006-two-stage",
+      "query": "experimentalRasterSvgPatch=two-stage",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-007-settle-plus-interval",
+      "patch": "tc-decode-007-settle-plus-interval",
+      "query": "experimentalRasterDecodeSettle=1&experimentalRasterSvgPatch=decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-decode-008-double-plus-interval",
+      "patch": "tc-decode-008-double-plus-interval",
+      "query": "experimentalRasterDoubleDecode=1&experimentalRasterSvgPatch=decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-001-natural-dims",
+      "patch": "tc-raster-001-natural-dims",
+      "query": "experimentalRasterNaturalDims=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-002-backing-ceil",
+      "patch": "tc-raster-002-backing-ceil",
+      "query": "experimentalRasterBackingCeil=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-003-disable-gbcr-nudge",
+      "patch": "tc-raster-003-disable-gbcr-nudge",
+      "query": "experimentalRasterDisableGbcrNudge=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-004-ctx-no-scale",
+      "patch": "tc-raster-004-ctx-no-scale",
+      "query": "experimentalRasterCtxNoScale=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-005-natural-plus-settle",
+      "patch": "tc-raster-005-natural-plus-settle",
+      "query": "experimentalRasterNaturalDims=1&experimentalRasterDecodeSettle=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-006-interval-int-viewbox",
+      "patch": "tc-raster-006-interval-int-viewbox",
+      "query": "experimentalRasterSvgPatch=decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-007-blob-decode-interval",
+      "patch": "tc-raster-007-blob-decode-interval",
+      "query": "experimentalRasterSvgPatch=blob-url-decode-interval",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": "tc-raster-008-product-baseline-decode",
+      "patch": "tc-raster-008-product-baseline-decode",
+      "query": null,
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    }
+  ],
+  "flagSweep": [
+    {
+      "recipeId": null,
+      "patch": "(default)",
+      "query": null,
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "experimentalRasterDecodeSettle=1",
+      "query": "experimentalRasterDecodeSettle=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "experimentalRasterDoubleDecode=1",
+      "query": "experimentalRasterDoubleDecode=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "experimentalRasterNaturalDims=1",
+      "query": "experimentalRasterNaturalDims=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "experimentalRasterDisableGbcrNudge=1",
+      "query": "experimentalRasterDisableGbcrNudge=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "combo-settle+double+nudge",
+      "query": "experimentalRasterDecodeSettle=1&experimentalRasterDoubleDecode=1&experimentalRasterNaturalDims=1&experimentalRasterDisableGbcrNudge=1",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    },
+    {
+      "recipeId": null,
+      "patch": "decode-interval",
+      "query": null,
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navDelta": 0,
+      "beatsBaseline": false,
+      "ok": false
+    }
+  ]
+}

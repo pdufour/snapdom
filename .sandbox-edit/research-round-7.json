@@ -1,0 +1,61 @@
+{
+  "probe": "fo-research-round-7",
+  "generatedAt": "2026-06-03T00:24:09.862Z",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "section": "w7ResidualScan",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "sections": {},
+  "synthesis": {
+    "winningHypothesis": "Chromium FO bitmap omits ~½(lh−fs) strut — w7 y nudge closes class gap; 0.203px residual is integer ink scan vs Range subpixel, not a second paint bug",
+    "rootCauseConfidence": "HIGH",
+    "confirmed": [
+      "BITMAP_ONLY on product-baseline",
+      "Half-leading plateau ≈-0.003px residual",
+      "w7 residual under investigation"
+    ],
+    "refuted": [],
+    "newFindings": [],
+    "top3NewFindings": [],
+    "bestNextFixDirection": "Promote tc-fix-w13-rfork-y-w7-minus-range-subpixel or align integer ink scan to Range; do not re-tune stretch height",
+    "top3NextFixes": [
+      {
+        "fix": "tc-fix-w13-rfork-y-w7-minus-range-subpixel — FO y −(½(lh−fs) − rangeSubpixelPx)",
+        "expectedCanvasDelta": "0.203 → ≤0.06 px integer gate"
+      },
+      {
+        "fix": "Fractional-threshold ink scan for matrix gate (document-only) — closes w7 without FO attr change",
+        "expectedCanvasDelta": "gate alignment; not a Chromium paint fix"
+      },
+      {
+        "fix": "tc-fix-w13-rfork-viewbox-y-half-leading — viewBox minY strut without FO height side effects",
+        "expectedCanvasDelta": "2.797 → ≤0.5 px if y-attr stretch coupling regresses"
+      }
+    ]
+  },
+  "port": 8799,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+  "wave14Ingest": {
+    "found": false,
+    "files": [],
+    "note": "No wave-14 matrix JSON on disk — spot-check wave-13 recipes in probe instead."
+  }
+}

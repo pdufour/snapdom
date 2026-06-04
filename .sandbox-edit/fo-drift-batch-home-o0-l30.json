@@ -1,0 +1,120 @@
+{
+  "landmark": "Home",
+  "dpr": 1,
+  "offset": 0,
+  "limit": 30,
+  "includeInactive": true,
+  "matrixIds": [
+    "product-baseline",
+    "tc-fix-drift-039-*",
+    "tc-fix-w7-capture-parent-lh-leaf-pin",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta"
+  ],
+  "recipeIds": [
+    "product-baseline",
+    "tc-fix-drift-039-capture-line-height-normal-important",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "tc-fix-w7-capture-parent-lh-leaf-pin"
+  ],
+  "baselineAbsCanvasVsLive": 1.1875,
+  "bestRecipeId": "tc-fix-drift-039-capture-line-height-normal-important",
+  "bestAbsCanvasVsLive": 0.1875,
+  "beatsBaseline": true,
+  "rows": [
+    {
+      "id": "tc-fix-drift-039-capture-line-height-normal-important",
+      "canvasVsLive": -0.1875,
+      "svgVsLive": -0.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "canvasVsLive": -0.1875,
+      "svgVsLive": -0.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "product-baseline",
+      "canvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0
+    },
+    {
+      "id": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "canvasVsLive": -2.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": -1
+    }
+  ],
+  "ranked": [
+    {
+      "id": "tc-fix-drift-039-capture-line-height-normal-important",
+      "recipeId": "tc-fix-drift-039-capture-line-height-normal-important",
+      "canvasVsLive": -0.1875,
+      "capModelCanvasVsLive": -0.1875,
+      "svgVsLive": -0.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 0.1875,
+      "previewCanvasVsLive": -0.1875,
+      "previewSvgVsLive": -0.1875,
+      "svgHigherPx": 0.1875,
+      "canvasHigherPx": 0.1875,
+      "bitmapCanvasVsLive": -0.1875,
+      "bitmapSvgVsLive": -0.1875
+    },
+    {
+      "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "recipeId": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "canvasVsLive": -0.1875,
+      "capModelCanvasVsLive": -0.1875,
+      "svgVsLive": -0.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 0.1875,
+      "previewCanvasVsLive": -0.1875,
+      "previewSvgVsLive": -0.1875,
+      "svgHigherPx": 0.1875,
+      "canvasHigherPx": 0.1875,
+      "bitmapCanvasVsLive": -0.1875,
+      "bitmapSvgVsLive": -0.1875
+    },
+    {
+      "id": "product-baseline",
+      "recipeId": "product-baseline",
+      "canvasVsLive": -1.1875,
+      "capModelCanvasVsLive": -1.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": 0,
+      "svgVsCanvasPx": 0,
+      "absSvgCanvas": 0,
+      "absCanvasVsLive": 1.1875,
+      "previewCanvasVsLive": -1.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 1.1875,
+      "bitmapCanvasVsLive": -1.1875,
+      "bitmapSvgVsLive": -1.1875
+    },
+    {
+      "id": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "canvasVsLive": -2.1875,
+      "capModelCanvasVsLive": -2.1875,
+      "svgVsLive": -1.1875,
+      "svgVsCanvas": -1,
+      "svgVsCanvasPx": -1,
+      "absSvgCanvas": 1,
+      "absCanvasVsLive": 2.1875,
+      "previewCanvasVsLive": -2.1875,
+      "previewSvgVsLive": -1.1875,
+      "svgHigherPx": 1.1875,
+      "canvasHigherPx": 2.1875,
+      "bitmapCanvasVsLive": -2.1875,
+      "bitmapSvgVsLive": -1.1875
+    }
+  ],
+  "errors": []
+}

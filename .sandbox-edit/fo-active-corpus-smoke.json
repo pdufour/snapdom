@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-06-03T00:12:12.173Z",
+  "headed": true,
+  "recipeIds": [
+    "product-baseline",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "tc-reg-lock-w7-half-leading-meta",
+    "tc-reg-lock-src-mirror-w7",
+    "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta"
+  ],
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "pass": false
+    }
+  ],
+  "exitCode": 0,
+  "pass": true
+}

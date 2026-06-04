@@ -41,18 +41,22 @@ export async function prepareClone(element, options = {}) {
   const undoContentVisibility = forceContentVisibility(element)
 
   try {
-    inlineExternalDefsAndSymbols(element)
-  } catch (e) {
-    console.warn('inlineExternal defs or symbol failed:', e)
-  }
-
-  try {
     clone = await deepClone(element, sessionCache, options)
   } catch (e) {
     console.warn('deepClone failed:', e)
     throw e
   } finally {
     undoContentVisibility()
+  }
+
+  // Inline external <defs>/<symbol> into the CLONE, not the live source. Operating on the
+  // source mutated the user's DOM (a hidden <svg> was inserted as firstChild and never
+  // removed) and shifted :first-child/nth-child matches while deepClone read computed
+  // styles. The clone is detached; external refs are still resolved from the live document.
+  try {
+    inlineExternalDefsAndSymbols(clone)
+  } catch (e) {
+    console.warn('inlineExternal defs or symbol failed:', e)
   }
   try {
     await inlinePseudoElements(element, clone, sessionCache, options)
@@ -132,6 +136,12 @@ export async function prepareClone(element, options = {}) {
       } catch { /* non-blocking */ }
 
       const inner = document.createElement('div')
+      // #413: baseCSS emits a `div{white-space:normal;font-family:…}` rule (from the tag's
+      // all:initial defaults) that directly targets this wrapper and overrides the inherited
+      // text formatting of the scrolled element (e.g. a <pre>'s pre-wrap/monospace). `all:unset`
+      // lets inherited props flow from the parent again (inline style beats the type selector)
+      // while keeping non-inherited props at initial, so the wrapper stays visually transparent.
+      inner.style.all = 'unset'
       inner.style.transform = `translate(${-scrollX}px, ${-scrollY}px)`
       inner.style.willChange = 'transform'
       inner.style.display = 'inline-block'

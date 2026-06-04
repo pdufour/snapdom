@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini nav — line-height decouple (FO CSS inject)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+    pre#report {
+      margin-top: 12px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font: 11px/1.4 ui-monospace, Menlo, monospace;
+      overflow: auto;
+      max-height: 70vh;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini nav — line-height decouple (FO CSS inject only)</h1>
+  <p class="hint">
+    Compare FO post-capture CSS inject: <code>foreignObject a{line-height:…}</code> on text leaves.
+    Variants: <code>21.6px</code> (font lh), <code>48px</code> (nav min-height), <code>from-live</code>
+    (computed lh from landmark). Three-way ink per landmark; product-baseline capture +
+    <code>product-toCanvas</code> raster after inject.
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <pre id="report" hidden></pre>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      findLandmarkElement,
+      getFoFixRecipe,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const reportEl = document.getElementById('report')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const lhVariant = (params.get('lh') || '21.6px').trim()
+    const landmarks = (params.get('landmarks') || 'Home,Products')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    /** FO CSS inject selector — mini nav text leaves are direct-text anchors. */
+    const TEXT_LEAF_CSS = 'foreignObject a'
+
+    /**
+     * @param {string} variant
+     * @param {Element} leaf
+     */
+    function resolveInjectLineHeight(variant, leaf) {
+      if (variant === '21.6px') return '21.6px'
+      if (variant === '48px') return '48px'
+      if (variant === 'from-live') {
+        const cs = getComputedStyle(leaf)
+        return cs.lineHeight || 'normal'
+      }
+      throw new Error(`Unknown lh variant: ${variant}`)
+    }
+
+    /**
+     * @param {string} variant
+     * @param {Element} leaf
+     */
+    function buildLhDecoupleRecipe(variant, leaf) {
+      const lhValue = resolveInjectLineHeight(variant, leaf)
+      const css = `${TEXT_LEAF_CSS}{line-height:${lhValue}!important}`
+      return {
+        ...getFoFixRecipe('product-baseline'),
+        id: `lab-lh-decouple-${variant.replace(/[^a-z0-9]+/gi, '-')}`,
+        label: `Lab lh decouple ${variant}`,
+        css,
+        inject: 'capture',
+        rasterPatch: 'product-toCanvas',
+      }
+    }
+
+    /**
+     * @param {Element} leaf
+     */
+    function liveLeafMeta(leaf) {
+      const cs = getComputedStyle(leaf)
+      const box = leaf.getBoundingClientRect()
+      return {
+        tag: leaf.tagName,
+        computedLineHeight: cs.lineHeight,
+        fontSize: cs.fontSize,
+        heightGbcr: box.height,
+        alignSelf: cs.alignSelf,
+        display: cs.display,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      /** @type {Record<string, unknown>[]} */
+      const rows = []
+      for (const landmark of landmarks) {
+        const leaf = findLandmarkElement(root, landmark)
+        if (!leaf) throw new Error(`landmark "${landmark}" not found`)
+
+        const recipe = buildLhDecoupleRecipe(lhVariant, leaf)
+        const injectLh = resolveInjectLineHeight(lhVariant, leaf)
+
+        status.textContent = `Probing ${landmark} (lh=${lhVariant}, inject=${injectLh})…`
+        const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+        rows.push({
+          landmark,
+          lhVariant,
+          injectLineHeight: injectLh,
+          injectCss: recipe.css,
+          liveLeaf: liveLeafMeta(leaf),
+          recipeId: recipe.id,
+          rasterPatch: recipe.rasterPatch,
+          threeWay: {
+            livePaintedTopInBorder: probe.livePaintedTopInBorder,
+            svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+            canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+            liveVsSvgTopPx: probe.liveVsSvgTopPx,
+            liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+            pass: probe.pass,
+          },
+        })
+      }
+
+      return {
+        fixture: 'line-height-decouple',
+        probe: 'three-way',
+        lhVariant,
+        baseRecipe: 'product-baseline',
+        injectMode: 'fo-css-only',
+        textLeafSelector: TEXT_LEAF_CSS,
+        dpr,
+        scale,
+        rows,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__lineHeightDecoupleProbe = {
+        ready: false,
+        bootError: null,
+        lhVariant,
+        landmarks,
+        run: runProbe,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__lineHeightDecoupleProbe.ready = true
+        status.textContent = `Ready — lh=${lhVariant}, landmarks=${landmarks.join(',')}. CLI invokes run().`
+        if (params.get('auto') === '1') {
+          const payload = await runProbe()
+          reportEl.hidden = false
+          reportEl.textContent = JSON.stringify(payload, null, 2)
+          status.textContent = 'Done (auto=1).'
+          window.__lineHeightDecoupleProbe.lastReport = payload
+        }
+      } catch (err) {
+        window.__lineHeightDecoupleProbe.bootError = String(err?.message || err)
+        status.textContent = window.__lineHeightDecoupleProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__lineHeightDecoupleProbe = window.__lineHeightDecoupleProbe || {}
+      window.__lineHeightDecoupleProbe.bootError = String(err?.message || err)
+      status.textContent = window.__lineHeightDecoupleProbe.bootError
+    })
+  </script>
+</body>
+</html>

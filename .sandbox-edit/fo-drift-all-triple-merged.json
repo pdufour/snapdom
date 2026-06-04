@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-06-03T23:50:00.528Z",
+  "landmark": "Home",
+  "rankMetric": "|svgΔ|+|canvasΔ|+|svg−canvas|",
+  "baseline": {
+    "id": "product-baseline",
+    "tripleScore": 3,
+    "svgVsLive": 1.5,
+    "canvasVsLive": 0,
+    "svgVsCanvas": 1.5
+  },
+  "userStatedBaseline": {
+    "tripleApprox": 4,
+    "svgLive": 1.5,
+    "canvasLive": -0.5,
+    "svgCanvas": 2
+  },
+  "driftRecipesTested": 260,
+  "improvedCount": 54,
+  "top10Improved": [
+    {
+      "id": "drift-batch2-036",
+      "tripleScore": 1,
+      "svgVsLive": 0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": 0.5,
+      "gapsClosed": [
+        "svg↔canvas 0.5px (was 1.5px)",
+        "svg↔live 0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch3-037",
+      "tripleScore": 1,
+      "svgVsLive": -0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": -0.5,
+      "gapsClosed": [
+        "svg↔canvas -0.5px (was 1.5px)",
+        "svg↔live -0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch32222-028",
+      "tripleScore": 1,
+      "svgVsLive": 0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": 0.5,
+      "gapsClosed": [
+        "svg↔canvas 0.5px (was 1.5px)",
+        "svg↔live 0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch3333-012",
+      "tripleScore": 1,
+      "svgVsLive": -0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": -0.5,
+      "gapsClosed": [
+        "svg↔canvas -0.5px (was 1.5px)",
+        "svg↔live -0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch555-040",
+      "tripleScore": 1,
+      "svgVsLive": 0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": 0.5,
+      "gapsClosed": [
+        "svg↔canvas 0.5px (was 1.5px)",
+        "svg↔live 0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch2-040",
+      "tripleScore": 1,
+      "svgVsLive": 0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": 0.5,
+      "gapsClosed": [
+        "svg↔canvas 0.5px (was 1.5px)",
+        "svg↔live 0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch2-009",
+      "tripleScore": 1,
+      "svgVsLive": 0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": 0.5,
+      "gapsClosed": [
+        "svg↔canvas 0.5px (was 1.5px)",
+        "svg↔live 0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch2-013",
+      "tripleScore": 1,
+      "svgVsLive": -0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": -0.5,
+      "gapsClosed": [
+        "svg↔canvas -0.5px (was 1.5px)",
+        "svg↔live -0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch2-017",
+      "tripleScore": 1,
+      "svgVsLive": -0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": -0.5,
+      "gapsClosed": [
+        "svg↔canvas -0.5px (was 1.5px)",
+        "svg↔live -0.5px (was 1.5px)"
+      ]
+    },
+    {
+      "id": "drift-batch2-021",
+      "tripleScore": 1,
+      "svgVsLive": -0.5,
+      "canvasVsLive": 0,
+      "svgVsCanvas": -0.5,
+      "gapsClosed": [
+        "svg↔canvas -0.5px (was 1.5px)",
+        "svg↔live -0.5px (was 1.5px)"
+      ]
+    }
+  ],
+  "svgCanvasFullyClosed": 0,
+  "shardLoadErrors": [
+    "recipes-drift-batch66-triple.js: duplicate recipe key drift-batch66-036",
+    "recipes-drift-batch555-triple.js: syntax error ~line 421 (shard broken in Node; matrix JSON from prior run)"
+  ],
+  "coverageGaps": [
+    "drift-batch222: 20/40 (parallel worker merge failed; chunks 1-2 missing)",
+    "drift-batch3939: not run",
+    "drift-batch66: blocked by shard error",
+    "drift-batch1: only stale 2-term metric matrix (fo-drift-batch1-matrix.json)"
+  ],
+  "sources": [
+    "fo-drift-batch0000-chunk-0.json",
+    "fo-drift-batch0000-chunk-1.json",
+    "fo-drift-batch0000-triple-matrix.json",
+    "fo-drift-batch2-chunk-0.json",
+    "fo-drift-batch2-chunk-1.json",
+    "fo-drift-batch2-chunk-2.json",
+    "fo-drift-batch2-chunk-3.json",
+    "fo-drift-batch2-triple-matrix.json",
+    "fo-drift-batch222-chunk-0.json",
+    "fo-drift-batch222-chunk-3.json",
+    "fo-drift-batch222-triple-matrix.json",
+    "fo-drift-batch3-chunk-1.json",
+    "fo-drift-batch3-chunk-2.json",
+    "fo-drift-batch3-triple-matrix.json",
+    "fo-drift-batch32222-chunk-0.json",
+    "fo-drift-batch32222-chunk-1.json",
+    "fo-drift-batch32222-chunk-2.json",
+    "fo-drift-batch32222-chunk-3.json",
+    "fo-drift-batch32222-triple-matrix.json",
+    "fo-drift-batch3333-chunk-0.json",
+    "fo-drift-batch3333-chunk-1.json",
+    "fo-drift-batch3333-chunk-2.json",
+    "fo-drift-batch3333-chunk-3.json",
+    "fo-drift-batch3333-triple-matrix.json",
+    "fo-drift-batch555-chunk-0.json",
+    "fo-drift-batch555-chunk-1.json",
+    "fo-drift-batch555-chunk-2.json",
+    "fo-drift-batch555-chunk-3.json",
+    "fo-drift-batch555-triple-matrix.json"
+  ]
+}

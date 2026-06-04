@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO DPR sweep probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    window.snapdom = snapdom
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { compareThreeWayInk, findLandmarkElement, runFoFixProbe } from './fo-fix-lab-runner.js'
+    import { halfLeadingFromComputed } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const dprList = (params.get('dprs') || '1,1.25,1.5,2,2.5')
+      .split(',')
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isFinite(n) && n > 0)
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function classifyCanvasDelta(canvasDelta, svgDelta) {
+      const c = Math.abs(canvasDelta ?? 0)
+      const s = Math.abs(svgDelta ?? 0)
+      if (c >= 1.5 && s <= 0.35) return 'BITMAP_ONLY'
+      if (c <= 0.5 && s <= 0.35) return 'NEAR_PARITY'
+      if (c >= 1.5 && s >= 1.5) return 'SVG_AND_BITMAP'
+      return 'MIXED'
+    }
+
+    async function runAtDpr(dpr, root) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const row = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const el = findLandmarkElement(root, landmark)
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW, cssH })
+      const halfLeading = el ? halfLeadingFromComputed(el) : null
+      const canvasDelta = cmp.liveVsCanvasTopPx ?? null
+      const svgDelta = cmp.liveVsSvgTopPx ?? null
+      const expectedHalfLeading = halfLeading != null ? roundPx(halfLeading) : null
+      const residual =
+        canvasDelta != null && expectedHalfLeading != null
+          ? roundPx(canvasDelta - expectedHalfLeading)
+          : null
+      return {
+        dpr,
+        halfLeadingPx: expectedHalfLeading,
+        threeWay: {
+          liveVsCanvasTopPx: roundPx(canvasDelta),
+          liveVsSvgTopPx: roundPx(svgDelta),
+          svgVsCanvasTopPx: roundPx(cmp.svgVsCanvasTopPx),
+        },
+        residualFromHalfLeadingPx: residual,
+        classification: classifyCanvasDelta(canvasDelta, svgDelta),
+        deviceCanvasHeight: row.canvas?.height ?? null,
+      }
+    }
+
+    window.__foDprSweepProbe = { ready: false, bootError: null, result: null }
+
+    async function run() {
+      await document.fonts.ready
+      const root = document.getElementById('capture-target')
+      const el = root.querySelector('a')
+      const halfLeading = el ? halfLeadingFromComputed(el) : null
+      /** @type {Awaited<ReturnType<typeof runAtDpr>>[]} */
+      const rows = []
+      for (const dpr of dprList) {
+        rows.push(await runAtDpr(dpr, root))
+      }
+      const canvasDeltas = rows.map((r) => r.threeWay.liveVsCanvasTopPx).filter((v) => v != null)
+      const spread =
+        canvasDeltas.length >= 2
+          ? roundPx(Math.max(...canvasDeltas) - Math.min(...canvasDeltas))
+          : null
+      const dpr1 = rows.find((r) => r.dpr === 1)
+      const dpr2 = rows.find((r) => r.dpr === 2)
+      const dpr2MinusDpr1 =
+        dpr1?.threeWay.liveVsCanvasTopPx != null && dpr2?.threeWay.liveVsCanvasTopPx != null
+          ? roundPx(dpr2.threeWay.liveVsCanvasTopPx - dpr1.threeWay.liveVsCanvasTopPx)
+          : null
+
+      return {
+        probe: 'fo-dpr-sweep-probe',
+        scale,
+        landmark,
+        dprList,
+        halfLeadingPx: roundPx(halfLeading),
+        rows,
+        synthesis: {
+          allBitmapOnly: rows.every((r) => r.classification === 'BITMAP_ONLY'),
+          canvasDeltaSpreadPx: spread,
+          dpr2MinusDpr1Px: dpr2MinusDpr1,
+          meanResidualFromHalfLeadingPx: roundPx(
+            rows.reduce((s, r) => s + (r.residualFromHalfLeadingPx ?? 0), 0) / rows.length,
+          ),
+        },
+      }
+    }
+
+    run()
+      .then((result) => {
+        window.__foDprSweepProbe.result = result
+        window.__foDprSweepProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foDprSweepProbe.bootError = String(err?.message || err)
+        window.__foDprSweepProbe.ready = true
+      })
+  </script>
+</body>
+</html>

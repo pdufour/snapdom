@@ -1,0 +1,99 @@
+{
+  "shard": "8/8",
+  "fixture": "checkout",
+  "landmarks": [
+    "Home",
+    "Products"
+  ],
+  "recipeIds": [
+    "product-baseline",
+    "brain-l01-026",
+    "brain-l01-027"
+  ],
+  "generatedAt": "2026-06-02T15:54:02.335Z",
+  "matrixHomeOnly": [
+    {
+      "recipeId": "brain-l01-026",
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": -0.203125,
+      "stage": "raster"
+    },
+    {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": 2.796875,
+      "stage": "raster"
+    },
+    {
+      "recipeId": "brain-l01-027",
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": 2.796875,
+      "stage": "raster"
+    }
+  ],
+  "rows": [
+    {
+      "recipeId": "brain-l01-026",
+      "worstAbsDeltaTop": 0.203125,
+      "meanAbsDeltaTop": 0.203125,
+      "landmarks": [
+        {
+          "landmark": "Home",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": -0.203125,
+          "stage": "raster",
+          "pass": false
+        },
+        {
+          "landmark": "Products",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": null,
+          "stage": null,
+          "pass": false
+        }
+      ]
+    },
+    {
+      "recipeId": "product-baseline",
+      "worstAbsDeltaTop": 2.796875,
+      "meanAbsDeltaTop": 2.796875,
+      "landmarks": [
+        {
+          "landmark": "Home",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "stage": "raster",
+          "pass": false
+        },
+        {
+          "landmark": "Products",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "stage": "raster",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "recipeId": "brain-l01-027",
+      "worstAbsDeltaTop": 2.796875,
+      "meanAbsDeltaTop": 2.796875,
+      "landmarks": [
+        {
+          "landmark": "Home",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "stage": "raster",
+          "pass": false
+        },
+        {
+          "landmark": "Products",
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "stage": "raster",
+          "pass": false
+        }
+      ]
+    }
+  ]
+}

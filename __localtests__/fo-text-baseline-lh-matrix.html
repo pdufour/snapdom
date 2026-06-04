@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text baseline / line-height matrix (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Line-height sweep — mini Home text leaf</h1>
+  <p class="hint">
+    Params: <code>lh=normal|1|1.2|1.35|21.6px|48px|from-live</code>.
+    Pins line-height on the Home anchor only, mirrors in FO CSS, then three-way ink
+    (product-baseline + product-toCanvas). Reports liveVsSvg, liveVsCanvas,
+    <code>(lh−fs)/2</code>, and layout line box.
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { findLandmarkElement, getFoFixRecipe, runFoFixProbe } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const lhVariant = (params.get('lh') || '1.35').trim()
+    const landmark = 'Home'
+    const TEXT_LEAF_CSS = 'foreignObject nav a'
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function measureLayoutLineBoxPx(style, el) {
+      if (!(el instanceof Element) || el.childElementCount > 0) return null
+      if (!(el.textContent || '').trim()) return null
+      const pad =
+        (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+      const h = el.getBoundingClientRect().height
+      if (h <= pad) return null
+      const content = h - pad
+      return el.scrollHeight <= content + 2 ? content : null
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      let px = NaN
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) px = n
+      }
+      if (!Number.isFinite(px) || px <= 0) {
+        const layout = measureLayoutLineBoxPx(cs, el)
+        px = layout != null && layout > 0 ? layout : fs * 1.35
+      }
+      return px
+    }
+
+    /**
+     * @param {string} variant
+     * @param {Element} leaf
+     */
+    function resolveLhApplyValue(variant, leaf) {
+      if (variant === 'from-live') return null
+      if (variant === 'normal') return 'normal'
+      if (variant === '1') return '1'
+      if (variant === '1.2') return '1.2'
+      if (variant === '1.35') return '1.35'
+      if (variant === '21.6px') return '21.6px'
+      if (variant === '48px') return '48px'
+      throw new Error(`Unknown lh variant: ${variant}`)
+    }
+
+    /**
+     * @param {string} variant
+     * @param {Element} leaf
+     */
+    function resolveLhInjectValue(variant, leaf) {
+      if (variant === 'from-live') {
+        const cs = getComputedStyle(leaf)
+        return cs.lineHeight || 'normal'
+      }
+      return resolveLhApplyValue(variant, leaf)
+    }
+
+    /**
+     * @param {Element} leaf
+     */
+    function leafMetrics(leaf) {
+      const cs = getComputedStyle(leaf)
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const lineHeightPx = resolveLineHeightPx(cs, leaf)
+      const layoutLineBoxPx = measureLayoutLineBoxPx(cs, leaf)
+      const halfLeadingStrutPx = (lineHeightPx - fontSizePx) / 2
+      const box = leaf.getBoundingClientRect()
+      return {
+        tag: leaf.tagName,
+        computedLineHeight: cs.lineHeight,
+        fontSizePx: roundPx(fontSizePx),
+        lineHeightPx: roundPx(lineHeightPx),
+        layoutLineBoxPx: roundPx(layoutLineBoxPx),
+        halfLeadingStrutPx: roundPx(halfLeadingStrutPx),
+        heightGbcr: roundPx(box.height),
+        display: cs.display,
+        alignSelf: cs.alignSelf,
+      }
+    }
+
+    /**
+     * @param {Element} leaf
+     * @param {string} lhValue
+     */
+    function buildRecipe(leaf, lhValue) {
+      const css = `${TEXT_LEAF_CSS}{line-height:${lhValue}!important}`
+      return {
+        ...getFoFixRecipe('product-baseline'),
+        id: `lab-lh-matrix-${lhVariant.replace(/[^a-z0-9]+/gi, '-')}`,
+        label: `Lab lh matrix Home lh=${lhValue}`,
+        css,
+        inject: 'capture',
+        rasterPatch: 'product-toCanvas',
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark "${landmark}" not found`)
+
+      const lhApply = resolveLhApplyValue(lhVariant, leaf)
+      if (lhApply != null) {
+        leaf.style.setProperty('line-height', lhApply, 'important')
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      }
+
+      const metrics = leafMetrics(leaf)
+      const lhInject = resolveLhInjectValue(lhVariant, leaf)
+      const recipe = buildRecipe(leaf, lhInject)
+
+      status.textContent = `Probing Home lh=${lhInject}…`
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      const liveVsCanvas = probe.liveVsCanvasTopPx ?? null
+      const liveVsSvg = probe.liveVsSvgTopPx ?? null
+      const halfLeadingStrut = metrics.halfLeadingStrutPx
+
+      return {
+        landmark,
+        lhVariant,
+        lhAppliedOnLive: lhApply,
+        lhInjected: lhInject,
+        injectCss: recipe.css,
+        liveVsSvg: roundPx(liveVsSvg),
+        liveVsCanvas: roundPx(liveVsCanvas),
+        halfLeadingStrutPx: halfLeadingStrut,
+        layoutLineBoxPx: metrics.layoutLineBoxPx,
+        metrics,
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+          svgVsCanvasTopPx: probe.svgVsCanvasTopPx,
+        },
+        recipeId: recipe.id,
+        dpr,
+        scale,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__foTextBaselineLhMatrix = {
+        ready: false,
+        bootError: null,
+        lhVariant,
+        run: runProbe,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__foTextBaselineLhMatrix.ready = true
+        status.textContent = `Ready — Home lh=${lhVariant}. CLI invokes run().`
+      } catch (err) {
+        window.__foTextBaselineLhMatrix.bootError = String(err?.message || err)
+        status.textContent = window.__foTextBaselineLhMatrix.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__foTextBaselineLhMatrix = window.__foTextBaselineLhMatrix || {}
+      window.__foTextBaselineLhMatrix.bootError = String(err?.message || err)
+      status.textContent = window.__foTextBaselineLhMatrix.bootError
+    })
+  </script>
+</body>
+</html>

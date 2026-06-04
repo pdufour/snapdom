@@ -1,0 +1,30 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-lab-blackbox-cap.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "rows": [
+      {
+        "recipeId": "product-baseline",
+        "labRangeCanvasDelta": 2.797,
+        "labCapModelCanvasDelta": -1.727,
+        "rangeMinusCapLiveTopPx": -4.523,
+        "rangeMinusCapDeltaPx": 4.523
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "labRangeCanvasDelta": -0.203,
+        "labCapModelCanvasDelta": -4.727,
+        "rangeMinusCapLiveTopPx": -4.523,
+        "rangeMinusCapDeltaPx": 4.523
+      }
+    ],
+    "capDeltaShiftBaselineToW7": -3,
+    "rangeDeltaShiftBaselineToW7": -3,
+    "capAndRangeShiftTogether": true,
+    "blackboxWouldAgreeWithLabRangeIfW7": false,
+    "verdict": "CAP_MODEL_DIVERGES_FROM_RANGE_AT_W7",
+    "implication": "Blackbox paint.canvas.vs-border.top uses cap-model live reference — w7 closes Range gap (−0.203) but cap-model delta shifts differently; do not gate w7 on blackbox without metric alignment."
+  }
+}

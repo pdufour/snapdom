@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-06-03T06:26:38.901Z",
+  "recipe": "product-baseline",
+  "landmark": "H",
+  "port": 8766,
+  "url": "http://127.0.0.1:8766/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=H&includeInactive=1&debugInkLine=1",
+  "pass": true,
+  "checks": [
+    {
+      "id": "recipe-done",
+      "pass": true,
+      "reason": "ok"
+    },
+    {
+      "id": "previews",
+      "pass": true,
+      "reason": "canvas=true svg=true"
+    },
+    {
+      "id": "single-letter-nav",
+      "pass": true,
+      "reason": "links=1 texts=[\"H\"]"
+    },
+    {
+      "id": "no-ink-checker-ui",
+      "pass": true,
+      "reason": "overlay=false marker=false checker=false"
+    },
+    {
+      "id": "layout-top-table",
+      "pass": true,
+      "reason": "panel=true rows=3 summary=svg−live 0.00 · canvas−live 0.00 · svg−canvas 0.00 · pass"
+    }
+  ],
+  "metrics": {
+    "liveLineY": 14.203125,
+    "svgLineY": 14.203125,
+    "canvasLineY": 14.203125,
+    "svgVsLive": 0,
+    "canvasVsLive": 0,
+    "deltaSummary": "svg−live 0.00 · canvas−live 0.00 · svg−canvas 0.00 · pass"
+  },
+  "views": {
+    "live": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-retry-live.png",
+      "line": {
+        "pass": true,
+        "reason": "line at/above glyph cap",
+        "delta": -0.000025000000000829914
+      },
+      "legend": "Live"
+    },
+    "svg": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-retry-svg.png",
+      "line": {
+        "pass": true,
+        "reason": "line at/above glyph cap",
+        "delta": -0.000025000000000829914
+      },
+      "legend": "SVG"
+    },
+    "canvas": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-retry-canvas.png",
+      "line": {
+        "pass": true,
+        "reason": "line at/above glyph cap",
+        "delta": -0.000025000000000829914
+      },
+      "legend": "Canvas"
+    }
+  },
+  "layoutTable": {
+    "panelVisible": true,
+    "rowCount": 3,
+    "rows": [
+      [
+        "Live",
+        "14.2031"
+      ],
+      [
+        "SVG",
+        "14.2031"
+      ],
+      [
+        "Canvas",
+        "14.2031"
+      ]
+    ],
+    "hasSvgVsLive": true,
+    "hasCanvasVsLive": true
+  },
+  "nav": {
+    "linkCount": 1,
+    "linkTexts": [
+      "H"
+    ],
+    "singleLetter": true
+  }
+}

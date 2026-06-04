@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Line-box strut math (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    #status { font: 12px ui-monospace, Menlo, monospace; margin-top: 10px; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { runFoFixProbe, findLandmarkElement } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function contentBoxHeightPx(el, cs) {
+      const box = el.getBoundingClientRect()
+      const bt = parseFloat(cs.borderTopWidth) || 0
+      const bb = parseFloat(cs.borderBottomWidth) || 0
+      const pt = parseFloat(cs.paddingTop) || 0
+      const pb = parseFloat(cs.paddingBottom) || 0
+      return box.height - bt - bb - pt - pb
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      const pad =
+        (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
+      const h = el.getBoundingClientRect().height
+      if (h > pad) {
+        const content = h - pad
+        if (el.scrollHeight <= content + 2) return content
+      }
+      return fs * 1.35
+    }
+
+    function measureFontBoxHeightPx(cs, sample) {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return null
+      const fs = parseFloat(cs.fontSize) || 16
+      ctx.font = `${cs.fontStyle || 'normal'} ${cs.fontWeight || '400'} ${fs}px ${cs.fontFamily || 'sans-serif'}`
+      const m = ctx.measureText(sample)
+      const ascent =
+        typeof m.fontBoundingBoxAscent === 'number'
+          ? m.fontBoundingBoxAscent
+          : m.actualBoundingBoxAscent
+      const descent =
+        typeof m.fontBoundingBoxDescent === 'number'
+          ? m.fontBoundingBoxDescent
+          : m.actualBoundingBoxDescent
+      if (typeof ascent !== 'number' || typeof descent !== 'number') return null
+      return ascent + descent
+    }
+
+    function computeStrutMath(el) {
+      const cs = getComputedStyle(el)
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const lineHeightPx = resolveLineHeightPx(cs, el)
+      const contentBoxPx = contentBoxHeightPx(el, cs)
+      const text = (el.textContent || '').trim() || 'Mg'
+      const sample = text.length === 1 ? `${text}${text}` : text[0] + text[text.length - 1]
+      const fontBoxHeightPx = measureFontBoxHeightPx(cs, sample)
+      const halfLeadingLhFs = (lineHeightPx - fontSizePx) / 2
+      const halfStrutContentLh = (contentBoxPx - lineHeightPx) / 2
+      const halfLeadingFontMetrics =
+        fontBoxHeightPx != null ? Math.max(0, (lineHeightPx - fontBoxHeightPx) / 2) : null
+      return {
+        fontSizePx: roundPx(fontSizePx),
+        lineHeightPx: roundPx(lineHeightPx),
+        lineHeightComputed: cs.lineHeight,
+        contentBoxPx: roundPx(contentBoxPx),
+        fontBoxHeightPx: roundPx(fontBoxHeightPx),
+        borderTopPx: roundPx(parseFloat(cs.borderTopWidth) || 0),
+        paddingTopPx: roundPx(parseFloat(cs.paddingTop) || 0),
+        paddingBottomPx: roundPx(parseFloat(cs.paddingBottom) || 0),
+        boxHeightPx: roundPx(el.getBoundingClientRect().height),
+        halfLeadingLhFs: roundPx(halfLeadingLhFs),
+        halfStrutContentLh: roundPx(halfStrutContentLh),
+        halfLeadingFontMetrics: roundPx(halfLeadingFontMetrics),
+      }
+    }
+
+    async function runProbe() {
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`Landmark "${landmark}" not found`)
+
+      const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+      if (!recipe?.id) throw new Error('product-baseline recipe missing')
+
+      globalThis.__foFixLabDebugCap = true
+      const row = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      const strut = computeStrutMath(el)
+      const liveTopInBorder = row.livePaintedTopInBorder ?? null
+      const capTopInBorder = row.liveCapModelTopInBorder ?? null
+      const svgTopInBorder = row.svgPaintedTopInBorder ?? null
+      const canvasTopInBorder = row.canvasPaintedTopInBorder ?? null
+      const canvasOffset = row.liveVsCanvasTopPx ?? null
+      const svgOffset = row.liveVsSvgTopPx ?? null
+      const capOffsetFromLive =
+        liveTopInBorder != null && capTopInBorder != null
+          ? roundPx(capTopInBorder - liveTopInBorder)
+          : null
+
+      return {
+        fixture: 'mini-nav',
+        recipeId: recipe.id,
+        landmark,
+        dpr,
+        scale,
+        strutMath: strut,
+        topsInBorder: {
+          liveRangeTopInBorder: roundPx(liveTopInBorder),
+          capModelTopInBorder: roundPx(capTopInBorder),
+          inlineSvgTopInBorder: roundPx(svgTopInBorder),
+          canvasTopInBorder: roundPx(canvasTopInBorder),
+        },
+        offsetsFromLiveRange: {
+          capModelOffsetPx: capOffsetFromLive,
+          inlineSvgOffsetPx: roundPx(svgOffset),
+          canvasOffsetPx: roundPx(canvasOffset),
+        },
+        capModelHalfLeading: strut.halfLeadingFontMetrics,
+        threeWay: {
+          liveVsCanvasTopPx: roundPx(canvasOffset),
+          liveVsSvgTopPx: roundPx(svgOffset),
+          deltaTopCapModel: roundPx(row.deltaTopCapModel ?? null),
+          deltaSvgCapModel: roundPx(row.deltaSvgCapModel ?? null),
+        },
+      }
+    }
+
+    async function boot() {
+      window.__lineBoxStrutMathProbe = {
+        ready: false,
+        done: false,
+        error: null,
+        payload: null,
+        run: runProbe,
+      }
+      try {
+        await document.fonts.ready
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+        window.__lineBoxStrutMathProbe.ready = true
+        if (params.get('auto') === '1') {
+          status.textContent = 'Running probe…'
+          window.__lineBoxStrutMathProbe.payload = await runProbe()
+          window.__lineBoxStrutMathProbe.done = true
+          status.textContent = 'Done.'
+        } else {
+          status.textContent = 'Ready — call __lineBoxStrutMathProbe.run()'
+        }
+      } catch (err) {
+        window.__lineBoxStrutMathProbe.error = String(err?.message || err)
+        window.__lineBoxStrutMathProbe.ready = true
+        window.__lineBoxStrutMathProbe.done = true
+        status.textContent = `Error: ${window.__lineBoxStrutMathProbe.error}`
+      }
+    }
+
+    boot()
+  </script>
+</body>
+</html>

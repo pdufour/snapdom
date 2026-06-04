@@ -1,0 +1,61 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-synthesis.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "winningHypothesis": "Chromium FO bitmap omits ~½(lh−fs) strut — round-5 rules decode timing, canvas backend, CIB path, FO subpixel attrs, xmlns",
+    "rootCauseConfidence": "HIGH",
+    "confirmed": [
+      "BITMAP_ONLY on product-baseline",
+      "Half-leading residual ≈2.797px"
+    ],
+    "refuted": [
+      "Upstream drawImageInterval / fonts.ready / double-rAF before decode",
+      "willReadFrequently / desynchronized / colorSpace srgb canvas2d hints",
+      "requiredExtensions / xmlns on hand-built FO (chromium-only confirm)",
+      "Fractional FO width/height vs integer (extends round-4 floor/ceil)"
+    ],
+    "newFindings": [
+      "createImageBitmap throws on full snapdom SVG — use hand-built FO for CIB A/B (chromium-class probe)",
+      "Snapdom decode-layer delta vs chromium-only same SVG: 0px",
+      "Decode timing spread: 0px",
+      "Wave-12 spot best: tc-fix-w7-rfork-fo-y-half-leading-meta |canvasΔ|=0.203125px (gate 0.06 not met)"
+    ],
+    "top3NewFindings": [
+      "createImageBitmap throws on full snapdom SVG — use hand-built FO for CIB A/B (chromium-class probe)",
+      "Snapdom decode-layer delta vs chromium-only same SVG: 0px",
+      "Decode timing spread: 0px"
+    ],
+    "bestNextFixDirection": "Promote structural FO paint-origin fix (w7 viewBox-y or inner linebox clip) — not decode/backing/timing; file Chromium bug; reconcile 0.203px w7 residual via metric or Range-aligned scan",
+    "top3NextFixes": [
+      {
+        "fix": "tc-fix-w12-rfork-viewbox-y-half-leading — viewBox minY strut without FO height change",
+        "expectedCanvasDelta": "2.797 → ≤0.5px headed calibrate"
+      },
+      {
+        "fix": "tc-fix-w12-rfork-leaf-translate-y-half-leading — decode CSS on text leaf not FO y",
+        "expectedCanvasDelta": "avoid stretch-box side effects of FO attr nudge"
+      },
+      {
+        "fix": "File CHROMIUM-FO-STRUT-BUG-DRAFT.md + attach round-5 decode-layer 0px proof",
+        "expectedCanvasDelta": "upstream Blink fix"
+      }
+    ],
+    "chromiumBugDraft": "__localtests__/CHROMIUM-FO-STRUT-BUG-DRAFT.md",
+    "filingStatus": "Draft — no exact open dup (crbug 1218383 / 467484 related only)"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-06-03T00:30:00.000Z",
+  "gatePx": 0.06,
+  "dpr": 1,
+  "landmarks": ["Home", "Products"],
+  "recipeGlob": "product-baseline,tc-fix-w7-rfork-fo-y-half-leading-meta,tc-fix-w20-*",
+  "hypothesis": "w7 refine — minus-subpixel FO y + root-only scope",
+  "verdict": "NOT_FIXED",
+  "w7ResidualStill203": true,
+  "noIntegerGatePass": true,
+  "recommendStop": true,
+  "bestLeader": {
+    "recipeId": "tc-fix-w20-rfork-y-half-root-only",
+    "worstAbsDeltaTop": 0.203,
+    "passGate": false
+  },
+  "w20Best": {
+    "recipeId": "tc-fix-w20-rfork-y-half-root-only",
+    "worstAbsDeltaTop": 0.203,
+    "passGate": false
+  },
+  "w7": {
+    "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "worstAbsDeltaTop": 0.203,
+    "passGate": false
+  },
+  "baseline": {
+    "recipeId": "product-baseline",
+    "worstAbsDeltaTop": 2.797,
+    "passGate": false
+  },
+  "rows": [
+    {
+      "recipeId": "tc-fix-w20-rfork-y-half-root-only",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 0.203,
+      "passGate": false
+    },
+    {
+      "recipeId": "tc-fix-w20-w7-integer-baseline",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 0.203,
+      "passGate": false
+    },
+    {
+      "recipeId": "tc-fix-w20-rfork-glyph-padding-w7",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 0.203,
+      "passGate": false
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": -0.203, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 0.203,
+      "passGate": false
+    },
+    {
+      "recipeId": "tc-fix-w20-rfork-y-half-minus-subpixel",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": 0.797, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": 0.797, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 0.797,
+      "passGate": false
+    },
+    {
+      "recipeId": "product-baseline",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": 2.797, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": 2.797, "passGate": false }
+      ],
+      "worstAbsDeltaTop": 2.797,
+      "passGate": false
+    },
+    {
+      "recipeId": "tc-fix-w20-rfork-createImageBitmap-minus-subpx",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": null, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": null, "passGate": false }
+      ],
+      "worstAbsDeltaTop": null,
+      "passGate": false,
+      "note": "createImageBitmap path — null canvas ink (known SVG blob limitation)"
+    },
+    {
+      "recipeId": "tc-fix-w20-rfork-createImageBitmap-root-only",
+      "landmarks": [
+        { "landmark": "Home", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": null, "passGate": false },
+        { "landmark": "Products", "liveVsSvgTopPx": 0, "liveVsCanvasTopPx": null, "passGate": false }
+      ],
+      "worstAbsDeltaTop": null,
+      "passGate": false,
+      "note": "createImageBitmap path — null canvas ink (known SVG blob limitation)"
+    }
+  ],
+  "leaders": [
+    { "recipeId": "tc-fix-w20-rfork-y-half-root-only", "worstAbsDeltaTop": 0.203 },
+    { "recipeId": "tc-fix-w20-w7-integer-baseline", "worstAbsDeltaTop": 0.203 },
+    { "recipeId": "tc-fix-w20-rfork-glyph-padding-w7", "worstAbsDeltaTop": 0.203 },
+    { "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta", "worstAbsDeltaTop": 0.203 },
+    { "recipeId": "tc-fix-w20-rfork-y-half-minus-subpixel", "worstAbsDeltaTop": 0.797 }
+  ],
+  "source": "fo-fix-lab.mjs --calibrate --open-browser headed Chrome @ dpr=1"
+}

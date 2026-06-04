@@ -1,0 +1,194 @@
+{
+  "probe": "fo-cross-browser-fo-probe",
+  "generatedAt": "2026-06-03T00:14:17.418Z",
+  "dpr": 1,
+  "landmark": "Home",
+  "headed": true,
+  "fixture": "hand-built-static-minimal-nav-fo",
+  "halfLeadingClassPx": 2.8,
+  "engines": [
+    {
+      "engine": "chromium",
+      "available": true,
+      "headed": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "result": {
+        "landmark": "Home",
+        "dpr": 1,
+        "fixtureDims": {
+          "cssW": 500,
+          "cssH": 50
+        },
+        "rasterPath": "image-decode",
+        "halfLeadingPx": 2.8000000000000007,
+        "threeWay": {
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 2.796875,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17
+        },
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "glyphMetrics": {
+          "boxHeightPx": 48,
+          "boxWidthPx": 68.859375,
+          "rangeTopInBorder": 14.203125,
+          "rangeBottomInBorder": 33.203125,
+          "rangeHeightInBorder": 19,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 14.203125,
+          "slackBelowRangePx": 14.796875,
+          "rangeFillsStretchBox": false
+        }
+      }
+    },
+    {
+      "engine": "chrome",
+      "available": true,
+      "headed": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "result": {
+        "landmark": "Home",
+        "dpr": 1,
+        "fixtureDims": {
+          "cssW": 500,
+          "cssH": 50
+        },
+        "rasterPath": "image-decode",
+        "halfLeadingPx": 2.8000000000000007,
+        "threeWay": {
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 2.796875,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17
+        },
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "glyphMetrics": {
+          "boxHeightPx": 48,
+          "boxWidthPx": 68.859375,
+          "rangeTopInBorder": 14.203125,
+          "rangeBottomInBorder": 33.203125,
+          "rangeHeightInBorder": 19,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 14.203125,
+          "slackBelowRangePx": 14.796875,
+          "rangeFillsStretchBox": false
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "available": true,
+      "headed": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+      "result": {
+        "landmark": "Home",
+        "dpr": 1,
+        "fixtureDims": {
+          "cssW": 500,
+          "cssH": 50
+        },
+        "rasterPath": "image-decode",
+        "halfLeadingPx": 2.8000000000000007,
+        "threeWay": {
+          "liveVsCanvasTopPx": 3.5,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 3.5,
+          "livePaintedTopInBorder": 14.5,
+          "svgPaintedTopInBorder": 14.5,
+          "canvasPaintedTopInBorder": 18
+        },
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "glyphMetrics": {
+          "boxHeightPx": 48,
+          "boxWidthPx": 68.83332824707031,
+          "rangeTopInBorder": 14.5,
+          "rangeBottomInBorder": 33.5,
+          "rangeHeightInBorder": 19,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 14.5,
+          "slackBelowRangePx": 14.5,
+          "rangeFillsStretchBox": false
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "available": true,
+      "headed": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15",
+      "result": {
+        "landmark": "Home",
+        "dpr": 1,
+        "fixtureDims": {
+          "cssW": 500,
+          "cssH": 50
+        },
+        "rasterPath": "image-decode",
+        "halfLeadingPx": 2.8000000000000007,
+        "threeWay": {
+          "liveVsCanvasTopPx": 3.421875,
+          "liveVsSvgTopPx": 0,
+          "svgVsCanvasTopPx": 3.421875,
+          "livePaintedTopInBorder": 14.578125,
+          "svgPaintedTopInBorder": 14.578125,
+          "canvasPaintedTopInBorder": 18
+        },
+        "verdict": "BITMAP_ONLY",
+        "bitmapOnly": true,
+        "glyphMetrics": {
+          "boxHeightPx": 48,
+          "boxWidthPx": 68.875,
+          "rangeTopInBorder": 14.578125,
+          "rangeBottomInBorder": 33.421875,
+          "rangeHeightInBorder": 18.84375,
+          "computedLhPx": 21.6,
+          "fontSizePx": 16,
+          "halfLeadingLhFsPx": 2.8000000000000007,
+          "slackAboveRangePx": 14.578125,
+          "slackBelowRangePx": 14.578125,
+          "rangeFillsStretchBox": false
+        }
+      }
+    }
+  ],
+  "synthesis": {
+    "enginesRequested": [
+      "chromium",
+      "chrome",
+      "firefox",
+      "webkit"
+    ],
+    "enginesRan": [
+      "chromium",
+      "chrome",
+      "firefox",
+      "webkit"
+    ],
+    "enginesSkipped": [],
+    "chromiumFamilyCanvasDeltaPx": [
+      2.797,
+      2.797
+    ],
+    "nonChromiumCanvasDeltaPx": [
+      3.5,
+      3.422
+    ],
+    "spreadAllEnginesPx": 0.703,
+    "verdict": "CLASS_WIDE_BITMAP_ONLY",
+    "isBugChromiumOnly": false,
+    "note": "All engines: svg≈live, canvasΔ ≫0 (FO→bitmap strut gap). Magnitude varies by engine — not Chromium-exclusive."
+  }
+}

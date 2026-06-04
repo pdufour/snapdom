@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-06-03T06:36:53.575Z",
+  "fixture": "fo-fix-lab block row (██████, data-landmark=H)",
+  "landmark": "H",
+  "dpr": [1, 2],
+  "metric": "layout top in #capture-target (fo-w7-regression-probe)",
+  "gatePx": 0.06,
+  "verdict": "w7 materially improves canvas; not promotable @ 0.06",
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 16,
+      "canvasDeltaVsLive": -1.188,
+      "svgDeltaVsLive": -1.188,
+      "canvasHigherThanLivePx": 1.188,
+      "note": "svg and canvas paint higher (smaller Y) than live"
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "liveTopPx": 17.188,
+      "svgTopPx": 16,
+      "canvasTopPx": 17,
+      "canvasDeltaVsLive": -0.188,
+      "svgDeltaVsLive": -1.188,
+      "canvasHigherThanLivePx": 0.188,
+      "rasterForkApplied": true,
+      "note": "FO y -= half-leading meta; canvas moves down 1px toward live"
+    }
+  ],
+  "improvementPx": 1.0,
+  "residualPx": 0.188,
+  "miniNavInkScanReference": {
+    "source": ".sandbox-edit/tc-fix-w18-matrix.json",
+    "baselineCanvasDelta": 2.797,
+    "w7CanvasDelta": -0.203
+  }
+}

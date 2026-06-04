@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO drift per landmark (three-way + typography)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 90ch; }
+    .fixture-block { margin-bottom: 20px; }
+    .fixture-block h2 { font-size: 14px; margin: 0 0 8px; color: #0f172a; }
+    #mini-capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #checkout-capture-target {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 720px;
+    }
+    .checkout-header {
+      display: flex;
+      align-items: stretch;
+      min-height: 56px;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 16px;
+      gap: 24px;
+    }
+    nav.nav-links {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      min-width: 0;
+    }
+    nav.nav-links a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      text-decoration: none;
+      color: #0f172a;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      border-top: 3px solid transparent;
+    }
+    .checkout-body {
+      padding: 20px 16px 28px;
+      font: 400 15px/1.5 system-ui, -apple-system, sans-serif;
+      color: #475569;
+    }
+    .checkout-body form { margin: 0; }
+    .checkout-body label {
+      display: inline-block;
+      margin: 0 0 8px;
+      font: 400 15px/1.5 system-ui, -apple-system, sans-serif;
+      color: #0f172a;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Per-landmark FO drift — typography + three-way ink</h1>
+  <p class="hint">
+  Mini nav + checkout-example layout (nav + form labels). product-baseline, FO raster only.
+  </p>
+
+  <div class="fixture-block" data-fixture="mini-nav">
+    <h2>Mini nav (500×48)</h2>
+    <div id="mini-capture-target">
+      <nav class="mini-nav" aria-label="Mini checkout nav">
+        <a href="#">Home</a>
+        <a href="#">Products</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="fixture-block" data-fixture="checkout-example">
+    <h2>Checkout-example (nav + form labels)</h2>
+    <div id="checkout-capture-target">
+      <div class="checkout-header">
+        <nav class="nav-links" aria-label="Checkout navigation">
+          <a href="#">Home</a>
+          <a href="#">Products</a>
+        </nav>
+      </div>
+      <div class="checkout-body">
+        <form aria-label="Checkout form">
+          <label for="email-field">Email</label>
+          <label for="name-field">Full name</label>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+
+    const FIXTURES = {
+      'mini-nav': {
+        rootId: 'mini-capture-target',
+        landmarks: ['Home', 'Products'],
+      },
+      'checkout-example': {
+        rootId: 'checkout-capture-target',
+        landmarks: ['Home', 'Products', 'Email', 'Full name'],
+      },
+    }
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function contentBoxHeightPx(el, cs) {
+      const box = el.getBoundingClientRect()
+      const bt = parseFloat(cs.borderTopWidth) || 0
+      const bb = parseFloat(cs.borderBottomWidth) || 0
+      const pt = parseFloat(cs.paddingTop) || 0
+      const pb = parseFloat(cs.paddingBottom) || 0
+      return box.height - bt - bb - pt - pb
+    }
+
+    /** CSS line-height in px (not flex-stretched layout line box). */
+    function resolveLineHeightPx(cs) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      return fs * 1.35
+    }
+
+    function measureFontBoxHeightPx(cs, sample) {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return null
+      const fs = parseFloat(cs.fontSize) || 16
+      ctx.font = `${cs.fontStyle || 'normal'} ${cs.fontWeight || '400'} ${fs}px ${cs.fontFamily || 'sans-serif'}`
+      const m = ctx.measureText(sample)
+      const ascent =
+        typeof m.fontBoundingBoxAscent === 'number'
+          ? m.fontBoundingBoxAscent
+          : m.actualBoundingBoxAscent
+      const descent =
+        typeof m.fontBoundingBoxDescent === 'number'
+          ? m.fontBoundingBoxDescent
+          : m.actualBoundingBoxDescent
+      if (typeof ascent !== 'number' || typeof descent !== 'number') return null
+      return ascent + descent
+    }
+
+    function glyphSample(el) {
+      const t = (el.textContent || '').trim()
+      if (!t) return 'Mg'
+      if (t.length === 1) return `${t}${t}`
+      return t[0] + t[t.length - 1]
+    }
+
+    function flexStretchContext(el) {
+      let parent = el.parentElement
+      while (parent) {
+        const pcs = getComputedStyle(parent)
+        const display = pcs.display || ''
+        if (display.includes('flex') || display.includes('grid')) {
+          const alignItems = pcs.alignItems || 'stretch'
+          const cs = getComputedStyle(el)
+          const alignSelf = cs.alignSelf || 'auto'
+          const stretched =
+            alignItems === 'stretch' &&
+            (alignSelf === 'auto' || alignSelf === 'stretch')
+          return {
+            flexParentTag: parent.tagName,
+            alignItems,
+            alignSelf,
+            flexChildStretched: stretched,
+          }
+        }
+        parent = parent.parentElement
+      }
+      return {
+        flexParentTag: null,
+        alignItems: null,
+        alignSelf: null,
+        flexChildStretched: false,
+      }
+    }
+
+    function measureLandmarkMetrics(el) {
+      const cs = getComputedStyle(el)
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const lineHeightComputed = cs.lineHeight
+      const lineHeightPx = resolveLineHeightPx(cs)
+      const layoutBoxPx = contentBoxHeightPx(el, cs)
+      const halfLeadingStrutPx = (lineHeightPx - fontSizePx) / 2
+      const halfLayoutStrutPx = (layoutBoxPx - lineHeightPx) / 2
+      const fontBoxHeightPx = measureFontBoxHeightPx(cs, glyphSample(el))
+      const halfLeadingCapPx = fontBoxHeightPx != null
+        ? Math.max(0, (lineHeightPx - fontBoxHeightPx) / 2)
+        : null
+      const flex = flexStretchContext(el)
+      return {
+        tag: el.tagName,
+        elementKind: el.tagName === 'LABEL' ? 'block-label' : el.tagName === 'A' ? 'nav-link' : 'text-leaf',
+        fontSizePx: roundPx(fontSizePx),
+        lineHeightComputed,
+        lineHeightPx: roundPx(lineHeightPx),
+        layoutBoxPx: roundPx(layoutBoxPx),
+        halfLeadingStrutPx: roundPx(halfLeadingStrutPx),
+        halfLayoutStrutPx: roundPx(halfLayoutStrutPx),
+        halfLeadingCapPx: roundPx(halfLeadingCapPx),
+        fontBoxHeightPx: roundPx(fontBoxHeightPx),
+        fontWeight: cs.fontWeight,
+        display: cs.display,
+        borderTopPx: roundPx(parseFloat(cs.borderTopWidth) || 0),
+        paddingTopPx: roundPx(parseFloat(cs.paddingTop) || 0),
+        borderBoxHeightPx: roundPx(el.getBoundingClientRect().height),
+        ...flex,
+      }
+    }
+
+    function rowSummary(metrics, threeWay) {
+      return {
+        fontSize: metrics?.fontSizePx ?? null,
+        lineHeight: metrics?.lineHeightPx ?? null,
+        layoutBox: metrics?.layoutBoxPx ?? null,
+        halfLeadingStrut: metrics?.halfLeadingStrutPx ?? null,
+        canvasDelta: threeWay?.liveVsCanvasTopPx ?? null,
+      }
+    }
+
+    async function probeFixture(fixtureId, spec) {
+      const root = document.getElementById(spec.rootId)
+      if (!root) throw new Error(`Missing #${spec.rootId}`)
+      const recipe = getFoFixRecipe('product-baseline')
+      /** @type {import('./fo-fix-lab-runner.js').FoFixProbeRow[]} */
+      const rows = []
+      for (const landmark of spec.landmarks) {
+        const el = findLandmarkElement(root, landmark)
+        if (!el) {
+          rows.push({ landmark, error: `landmark not found` })
+          continue
+        }
+        globalThis.__foFixLabDebugCap = true
+        const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+        const cssW = root.offsetWidth || root.getBoundingClientRect().width
+        const cssH = root.offsetHeight || root.getBoundingClientRect().height
+        const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr, { cssW, cssH })
+        const metrics = measureLandmarkMetrics(el)
+        const threeWay = {
+            livePaintedTopInBorder: roundPx(probe.livePaintedTopInBorder),
+            liveCapModelTopInBorder: roundPx(probe.liveCapModelTopInBorder),
+            svgPaintedTopInBorder: roundPx(probe.svgPaintedTopInBorder),
+            canvasPaintedTopInBorder: roundPx(probe.canvasPaintedTopInBorder),
+            liveVsSvgTopPx: roundPx(cmp.liveVsSvgTopPx),
+            liveVsCanvasTopPx: roundPx(cmp.liveVsCanvasTopPx),
+            deltaTopCapModel: roundPx(cmp.deltaTopCapModel),
+            svgVsCanvasTopPx:
+              cmp.liveVsCanvasTopPx != null && cmp.liveVsSvgTopPx != null
+                ? roundPx(cmp.liveVsCanvasTopPx - cmp.liveVsSvgTopPx)
+                : null,
+        }
+        rows.push({
+          landmark,
+          summary: rowSummary(metrics, threeWay),
+          metrics,
+          threeWay,
+        })
+      }
+      return { fixture: fixtureId, dpr, scale, captureDims: { cssW: root.offsetWidth, cssH: root.offsetHeight }, rows }
+    }
+
+    function classifyBuckets(fixtures) {
+      const navPainted = []
+      const structureCap = []
+      const formPainted = []
+      for (const fx of fixtures) {
+        for (const row of fx.rows) {
+          if (row.error || !row.threeWay) continue
+          const painted = row.threeWay.liveVsCanvasTopPx
+          const cap = row.threeWay.deltaTopCapModel
+          const kind = row.metrics?.elementKind
+          if (kind === 'nav-link' && painted != null) navPainted.push(painted)
+          if (kind === 'nav-link' && cap != null) structureCap.push(cap)
+          if (kind === 'block-label' && painted != null) formPainted.push(painted)
+        }
+      }
+      const mean = (arr) =>
+        arr.length ? roundPx(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+      const spread = (arr) =>
+        arr.length < 2
+          ? 0
+          : roundPx(Math.max(...arr) - Math.min(...arr))
+      return {
+        navPaintedCanvasDelta: {
+          bucket: '~2.8px FO raster (painted Range vs canvas)',
+          valuesPx: navPainted,
+          meanPx: mean(navPainted),
+          spreadPx: spread(navPainted),
+        },
+        navStructureCapDelta: {
+          bucket: '~-0.9px cap-model vs canvas (legacy structure metric)',
+          valuesPx: structureCap,
+          meanPx: mean(structureCap),
+          spreadPx: spread(structureCap),
+        },
+        formLabelPaintedCanvasDelta: {
+          bucket: 'smaller than nav (15px/400 inline-block label)',
+          valuesPx: formPainted,
+          meanPx: mean(formPainted),
+          spreadPx: spread(formPainted),
+        },
+      }
+    }
+
+    async function runAll() {
+      const fixtures = []
+      for (const [id, spec] of Object.entries(FIXTURES)) {
+        fixtures.push(await probeFixture(id, spec))
+      }
+      return {
+        probe: 'fo-drift-per-landmark',
+        recipeId: 'product-baseline',
+        dpr,
+        scale,
+        fixtures,
+        buckets: classifyBuckets(fixtures),
+      }
+    }
+
+    async function boot() {
+      window.__foDriftPerLandmark = {
+        ready: false,
+        bootError: null,
+        run: runAll,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error('Missing /dist/snapdom.mjs — run npm run compile')
+        window.snapdom = snapdom
+        await document.fonts.ready
+        window.__foDriftPerLandmark.ready = true
+        status.textContent = 'Ready — CLI invokes run().'
+      } catch (err) {
+        window.__foDriftPerLandmark.bootError = String(err?.message || err)
+        status.textContent = window.__foDriftPerLandmark.bootError
+      }
+    }
+
+    boot()
+  </script>
+</body>
+</html>

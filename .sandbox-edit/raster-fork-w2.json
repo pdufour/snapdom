@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-06-02T16:23:35.159Z",
+  "headed": true,
+  "port": 8790,
+  "landmark": "Home",
+  "mechanism": "raster-only-svg-fork-wave2",
+  "excludeTextBypass": true,
+  "svgPlateauTolPx": 0.15,
+  "inkPassThresholdPx": 0.06,
+  "recipeIds": [
+    "product-baseline",
+    "tc-fork-w2-leading-trim-inject",
+    "tc-fork-w2-align-self-flex-start",
+    "tc-fork-w2-svg-root-translate-y-minus-half-leading",
+    "tc-fork-w2-foreignObject-overflow-hidden",
+    "tc-fork-w2-line-height-normal-important",
+    "tc-fork-w2-combo-lh-normal-flex-start"
+  ],
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": null
+    },
+    {
+      "recipeId": "tc-fork-w2-leading-trim-inject",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "leading-trim-inject"
+    },
+    {
+      "recipeId": "tc-fork-w2-align-self-flex-start",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "align-self-flex-start"
+    },
+    {
+      "recipeId": "tc-fork-w2-svg-root-translate-y-minus-half-leading",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "svg-root-translate-y-minus-half-leading"
+    },
+    {
+      "recipeId": "tc-fork-w2-foreignObject-overflow-hidden",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "foreignObject-overflow-hidden"
+    },
+    {
+      "recipeId": "tc-fork-w2-line-height-normal-important",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 3.797,
+      "svgVsCanvasTopPx": 3.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "line-height-normal-important"
+    },
+    {
+      "recipeId": "tc-fork-w2-combo-lh-normal-flex-start",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 3.797,
+      "svgVsCanvasTopPx": 3.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "combo-lh-normal-flex-start"
+    }
+  ],
+  "bestWithSvgPlateau": {
+    "criterion": "|liveVsSvgTopPx| < 0.15, minimize |liveVsCanvasTopPx|",
+    "bestOverall": {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": null
+    },
+    "bestForkOnly": {
+      "recipeId": "tc-fork-w2-align-self-flex-start",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "svgVsCanvasTopPx": 2.805,
+      "parityStage": "raster",
+      "pass": false,
+      "rasterOnlySvgPatch": "align-self-flex-start"
+    },
+    "tiedAtBestAbsCanvasDelta": [
+      "product-baseline",
+      "tc-fork-w2-leading-trim-inject",
+      "tc-fork-w2-align-self-flex-start",
+      "tc-fork-w2-svg-root-translate-y-minus-half-leading",
+      "tc-fork-w2-foreignObject-overflow-hidden"
+    ]
+  },
+  "summary": {
+    "baselineCanvasDeltaPx": 2.797,
+    "baselineAbsCanvasDeltaPx": 2.797,
+    "forkCount": 6,
+    "improvedCount": 0,
+    "verdict": "NO_FORK_BEATS_BASELINE",
+    "allForksPreserveSvgWithinPlateau": true
+  }
+}

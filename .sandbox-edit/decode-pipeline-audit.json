@@ -1,0 +1,484 @@
+{
+  "probe": "fo-decode-pipeline-audit",
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "pipelineStages": [
+    "capture SVG string (snapdom.toRaw data URL)",
+    "optional rasterOnlySvgPatch on SVG bytes (lab w7: fo-y-half-leading-meta)",
+    "URL handoff: data: (lab default) or blob: (product toCanvas in runner)",
+    "HTMLImageElement decode → naturalWidth / naturalHeight",
+    "dim chain: meta.w0/h0, opt width/height, scale, dpr → backing + paint box",
+    "computeRasterDrawRect / lab drawMain → drawImage dest rect",
+    "half-leading: FO y patch (svg-fork) OR draw dy knobs (inkAlign, gbcr, offset)"
+  ],
+  "variants": [
+    {
+      "recipeId": "product-baseline",
+      "rasterPatch": "none",
+      "labToCanvasOpts": {},
+      "meta": {
+        "w0": 500,
+        "h0": 50,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875,
+        "lhStrutHalfLeadingPx": 2.8000000000000007,
+        "lhStrutLineHeightPx": 21.6,
+        "lhStrutFontSizePx": 16,
+        "inkTopFracInBorder": null,
+        "inkTopFracExpected": null
+      },
+      "svgAttrs": {
+        "post": {
+          "svgRoot": {
+            "width": "500",
+            "height": "50",
+            "viewBox": "0 0 500 50"
+          },
+          "foreignObject": {
+            "x": "0",
+            "y": "0",
+            "width": "500",
+            "height": "50"
+          },
+          "foContainer": {
+            "tag": "style",
+            "width": null,
+            "height": null
+          }
+        },
+        "foYDeltaPx": null,
+        "patchId": null,
+        "baselineFoY": null
+      },
+      "decode": {
+        "dataUrl": {
+          "urlKind": "data-url",
+          "naturalWidth": 500,
+          "naturalHeight": 50,
+          "complete": true
+        },
+        "blobUrl": {
+          "urlKind": "blob-url",
+          "naturalWidth": 500,
+          "naturalHeight": 50,
+          "complete": true
+        }
+      },
+      "dims": {
+        "cssW": 500,
+        "cssH": 50,
+        "dpr": 1,
+        "scale": 1
+      },
+      "drawComputed": {
+        "product": {
+          "path": "src/exporters/toCanvas.js",
+          "refW": 500,
+          "refH": 50,
+          "outW": 500,
+          "outH": 50,
+          "physicalW": 500,
+          "physicalH": 50,
+          "paintW": 500,
+          "paintH": 50,
+          "ctxScale": true,
+          "gbcrActive": true,
+          "gbcrNudge": {
+            "dx": 0,
+            "dy": -0.875
+          },
+          "inkAlignDy": 0,
+          "draw": {
+            "form": "9-arg",
+            "sx": 0,
+            "sy": 0,
+            "sw": 500,
+            "sh": 50,
+            "dx": 0,
+            "dy": -0.875,
+            "dw": 500,
+            "dh": 50
+          },
+          "natVsDest": {
+            "naturalW": 500,
+            "naturalH": 50,
+            "destW": 500,
+            "destH": 50,
+            "naturalMatchesDest": true
+          }
+        },
+        "lab": {
+          "path": "__localtests__/fo-fix-toCanvas.js",
+          "refW": 500,
+          "refH": 50,
+          "outW": 500,
+          "outH": 50,
+          "backingW": 500,
+          "backingH": 50,
+          "paintW": 500,
+          "paintH": 50,
+          "gbcrNudge": {
+            "dx": 0,
+            "dy": 0
+          },
+          "inkAlignDy": 0,
+          "halfLeadingEntries": {},
+          "draw": {
+            "form": "5-arg",
+            "dx": 0,
+            "dy": 0,
+            "dw": 500,
+            "dh": 50
+          },
+          "natVsDest": {
+            "naturalW": 500,
+            "naturalH": 50,
+            "destW": 500,
+            "destH": 50
+          }
+        }
+      },
+      "drawActual": {
+        "product": [
+          {
+            "form": "9-arg",
+            "img": {
+              "naturalWidth": 500,
+              "naturalHeight": 50
+            },
+            "sx": 0,
+            "sy": 0,
+            "sw": 500,
+            "sh": 50,
+            "dx": 0,
+            "dy": -0.875,
+            "dw": 500,
+            "dh": 50
+          }
+        ],
+        "lab": [
+          {
+            "form": "5-arg",
+            "img": {
+              "naturalWidth": 500,
+              "naturalHeight": 50
+            },
+            "dx": 0,
+            "dy": 0,
+            "dw": 500,
+            "dh": 50
+          }
+        ]
+      },
+      "halfLeadingEntryPoints": [
+        {
+          "stage": "svg-fork",
+          "mechanism": "foreignObject y − lhStrutHalfLeadingPx (fo-y-half-leading-meta)",
+          "px": 2.8000000000000007,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "inkAlign → rasterInkAlignDestDy (Range vs cap-model)",
+          "px": null,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "inkOffsetFromFoTop / −lhStrutHalfLeadingPx",
+          "px": 2.8000000000000007,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "strutRangeSubpixelDrawDy",
+          "px": 0.203125,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "gbcrFracY nudge (product default −gbcrFracY)",
+          "px": 0.875,
+          "active": true
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "natural-dims contain centering dy",
+          "px": null,
+          "active": false
+        },
+        {
+          "stage": "fo-layout",
+          "mechanism": "serialized line-height / strut inside FO (not drawImage)",
+          "px": 2.8000000000000007,
+          "active": true
+        }
+      ],
+      "canvasBacking": {
+        "product": {
+          "width": 500,
+          "height": 50
+        },
+        "lab": {
+          "width": 500,
+          "height": 50
+        },
+        "probe": {
+          "width": 500,
+          "height": 50
+        }
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      }
+    },
+    {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "rasterPatch": "lab-toCanvas",
+      "labToCanvasOpts": {
+        "rasterOnlySvgPatch": "fo-y-half-leading-meta"
+      },
+      "meta": {
+        "w0": 500,
+        "h0": 50,
+        "gbcrFracX": 0,
+        "gbcrFracY": 0.875,
+        "lhStrutHalfLeadingPx": 2.8000000000000007,
+        "lhStrutLineHeightPx": 21.6,
+        "lhStrutFontSizePx": 16,
+        "inkTopFracInBorder": null,
+        "inkTopFracExpected": null
+      },
+      "svgAttrs": {
+        "post": {
+          "svgRoot": {
+            "width": "500",
+            "height": "50",
+            "viewBox": "0 0 500 50"
+          },
+          "foreignObject": {
+            "x": "0",
+            "y": "0",
+            "width": "500",
+            "height": "50"
+          },
+          "foContainer": {
+            "tag": "style",
+            "width": null,
+            "height": null
+          }
+        },
+        "foYDeltaPx": 0,
+        "patchId": "fo-y-half-leading-meta",
+        "baselineFoY": 0
+      },
+      "decode": {
+        "dataUrl": {
+          "urlKind": "data-url",
+          "naturalWidth": 500,
+          "naturalHeight": 50,
+          "complete": true
+        },
+        "blobUrl": {
+          "urlKind": "blob-url",
+          "naturalWidth": 500,
+          "naturalHeight": 50,
+          "complete": true
+        }
+      },
+      "dims": {
+        "cssW": 500,
+        "cssH": 50,
+        "dpr": 1,
+        "scale": 1
+      },
+      "drawComputed": {
+        "product": {
+          "path": "src/exporters/toCanvas.js",
+          "refW": 500,
+          "refH": 50,
+          "outW": 500,
+          "outH": 50,
+          "physicalW": 500,
+          "physicalH": 50,
+          "paintW": 500,
+          "paintH": 50,
+          "ctxScale": true,
+          "gbcrActive": true,
+          "gbcrNudge": {
+            "dx": 0,
+            "dy": -0.875
+          },
+          "inkAlignDy": 0,
+          "draw": {
+            "form": "9-arg",
+            "sx": 0,
+            "sy": 0,
+            "sw": 500,
+            "sh": 50,
+            "dx": 0,
+            "dy": -0.875,
+            "dw": 500,
+            "dh": 50
+          },
+          "natVsDest": {
+            "naturalW": 500,
+            "naturalH": 50,
+            "destW": 500,
+            "destH": 50,
+            "naturalMatchesDest": true
+          }
+        },
+        "lab": {
+          "path": "__localtests__/fo-fix-toCanvas.js",
+          "refW": 500,
+          "refH": 50,
+          "outW": 500,
+          "outH": 50,
+          "backingW": 500,
+          "backingH": 50,
+          "paintW": 500,
+          "paintH": 50,
+          "gbcrNudge": {
+            "dx": 0,
+            "dy": 0
+          },
+          "inkAlignDy": 0,
+          "halfLeadingEntries": {},
+          "draw": {
+            "form": "5-arg",
+            "dx": 0,
+            "dy": 0,
+            "dw": 500,
+            "dh": 50
+          },
+          "natVsDest": {
+            "naturalW": 500,
+            "naturalH": 50,
+            "destW": 500,
+            "destH": 50
+          }
+        }
+      },
+      "drawActual": {
+        "product": [
+          {
+            "form": "9-arg",
+            "img": {
+              "naturalWidth": 500,
+              "naturalHeight": 50
+            },
+            "sx": 0,
+            "sy": 0,
+            "sw": 500,
+            "sh": 50,
+            "dx": 0,
+            "dy": -0.875,
+            "dw": 500,
+            "dh": 50
+          }
+        ],
+        "lab": [
+          {
+            "form": "5-arg",
+            "img": {
+              "naturalWidth": 500,
+              "naturalHeight": 50
+            },
+            "dx": 0,
+            "dy": 0,
+            "dw": 500,
+            "dh": 50
+          }
+        ]
+      },
+      "halfLeadingEntryPoints": [
+        {
+          "stage": "svg-fork",
+          "mechanism": "foreignObject y − lhStrutHalfLeadingPx (fo-y-half-leading-meta)",
+          "px": 2.8000000000000007,
+          "active": true
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "inkAlign → rasterInkAlignDestDy (Range vs cap-model)",
+          "px": null,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "inkOffsetFromFoTop / −lhStrutHalfLeadingPx",
+          "px": 2.8000000000000007,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "strutRangeSubpixelDrawDy",
+          "px": 0.203125,
+          "active": false
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "gbcrFracY nudge (product default −gbcrFracY)",
+          "px": 0.875,
+          "active": true
+        },
+        {
+          "stage": "drawImage",
+          "mechanism": "natural-dims contain centering dy",
+          "px": null,
+          "active": false
+        },
+        {
+          "stage": "fo-layout",
+          "mechanism": "serialized line-height / strut inside FO (not drawImage)",
+          "px": 2.8000000000000007,
+          "active": true
+        }
+      ],
+      "canvasBacking": {
+        "product": {
+          "width": 500,
+          "height": 50
+        },
+        "lab": {
+          "width": 500,
+          "height": 50
+        },
+        "probe": {
+          "width": 500,
+          "height": 50
+        }
+      },
+      "ink": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": -0.203125,
+        "svgVsCanvasTopPx": -0.1953125
+      }
+    }
+  ],
+  "comparison": {
+    "baselineCanvasDeltaPx": 2.796875,
+    "w7CanvasDeltaPx": -0.203125,
+    "canvasDeltaImprovementPx": 3,
+    "baselineSvgDeltaPx": -0.0078125,
+    "w7FoYDeltaPx": 0,
+    "w7HalfLeadingMetaPx": 2.8000000000000007,
+    "productGbcrDyPx": -0.875,
+    "labProbeUsesDataUrl": true,
+    "productUsesBlobUrl": true
+  },
+  "synthesis": {
+    "bitmapStageConfirmed": true,
+    "halfLeadingPrimaryFork": "fo-y-half-leading-meta adjusts foreignObject y at decode (not drawImage dy)",
+    "drawPathHalfLeadingInactiveOnW7": true,
+    "naturalVsDestMatch": true
+  },
+  "generatedAt": "2026-06-03T00:13:10.604Z",
+  "port": 19444,
+  "headed": true
+}

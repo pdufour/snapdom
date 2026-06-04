@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO research round 7</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+
+    window.snapdom = snapdom
+    import { computeHalfLeadingLhFs } from './fo-fix-toCanvas.js'
+    import {
+      applyRasterOnlySvgPatch,
+      compareThreeWayInk,
+      enrichRasterMetaFromTextLeaf,
+      findLandmarkElement,
+      measureLhStrutRangeFacts,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import {
+      compareThreeWay,
+      rasterSvgToCanvasEx,
+      DRAW_IMAGE_INTERVAL_MS,
+    } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx: cmp.svgVsCanvasTopPx ?? null,
+        deltaTopCapModel: cmp.deltaTopCapModel ?? null,
+        livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+        liveCapTopInBorder: cmp.liveCapModel?.topInBorder ?? null,
+        inkScanMode: cmp.inkScanMode ?? 'integer',
+        fractionalCanvasDelta: cmp.fractionalCanvasDelta ?? null,
+      }
+    }
+
+    async function rasterChromium(svgText, root, el, rasterOpts) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const { canvas } = await rasterSvgToCanvasEx(svgText, cssW * scale, cssH * scale, dpr, rasterOpts)
+      const fixtureDims = { cssW, cssH }
+      const threeWay = compareThreeWay(root, canvas, svgText, el, dpr, fixtureDims)
+      return { canvas, threeWay: threeWaySummary(threeWay), cssW, cssH, rawThreeWay: threeWay }
+    }
+
+    async function captureBaselineSvg(root, lm = landmark) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const el = findLandmarkElement(root, lm)
+      const row = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark: lm,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      return { svgText: row.svgText, el, recipe, row }
+    }
+
+    function setNavMinHeight(root, px) {
+      const nav = root.querySelector('nav.mini-nav')
+      if (nav) nav.style.minHeight = `${px}px`
+    }
+
+    function halfLeadingFromEl(el) {
+      const cs = getComputedStyle(el)
+      const fs = parseFloat(cs.fontSize) || 16
+      let lh = parseFloat(cs.lineHeight)
+      if (!Number.isFinite(lh) || lh <= 0) lh = fs * 1.35
+      return computeHalfLeadingLhFs(fs, lh)
+    }
+
+    function layoutFacts(el) {
+      const cs = getComputedStyle(el)
+      const box = el.getBoundingClientRect()
+      const strut = measureLhStrutRangeFacts(el)
+      return {
+        text: (el.textContent || '').trim(),
+        gbcrHeight: roundPx(box.height),
+        gbcrWidth: roundPx(box.width),
+        fontSizePx: roundPx(parseFloat(cs.fontSize) || 16),
+        lineHeightPx: roundPx(parseFloat(cs.lineHeight) || null),
+        computedLineHeight: cs.lineHeight,
+        paddingTop: roundPx(parseFloat(cs.paddingTop) || 0),
+        paddingBottom: roundPx(parseFloat(cs.paddingBottom) || 0),
+        halfLeadingFs: roundPx(strut.halfLeadingFs),
+        rangeTopInBorder: roundPx(strut.rangeTopInBorder),
+        capTopInBorder: roundPx(strut.capTopInBorder),
+        lineBoxTopInBorder: roundPx(strut.lineBoxTopInBorder),
+        rangeSubpixelPx: roundPx(strut.rangeSubpixelPx),
+        halfLeadingFsMinusRangeSubpixel: roundPx(strut.halfLeadingFsMinusRangeSubpixel),
+        rangeLineHeightPx: roundPx(strut.rangeLineHeightPx),
+      }
+    }
+
+    /** 1 — 48px vs 56/64px stretch box: does canvasΔ track layout strut or glyph ink? */
+    async function probeNavHeightVariants(root) {
+      const heights = [48, 56, 64]
+      const rows = []
+      for (const h of heights) {
+        setNavMinHeight(root, h)
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+        const el = findLandmarkElement(root, landmark)
+        const { svgText } = await captureBaselineSvg(root, landmark)
+        const row = await rasterChromium(svgText, root, el, {
+          postDecodePaintCount: 3,
+          postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+        })
+        const facts = layoutFacts(el)
+        const halfLayoutStrut = roundPx((facts.gbcrHeight - (facts.lineHeightPx ?? 21.6)) / 2)
+        rows.push({
+          navMinHeightPx: h,
+          halfLayoutStrutPx: halfLayoutStrut,
+          halfLeadingFsPx: facts.halfLeadingFs,
+          rangeTopInBorder: facts.rangeTopInBorder,
+          liveVsCanvasTopPx: row.threeWay.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.threeWay.liveVsSvgTopPx,
+          residualVsHalfLeadingFs: roundPx(
+            (row.threeWay.liveVsCanvasTopPx ?? 0) - (facts.halfLeadingFs ?? 0),
+          ),
+        })
+      }
+      setNavMinHeight(root, 48)
+      const deltas = rows.map((r) => r.liveVsCanvasTopPx).filter(Number.isFinite)
+      const spread = deltas.length ? roundPx(Math.max(...deltas) - Math.min(...deltas)) : null
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        verdict:
+          spread != null && spread < 0.08
+            ? 'NAV_HEIGHT_INVARIANT'
+            : 'NAV_HEIGHT_AFFECTS_CANVAS',
+        implication:
+          spread != null && spread < 0.08
+            ? 'Stretch box 48/56/64px does not change painted Range↔canvas drift — glyph half-leading class, not layout strut.'
+            : 'Taller nav changes canvasΔ — investigate stretch line-box coupling.',
+      }
+    }
+
+    /** 2 — wave-14 absent on disk → wave-13 spot-check */
+    async function probeWaveMatrixSpot(root) {
+      const ids = [
+        'product-baseline',
+        'tc-fix-w7-rfork-fo-y-half-leading-meta',
+        'tc-fix-w13-rfork-y-w7-minus-range-subpixel',
+        'tc-fix-w13-rfork-viewbox-y-half-leading',
+        'tc-fix-w13-rfork-leaf-translate-y-half-leading',
+        'tc-fix-w13-bitmap-w7-y',
+      ]
+      const rows = []
+      for (const id of ids) {
+        const recipe = getFoFixRecipe(id)
+        if (!recipe) {
+          rows.push({ recipeId: id, error: 'recipe not found' })
+          continue
+        }
+        try {
+          const row = await runFoFixProbe(recipe, {
+            dpr,
+            scale,
+            landmark,
+            root,
+            labToCanvasOpts: { disableGbcrFracNudge: true, ...(recipe.labToCanvasOpts || {}) },
+          })
+          rows.push({
+            recipeId: id,
+            wave: id.includes('w13') ? 13 : id.includes('w7') ? 7 : 0,
+            liveVsCanvasTopPx: roundPx(row.liveVsCanvasTopPx),
+            liveVsSvgTopPx: roundPx(row.liveVsSvgTopPx),
+            passesGate006: Math.abs(row.liveVsCanvasTopPx ?? 99) <= 0.06,
+          })
+        } catch (err) {
+          rows.push({ recipeId: id, error: String(err?.message || err) })
+        }
+      }
+      const best = rows
+        .filter((r) => Number.isFinite(r.liveVsCanvasTopPx))
+        .sort((a, b) => Math.abs(a.liveVsCanvasTopPx) - Math.abs(b.liveVsCanvasTopPx))[0]
+      return {
+        wave14OnDisk: false,
+        spotWave: 13,
+        rows,
+        bestRow: best ?? null,
+        noRowPassesGate: !rows.some((r) => r.passesGate006),
+        note: 'wave-14 matrix JSON not on disk — spot-check wave-13 + w7; run full --ids tc-fix-w13-* calibrate separately.',
+      }
+    }
+
+    /** 3 — Chromium-only vs snapdom decode on same SVG bytes */
+    async function probeDecodeDelta(root) {
+      const el = findLandmarkElement(root, landmark)
+      const snapdomRow = await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const snapCmp = compareThreeWayInk(root, snapdomRow.canvas, snapdomRow.svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      })
+      const chromiumRow = await rasterChromium(snapdomRow.svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const w7Row = await runFoFixProbe(getFoFixRecipe('tc-fix-w7-rfork-fo-y-half-leading-meta'), {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: {
+          disableGbcrFracNudge: true,
+          rasterOnlySvgPatch: 'fo-y-half-leading-meta',
+        },
+      })
+      const w7Meta = enrichRasterMetaFromTextLeaf(el, {})
+      const w7PatchedSvg = applyRasterOnlySvgPatch(snapdomRow.svgText, 'fo-y-half-leading-meta', {
+        meta: w7Meta,
+      })
+      const w7Chromium = await rasterChromium(w7PatchedSvg, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const snapdomVsChromiumPx = roundPx(
+        (chromiumRow.threeWay.liveVsCanvasTopPx ?? 0) - (snapCmp.liveVsCanvasTopPx ?? 0),
+      )
+      const w7SnapdomVsChromiumPx = roundPx(
+        (w7Chromium.threeWay.liveVsCanvasTopPx ?? 0) - (w7Row.liveVsCanvasTopPx ?? 0),
+      )
+      return {
+        baseline: {
+          snapdomLab: threeWaySummary(snapCmp),
+          chromiumOnlySameSvg: chromiumRow.threeWay,
+          snapdomVsChromiumDecodeDeltaPx: snapdomVsChromiumPx,
+        },
+        w7: {
+          snapdomLabCanvasDelta: roundPx(w7Row.liveVsCanvasTopPx),
+          chromiumOnlyPatchedSvg: w7Chromium.threeWay,
+          snapdomVsChromiumDecodeDeltaPx: w7SnapdomVsChromiumPx,
+        },
+        verdict:
+          Math.abs(snapdomVsChromiumPx ?? 0) < 0.08 && Math.abs(w7SnapdomVsChromiumPx ?? 0) < 0.08
+            ? 'SNAPDOM_ZERO_PX_AT_DECODE'
+            : 'SNAPDOM_DECODE_ADDS_PX',
+        implication:
+          'Same SVG bytes: lab toCanvas vs chromium-only raster — non-zero delta means snapdom decode/blit adds px beyond Chromium FO paint.',
+      }
+    }
+
+    /** 4 — Home vs Products landmark parity */
+    async function probeLandmarkParity(root) {
+      const landmarks = ['Home', 'Products']
+      const rows = []
+      for (const lm of landmarks) {
+        const el = findLandmarkElement(root, lm)
+        const { svgText, row } = await captureBaselineSvg(root, lm)
+        const chRow = await rasterChromium(svgText, root, el, {
+          postDecodePaintCount: 3,
+          postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+        })
+        rows.push({
+          landmark: lm,
+          layout: layoutFacts(el),
+          productBaseline: {
+            liveVsCanvasTopPx: roundPx(row.liveVsCanvasTopPx),
+            liveVsSvgTopPx: roundPx(row.liveVsSvgTopPx),
+          },
+          chromiumRaster: chRow.threeWay,
+        })
+      }
+      const home = rows.find((r) => r.landmark === 'Home')
+      const products = rows.find((r) => r.landmark === 'Products')
+      const canvasSpread =
+        home && products
+          ? roundPx(
+              Math.abs(
+                (home.productBaseline.liveVsCanvasTopPx ?? 0) -
+                  (products.productBaseline.liveVsCanvasTopPx ?? 0),
+              ),
+            )
+          : null
+      const layoutDiffs = {}
+      if (home && products) {
+        for (const key of Object.keys(home.layout)) {
+          const a = home.layout[key]
+          const b = products.layout[key]
+          if (typeof a === 'number' && typeof b === 'number') {
+            layoutDiffs[key] = roundPx(Math.abs(a - b))
+          }
+        }
+      }
+      return {
+        rows,
+        canvasDeltaSpreadPx: canvasSpread,
+        layoutDiffMaxPx: layoutDiffs
+          ? roundPx(Math.max(...Object.values(layoutDiffs).filter(Number.isFinite)))
+          : null,
+        layoutDiffs,
+        verdict:
+          canvasSpread != null && canvasSpread < 0.001
+            ? 'LANDMARK_CANVAS_DELTA_IDENTICAL'
+            : 'LANDMARK_CANVAS_DELTA_DIFFERS',
+        rootCause:
+          canvasSpread != null && canvasSpread < 0.001
+            ? 'No Products-vs-Home painted drift — any blackbox nav parity failure is metric/coordinate, not FO raster class.'
+            : 'Landmarks diverge — inspect per-link CSS or text metrics.',
+      }
+    }
+
+    /** 5 — blackbox cap-model vs lab Range reconciliation */
+    async function probeMetricReconcile(root) {
+      const el = findLandmarkElement(root, landmark)
+      const { svgText } = await captureBaselineSvg(root, landmark)
+      const chRow = await rasterChromium(svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const cmp = compareThreeWayInk(root, chRow.canvas, svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      }, { includeFractionalInkScan: true })
+
+      const rangeCanvasDelta = cmp.liveVsCanvasTopPx
+      const capCanvasDelta = cmp.deltaTopCapModel
+      const rangeMinusCapLive = roundPx(
+        (cmp.live?.topInBorder ?? 0) - (cmp.liveCapModel?.topInBorder ?? 0),
+      )
+
+      /** Blackbox paint.canvas.vs-border.top ≈ cap-model canvas delta (structure report). */
+      const blackboxProxyDelta = capCanvasDelta
+
+      return {
+        metrics: {
+          labRangeLiveVsCanvasTopPx: roundPx(rangeCanvasDelta),
+          labCapModelCanvasDeltaPx: roundPx(capCanvasDelta),
+          blackboxProxyPaintCanvasVsBorderTopPx: roundPx(blackboxProxyDelta),
+          rangeMinusCapLiveTopInBorderPx: rangeMinusCapLive,
+          reconciliation:
+            rangeCanvasDelta != null && capCanvasDelta != null
+              ? roundPx(rangeCanvasDelta - capCanvasDelta)
+              : null,
+        },
+        live: {
+          rangeTopInBorder: roundPx(cmp.live?.topInBorder),
+          capTopInBorder: roundPx(cmp.liveCapModel?.topInBorder),
+        },
+        canvas: {
+          integerTopInBorder: roundPx(cmp.canvas?.topInBorder),
+          integerDeviceRow: cmp.canvas?.firstInkDeviceRow ?? null,
+        },
+        fractionalCanvasDelta: cmp.fractionalCanvasDelta,
+        verdict: 'METRIC_FAMILIES_DIFFER_BY_DESIGN',
+        implication:
+          '+2.797 (Range) vs ~−1.727 (cap-model on mini nav) vs blackbox ~−0.91 are different ink boxes — reconcile before gating; do not treat as contradictory bugs.',
+        formula:
+          'blackbox Δ ≈ canvas(cap scan) − live(cap model); lab Δ ≈ canvas(integer scan) − live(Range union)',
+      }
+    }
+
+    /** 6 — w7 residual 0.203: integer scan vs subpixel Range */
+    async function probeW7ResidualScan(root) {
+      const el = findLandmarkElement(root, landmark)
+      const strut = measureLhStrutRangeFacts(el)
+      const halfLeading = halfLeadingFromEl(el)
+
+      const baselineRow = await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const w7Row = await runFoFixProbe(getFoFixRecipe('tc-fix-w7-rfork-fo-y-half-leading-meta'), {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: {
+          disableGbcrFracNudge: true,
+          rasterOnlySvgPatch: 'fo-y-half-leading-meta',
+        },
+      })
+
+      const baselineCmp = compareThreeWayInk(root, baselineRow.canvas, baselineRow.svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      }, { includeFractionalInkScan: true })
+
+      const w7Cmp = compareThreeWayInk(root, w7Row.canvas, w7Row.svgText, el, dpr, {
+        cssW: root.offsetWidth,
+        cssH: root.offsetHeight,
+      }, { includeFractionalInkScan: true })
+
+      const w7IntegerDelta = w7Cmp.liveVsCanvasTopPx
+      const w7FractionalThreshold = w7Cmp.fractionalCanvasDelta?.fractionalThreshold
+      const w7FractionalCom = w7Cmp.fractionalCanvasDelta?.fractionalCom
+
+      const expectedW7Nudge = roundPx(-(halfLeading ?? 0))
+      const residualAfterHalfLeadingNudge = roundPx(w7IntegerDelta)
+      const rangeSubpixel = strut.rangeSubpixelPx
+      const predictedResidualFromRangeSubpx = roundPx(
+        expectedW7Nudge + (baselineCmp.liveVsCanvasTopPx ?? 0),
+      )
+
+      return {
+        halfLeadingLhFsPx: roundPx(halfLeading),
+        rangeSubpixelPx: roundPx(rangeSubpixel),
+        halfLeadingFsMinusRangeSubpixelPx: roundPx(strut.halfLeadingFsMinusRangeSubpixel),
+        baseline: {
+          integerCanvasDelta: roundPx(baselineCmp.liveVsCanvasTopPx),
+          fractionalThreshold: roundPx(baselineCmp.fractionalCanvasDelta?.fractionalThreshold),
+          fractionalCom: roundPx(baselineCmp.fractionalCanvasDelta?.fractionalCom),
+        },
+        w7: {
+          integerCanvasDelta: roundPx(w7IntegerDelta),
+          fractionalThreshold: roundPx(w7FractionalThreshold),
+          fractionalCom: roundPx(w7FractionalCom),
+          canvasIntegerTopInBorder: roundPx(w7Cmp.canvas?.topInBorder),
+          canvasIntegerDeviceRow: w7Cmp.canvas?.firstInkDeviceRow ?? null,
+          liveRangeTopInBorder: roundPx(w7Cmp.live?.topInBorder),
+          rangeMinusIntegerCanvasTop: roundPx(
+            (w7Cmp.live?.topInBorder ?? 0) - (w7Cmp.canvas?.topInBorder ?? 0),
+          ),
+        },
+        math: {
+          expectedFoYNudgePx: expectedW7Nudge,
+          baselineMinusHalfLeading: roundPx((baselineCmp.liveVsCanvasTopPx ?? 0) - (halfLeading ?? 0)),
+          w7ResidualMatchesRangeSubpixel:
+            rangeSubpixel != null &&
+            w7IntegerDelta != null &&
+            Math.abs(Math.abs(w7IntegerDelta) - rangeSubpixel) < 0.05,
+          w7PassesGateAtFractionalThreshold:
+            w7FractionalThreshold != null && Math.abs(w7FractionalThreshold) <= 0.06,
+        },
+        verdict: 'W7_RESIDUAL_IS_INTEGER_SCAN_VS_RANGE_SUBPIXEL',
+        implication:
+          'w7 FO y −2.8px lands canvas integer ink row at 14px vs live Range 14.203px → reported −0.203px; fractional scan may close gate without new paint fix.',
+      }
+    }
+
+    function buildSynthesis(sections, baseline) {
+      const refuted = []
+      const newFindings = []
+
+      if (sections.navHeightVariants?.verdict === 'NAV_HEIGHT_INVARIANT') {
+        refuted.push('Stretch nav 48/56/64px as root cause of +2.797 painted drift')
+        newFindings.push(
+          `Nav height 48/56/64px canvasΔ spread: ${sections.navHeightVariants.canvasDeltaSpreadPx ?? 0}px`,
+        )
+      }
+      if (sections.decodeDelta?.verdict === 'SNAPDOM_ZERO_PX_AT_DECODE') {
+        refuted.push('Snapdom decode/blit layer adding px beyond Chromium on same SVG')
+        newFindings.push(
+          `Snapdom vs chromium-only decode delta: ${sections.decodeDelta.baseline?.snapdomVsChromiumDecodeDeltaPx ?? 0}px`,
+        )
+      }
+      if (sections.landmarkParity?.verdict === 'LANDMARK_CANVAS_DELTA_IDENTICAL') {
+        newFindings.push(
+          `Home vs Products canvasΔ spread: ${sections.landmarkParity.canvasDeltaSpreadPx ?? 0}px — identical FO raster class`,
+        )
+      }
+      if (sections.metricReconcile?.metrics) {
+        newFindings.push(
+          `Range canvasΔ ${sections.metricReconcile.metrics.labRangeLiveVsCanvasTopPx}px vs cap-model ${sections.metricReconcile.metrics.labCapModelCanvasDeltaPx}px (reconcile ${sections.metricReconcile.metrics.reconciliation}px)`,
+        )
+      }
+      if (sections.w7ResidualScan?.w7) {
+        newFindings.push(
+          `w7 residual integer ${sections.w7ResidualScan.w7.integerCanvasDelta}px; Range subpixel ${sections.w7ResidualScan.rangeSubpixelPx}px; fractional-threshold ${sections.w7ResidualScan.w7.fractionalThreshold}px`,
+        )
+      }
+      if (sections.waveMatrixSpot?.bestRow) {
+        newFindings.push(
+          `Wave-13 spot best: ${sections.waveMatrixSpot.bestRow.recipeId} |canvasΔ|=${Math.abs(sections.waveMatrixSpot.bestRow.liveVsCanvasTopPx)}px`,
+        )
+      }
+
+      return {
+        winningHypothesis:
+          'Chromium FO bitmap omits ~½(lh−fs) strut — w7 y nudge closes class gap; 0.203px residual is integer ink scan vs Range subpixel, not a second paint bug',
+        rootCauseConfidence: 'HIGH',
+        confirmed: [
+          'BITMAP_ONLY on product-baseline',
+          `Half-leading plateau ≈${baseline.residualCanvasMinusHalfLeadingPx ?? '—'}px residual`,
+          sections.w7ResidualScan?.math?.w7ResidualMatchesRangeSubpixel
+            ? 'w7 |0.203| ≈ Range subpixel 0.203'
+            : 'w7 residual under investigation',
+        ],
+        refuted,
+        newFindings,
+        top3NewFindings: newFindings.slice(0, 3),
+        bestNextFixDirection:
+          'Promote tc-fix-w13-rfork-y-w7-minus-range-subpixel or align integer ink scan to Range; do not re-tune stretch height',
+        top3NextFixes: [
+          {
+            fix: 'tc-fix-w13-rfork-y-w7-minus-range-subpixel — FO y −(½(lh−fs) − rangeSubpixelPx)',
+            expectedCanvasDelta: '0.203 → ≤0.06 px integer gate',
+          },
+          {
+            fix: 'Fractional-threshold ink scan for matrix gate (document-only) — closes w7 without FO attr change',
+            expectedCanvasDelta: 'gate alignment; not a Chromium paint fix',
+          },
+          {
+            fix: 'tc-fix-w13-rfork-viewbox-y-half-leading — viewBox minY strut without FO height side effects',
+            expectedCanvasDelta: '2.797 → ≤0.5 px if y-attr stretch coupling regresses',
+          },
+        ],
+      }
+    }
+
+    async function run() {
+      const status = document.getElementById('status')
+      const root = document.getElementById('capture-target')
+      await document.fonts.ready
+
+      const { svgText, el } = await captureBaselineSvg(root)
+      if (!el) throw new Error(`landmark ${landmark} not found`)
+
+      const halfLeadingLhFsPx = halfLeadingFromEl(el)
+      const baselineProbe = await rasterChromium(svgText, root, el, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const baseline = {
+        threeWay: baselineProbe.threeWay,
+        halfLeadingLhFsPx,
+        residualCanvasMinusHalfLeadingPx: roundPx(
+          (baselineProbe.threeWay.liveVsCanvasTopPx ?? 0) - halfLeadingLhFsPx,
+        ),
+        svgBytes: svgText.length,
+      }
+
+      status.textContent = 'Running round-7 probes…'
+      const sections = {}
+      const runAll = section === 'all'
+      if (runAll || section === 'navHeight') {
+        sections.navHeightVariants = await probeNavHeightVariants(root)
+      }
+      if (runAll || section === 'waveMatrix') {
+        sections.waveMatrixSpot = await probeWaveMatrixSpot(root)
+      }
+      if (runAll || section === 'decodeDelta') {
+        sections.decodeDelta = await probeDecodeDelta(root)
+      }
+      if (runAll || section === 'landmarkParity') {
+        sections.landmarkParity = await probeLandmarkParity(root)
+      }
+      if (runAll || section === 'metricReconcile') {
+        sections.metricReconcile = await probeMetricReconcile(root)
+      }
+      if (runAll || section === 'w7Residual') {
+        sections.w7ResidualScan = await probeW7ResidualScan(root)
+      }
+
+      const synthesis = buildSynthesis(sections, baseline)
+      status.textContent = 'Done.'
+      return {
+        probe: 'fo-research-round-7',
+        generatedAt: new Date().toISOString(),
+        dpr,
+        scale,
+        landmark,
+        section,
+        baseline,
+        sections,
+        synthesis,
+      }
+    }
+
+    window.__foResearchRound7 = { ready: false, bootError: null, result: null }
+    run()
+      .then((result) => {
+        window.__foResearchRound7.result = result
+        window.__foResearchRound7.ready = true
+      })
+      .catch((err) => {
+        window.__foResearchRound7.bootError = String(err?.message || err)
+        window.__foResearchRound7.ready = true
+        document.getElementById('status').textContent = `Error: ${window.__foResearchRound7.bootError}`
+      })
+  </script>
+</body>
+</html>

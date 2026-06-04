@@ -1,0 +1,51 @@
+{
+  "fixture": "fo-lh-deep-probe-v2",
+  "section": "fo-serialized",
+  "headed": true,
+  "generatedAt": "2026-06-02T16:32:09.013Z",
+  "row": {
+    "section": "fo-serialized",
+    "liveComputed": {
+      "lineHeight": "21.6px",
+      "fontSize": "16px",
+      "lineHeightPx": 21.6
+    },
+    "serializedFo": {
+      "inlineStyle": "color: rgb(17, 17, 17); mask-position: 0% 0%; mask-size: auto; mask-repeat: repeat; mask-mode: match-source; mask-composite: add; mask-origin: border-box; mask-clip: border-box;",
+      "lineHeight": null
+    },
+    "lhMatch": false,
+    "threeWay": {
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797
+    },
+    "canvasDeltaPx": 2.797,
+    "svgDeltaPx": -0.008,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "metrics": {
+      "tag": "A",
+      "computedLineHeight": "21.6px",
+      "lineHeightComputedPx": 21.6,
+      "lineHeightPx": 21.6,
+      "layoutLineBoxPx": 48,
+      "halfLeadingLhFsPx": 2.8,
+      "halfLeadingComputedPx": 2.8,
+      "fontSizePx": 16,
+      "leafHeightGbcr": 48,
+      "parentHeightGbcr": 48,
+      "parentAlignItems": "stretch",
+      "display": "flex",
+      "alignSelf": "auto",
+      "leadingTrim": null,
+      "textBoxTrim": "none"
+    },
+    "dpr": 1,
+    "scale": 1,
+    "landmark": "Home",
+    "recipeId": "product-baseline",
+    "rasterPatch": "product-toCanvas"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-06-03T06:53:47.040Z",
+  "landmark": "Blocks",
+  "blockChars": "██████",
+  "dpr": 1,
+  "recipes": [
+    "product-baseline"
+  ],
+  "captures": [
+    {
+      "recipeId": "product-baseline",
+      "url": "http://127.0.0.1:8765/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=Blocks&debugInkLine=0",
+      "meta": {
+        "recipeId": "product-baseline",
+        "landmark": "Blocks",
+        "liveVsSvgTopPx": -1.1875,
+        "liveVsCanvasTopPx": -1.1875,
+        "inkNote": "Ink metrics recorded for context only — LLM visual gate ignores pass/fail from scan."
+      },
+      "screenshots": {
+        "live": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/product-baseline/live.png",
+        "svg": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/product-baseline/svg.png",
+        "canvas": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/product-baseline/canvas.png"
+      }
+    }
+  ],
+  "strip": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/compare-strip.png",
+  "promptPath": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/compare-prompt.md",
+  "reportMd": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-llm-visual-compare/report.md",
+  "vision": null,
+  "gate": "llm-visual",
+  "inkMetricsNote": "Ink numbers in meta are diagnostic only; do not use as primary pass/fail.",
+  "captureError": null
+}

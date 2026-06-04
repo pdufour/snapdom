@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FO decode pipeline audit (baseline vs w7)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 12px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+    }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: #111;
+      text-decoration: none;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <h1>Decode pipeline audit</h1>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { runDecodePipelineAudit } from './fo-decode-pipeline-audit.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    window.__foDecodePipelineAudit = {
+      ready: false,
+      bootError: null,
+      async run() {
+        status.textContent = 'Running audit…'
+        const result = await runDecodePipelineAudit({ root, dpr, scale, landmark })
+        status.textContent = 'Done.'
+        return result
+      },
+    }
+
+    ;(async () => {
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status})`)
+        await document.fonts.ready
+        window.__foDecodePipelineAudit.ready = true
+        status.textContent = 'Ready — runner will invoke run().'
+      } catch (err) {
+        window.__foDecodePipelineAudit.bootError = String(err?.message || err)
+        status.textContent = window.__foDecodePipelineAudit.bootError
+        window.__foDecodePipelineAudit.ready = true
+      }
+    })()
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-nav-height.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "navMinHeightPx": 48,
+        "halfLayoutStrutPx": 13.2,
+        "halfLeadingFsPx": 2.8,
+        "rangeTopInBorder": 14.203,
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "residualVsHalfLeadingFs": -0.003
+      },
+      {
+        "navMinHeightPx": 56,
+        "halfLayoutStrutPx": 17.2,
+        "halfLeadingFsPx": 2.8,
+        "rangeTopInBorder": 18.203,
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "residualVsHalfLeadingFs": -0.003
+      },
+      {
+        "navMinHeightPx": 64,
+        "halfLayoutStrutPx": 21.2,
+        "halfLeadingFsPx": 2.8,
+        "rangeTopInBorder": 22.203,
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "residualVsHalfLeadingFs": -0.003
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "NAV_HEIGHT_INVARIANT",
+    "implication": "Stretch box 48/56/64px does not change painted Range↔canvas drift — glyph half-leading class, not layout strut."
+  }
+}

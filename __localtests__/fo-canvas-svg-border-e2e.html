@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-canvas-svg border-top e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  { "imports": { "image-trim": "https://esm.sh/image-trim@1.0.0" } }
+  </script>
+  <style>
+    .band-host { position: absolute; left: -9999px; top: 0; }
+    .band { position: relative; width: 100px; height: 80px; background: #fff; overflow: hidden; }
+    .ink-bar { position: absolute; left: 15px; width: 50px; height: 12px; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="band-host" class="band-host"></div>
+  <script type="module">
+    import {
+      INK_SCAN_CAP_CORE_DEFAULTS,
+      ensureInkScanBackend,
+      inkTopRowFromCanvasRegion,
+      registerImageTrimGetBorders,
+    } from './fo-ink-bounds-scan.mjs'
+
+    /** 100×80 band — black horizontal bar simulates ink top border. */
+    const BAND_W = 100
+    const BAND_H = 80
+    const BAR_H = 12
+    const BAR_X = 15
+    const BAR_W = 50
+    const TOL = 1
+
+    const SCAN_OPTS = {
+      mode: 'integer',
+      solidBand: true,
+      capCrest: true,
+      refineUpward: true,
+      ...INK_SCAN_CAP_CORE_DEFAULTS,
+    }
+
+    /** @type {{ id: string, inkTop: number, shift: number, expectedTop: number }[]} */
+    const STAGE_CASES = [
+      { id: 'top-0', inkTop: 0, shift: 0, expectedTop: 0 },
+      { id: 'top-0-down-5', inkTop: 0, shift: 5, expectedTop: 5 },
+      { id: 'baseline-40', inkTop: 40, shift: 0, expectedTop: 40 },
+      { id: 'down-5', inkTop: 40, shift: 5, expectedTop: 45 },
+      { id: 'down-10', inkTop: 40, shift: 10, expectedTop: 50 },
+      { id: 'up-5', inkTop: 50, shift: -5, expectedTop: 45 },
+      { id: 'up-5-from-45', inkTop: 45, shift: -5, expectedTop: 40 },
+    ]
+
+    const STAGES = ['live', 'svg', 'canvas']
+
+    /** @type {{ id: string, inkTop: number, canvasShift: number, svgShift: number, expect: object }[]} */
+    const CROSS_CASES = [
+      {
+        id: 'cross-canvas-down5',
+        inkTop: 40,
+        canvasShift: 5,
+        svgShift: 0,
+        expect: { canvasTop: 45, svgTop: 40, delta: 5 },
+      },
+    ]
+
+    function buildBandSvg(barTop) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${BAND_W}" height="${BAND_H}">
+  <rect width="100%" height="100%" fill="#fff"/>
+  <foreignObject width="${BAND_W}" height="${BAND_H}">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;width:${BAND_W}px;height:${BAND_H}px;background:#fff;position:relative">
+      <div style="position:absolute;top:${barTop}px;left:${BAR_X}px;width:${BAR_W}px;height:${BAR_H}px;background:#000"></div>
+    </div>
+  </foreignObject>
+</svg>`
+    }
+
+    function svgDataUrl(svgText) {
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+    }
+
+    function makeCanvas() {
+      const c = document.createElement('canvas')
+      c.width = BAND_W
+      c.height = BAND_H
+      return c
+    }
+
+    /** SVG path: data-URL FO SVG → img onload → canvas → scan. */
+    async function rasterizeSvg(svgText, canvas) {
+      const img = new Image()
+      await new Promise((res, rej) => {
+        img.onload = () => res()
+        img.onerror = () => rej(new Error('svg load failed'))
+        img.src = svgDataUrl(svgText)
+      })
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, 0, BAND_W, BAND_H)
+    }
+
+    function mountLive(barTop) {
+      const host = document.getElementById('band-host')
+      host.replaceChildren()
+      const band = document.createElement('div')
+      band.className = 'band'
+      const bar = document.createElement('div')
+      bar.className = 'ink-bar'
+      bar.style.top = `${barTop}px`
+      bar.style.height = `${BAR_H}px`
+      band.appendChild(bar)
+      host.appendChild(band)
+      return band
+    }
+
+    function rasterizeLive(band, canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      const bandRect = band.getBoundingClientRect()
+      const bar = band.querySelector('.ink-bar')
+      const barRect = bar.getBoundingClientRect()
+      ctx.fillStyle = '#000'
+      ctx.fillRect(
+        barRect.left - bandRect.left,
+        barRect.top - bandRect.top,
+        barRect.width,
+        barRect.height,
+      )
+    }
+
+    /** Canvas path: SVG → Image.decode → drawImage (+ optional Y shift) → scan. */
+    async function rasterizeCanvas(svgText, canvas, drawShiftY = 0) {
+      const img = new Image()
+      img.src = svgDataUrl(svgText)
+      await img.decode()
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, drawShiftY, BAND_W, BAND_H)
+    }
+
+    function scanBand(canvas) {
+      const hit = inkTopRowFromCanvasRegion(
+        canvas.getContext('2d', { willReadFrequently: true }),
+        0,
+        0,
+        BAND_W,
+        BAND_H,
+        SCAN_OPTS,
+      )
+      return hit?.regionRow ?? hit?.row ?? null
+    }
+
+    async function scanLiveStage(inkTop, shift) {
+      const canvas = makeCanvas()
+      rasterizeLive(mountLive(inkTop + shift), canvas)
+      return scanBand(canvas)
+    }
+
+    async function scanSvgStage(inkTop, shift) {
+      const canvas = makeCanvas()
+      await rasterizeSvg(buildBandSvg(inkTop + shift), canvas)
+      return scanBand(canvas)
+    }
+
+    async function scanCanvasStage(inkTop, shift) {
+      const canvas = makeCanvas()
+      await rasterizeCanvas(buildBandSvg(inkTop), canvas, shift)
+      return scanBand(canvas)
+    }
+
+    async function runStageCase(stage, c) {
+      const row =
+        stage === 'live'
+          ? await scanLiveStage(c.inkTop, c.shift)
+          : stage === 'svg'
+            ? await scanSvgStage(c.inkTop, c.shift)
+            : await scanCanvasStage(c.inkTop, c.shift)
+      const pass = row != null && Math.abs(row - c.expectedTop) <= TOL
+      return {
+        id: `${stage}-${c.id}`,
+        stage,
+        inkTop: c.inkTop,
+        shift: c.shift,
+        expectedTop: c.expectedTop,
+        row,
+        pass,
+        errors: pass ? [] : [`row=${row} expected ${c.expectedTop}`],
+      }
+    }
+
+    async function runCrossCase(c) {
+      const canvas = makeCanvas()
+      await rasterizeCanvas(buildBandSvg(c.inkTop), canvas, c.canvasShift)
+      const canvasTop = scanBand(canvas)
+
+      const svgCanvas = makeCanvas()
+      await rasterizeSvg(buildBandSvg(c.inkTop + c.svgShift), svgCanvas)
+      const svgTop = scanBand(svgCanvas)
+
+      const delta = canvasTop != null && svgTop != null ? canvasTop - svgTop : null
+      const exp = c.expect
+      let pass = canvasTop != null && svgTop != null && delta != null
+      if (pass && Math.abs(canvasTop - exp.canvasTop) > TOL) pass = false
+      if (pass && Math.abs(svgTop - exp.svgTop) > TOL) pass = false
+      if (pass && Math.abs(delta - exp.delta) > TOL) pass = false
+      return {
+        id: c.id,
+        stage: 'cross',
+        inkTop: c.inkTop,
+        canvasShift: c.canvasShift,
+        svgShift: c.svgShift,
+        canvasTop,
+        svgTop,
+        delta,
+        pass,
+        errors: pass
+          ? []
+          : [`canvas=${canvasTop} svg=${svgTop} delta=${delta} expected canvas=${exp.canvasTop} svg=${exp.svgTop} delta=${exp.delta}`],
+      }
+    }
+
+    window.__foCanvasSvgBorderE2e = {
+      ready: false,
+      bootError: null,
+      tol: TOL,
+      async run() {
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        await ensureInkScanBackend('auto')
+        /** @type {object[]} */
+        const matrix = []
+        for (const stage of STAGES) {
+          for (const c of STAGE_CASES) {
+            matrix.push(await runStageCase(stage, c))
+          }
+        }
+        for (const c of CROSS_CASES) {
+          matrix.push(await runCrossCase(c))
+        }
+        return { tol: TOL, matrix, pass: matrix.every((r) => r.pass) }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foCanvasSvgBorderE2e.ready = true
+    } catch (e) {
+      window.__foCanvasSvgBorderE2e.bootError = String(e?.message || e)
+      window.__foCanvasSvgBorderE2e.ready = true
+    }
+  </script>
+</body>
+</html>

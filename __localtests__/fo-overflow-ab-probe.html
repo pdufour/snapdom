@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO / SVG root overflow A/B (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>foreignObject vs SVG root overflow (mini Home)</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { FO_BASELINE_CSS } from './fo-fix-recipes-constants.js'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import {
+      applyRecipeToSvg,
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      runFoFixProbe,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    /** Lab-only inline SVG patch variants (no src/). */
+    const VARIANTS = [
+      {
+        id: 'baseline-capture',
+        label: 'Capture foNormalize only (visible/visible)',
+        recipe: { id: 'baseline-capture', css: '', inject: 'capture' },
+      },
+      {
+        id: 'fo-hidden',
+        label: 'foreignObject overflow:hidden',
+        recipe: {
+          id: 'fo-hidden',
+          css: 'foreignObject{overflow:hidden!important}',
+          inject: 'both',
+        },
+      },
+      {
+        id: 'fo-visible-explicit',
+        label: 'foreignObject overflow:visible !important',
+        recipe: {
+          id: 'fo-visible-explicit',
+          css: 'foreignObject{overflow:visible!important}',
+          inject: 'both',
+        },
+      },
+      {
+        id: 'svg-hidden-css',
+        label: 'SVG root overflow:hidden (CSS inject)',
+        recipe: {
+          id: 'svg-hidden-css',
+          css: 'svg{overflow:hidden!important}',
+          inject: 'both',
+        },
+      },
+      {
+        id: 'svg-visible-explicit',
+        label: 'SVG root overflow:visible !important',
+        recipe: {
+          id: 'svg-visible-explicit',
+          css: 'svg{overflow:visible!important}',
+          inject: 'both',
+        },
+      },
+      {
+        id: 'svg-hidden-attr',
+        label: 'SVG root overflow="hidden" attribute patch',
+        recipe: {
+          id: 'svg-hidden-attr',
+          css: '',
+          inject: 'capture',
+          svgRootPatch: { overflow: 'hidden' },
+        },
+      },
+      {
+        id: 'both-hidden',
+        label: 'svg + foreignObject overflow:hidden',
+        recipe: {
+          id: 'both-hidden',
+          css: 'svg{overflow:hidden!important}foreignObject{overflow:hidden!important}',
+          inject: 'both',
+        },
+      },
+      {
+        id: 'lab-fo-baseline-visible',
+        label: 'Lab FO_BASELINE_CSS (visible/visible)',
+        recipe: {
+          id: 'lab-fo-baseline-visible',
+          css: FO_BASELINE_CSS,
+          inject: 'both',
+        },
+      },
+    ]
+
+    function sniffOverflowFromSvg(svgText) {
+      const svgAttr = svgText.match(/<svg\b[^>]*\boverflow=["']([^"']+)/i)?.[1] ?? null
+      const styleBlock = svgText.match(/<style[^>]*>([\s\S]*?)<\/style>/i)?.[1] ?? ''
+      const pick = (re) => styleBlock.match(re)?.[1] ?? null
+      return {
+        svgAttr,
+        cssSvgOverflow: pick(/svg\s*\{[^}]*overflow\s*:\s*([^;!}\s]+)/i),
+        cssFoOverflow: pick(/foreignObject\s*\{[^}]*overflow\s*:\s*([^;!}\s]+)/i),
+      }
+    }
+
+    async function probeVariant(variant) {
+      const probe = await runFoFixProbe(variant.recipe, { root, landmark, dpr, scale })
+      const el = findLandmarkElement(root, landmark)
+      const cmp = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr)
+      return {
+        id: variant.id,
+        label: variant.label,
+        patch: {
+          css: variant.recipe.css || null,
+          inject: variant.recipe.inject,
+          svgRootPatch: variant.recipe.svgRootPatch ?? null,
+        },
+        overflowInSvg: sniffOverflowFromSvg(probe.svgText),
+        ink: {
+          liveTopInBorder: cmp.live?.topInBorder ?? null,
+          svgTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        canvasBacking: probe.canvas
+          ? { width: probe.canvas.width, height: probe.canvas.height }
+          : null,
+      }
+    }
+
+    async function runAll() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const baselineRecipe = getFoFixRecipe('product-baseline')
+      const baselineProbe = await runFoFixProbe(baselineRecipe, { root, landmark, dpr, scale })
+
+      /** @type {Awaited<ReturnType<typeof probeVariant>>[]} */
+      const rows = []
+      for (const variant of VARIANTS) {
+        rows.push(await probeVariant(variant))
+      }
+
+      const baselineRow = rows.find((r) => r.id === 'baseline-capture')
+      const refCanvasDelta = baselineRow?.ink.liveVsCanvasTopPx ?? null
+
+      const comparisons = rows.map((row) => {
+        const canvasDelta = row.ink.liveVsCanvasTopPx
+        const svgDelta = row.ink.liveVsSvgTopPx
+        return {
+          id: row.id,
+          canvasDelta,
+          svgDelta,
+          canvasDeltaChangeFromBaseline:
+            refCanvasDelta != null && canvasDelta != null
+              ? canvasDelta - refCanvasDelta
+              : null,
+          svgDeltaChangeFromBaseline:
+            baselineRow?.ink.liveVsSvgTopPx != null && svgDelta != null
+              ? svgDelta - baselineRow.ink.liveVsSvgTopPx
+              : null,
+        }
+      })
+
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        productBaseline: {
+          recipeId: 'product-baseline',
+          liveVsCanvasTopPx: baselineProbe.liveVsCanvasTopPx ?? null,
+          liveVsSvgTopPx: baselineProbe.liveVsSvgTopPx ?? null,
+        },
+        variants: rows,
+        comparisons,
+        matrix: {
+          foHiddenVsVisible: {
+            foHidden: comparisons.find((c) => c.id === 'fo-hidden'),
+            foVisible: comparisons.find((c) => c.id === 'fo-visible-explicit'),
+            canvasDeltaDiff:
+              (comparisons.find((c) => c.id === 'fo-hidden')?.canvasDelta ?? 0) -
+              (comparisons.find((c) => c.id === 'fo-visible-explicit')?.canvasDelta ?? 0),
+          },
+          svgHiddenVsVisible: {
+            svgHiddenCss: comparisons.find((c) => c.id === 'svg-hidden-css'),
+            svgHiddenAttr: comparisons.find((c) => c.id === 'svg-hidden-attr'),
+            svgVisible: comparisons.find((c) => c.id === 'svg-visible-explicit'),
+          },
+          bothHidden: comparisons.find((c) => c.id === 'both-hidden'),
+        },
+      }
+    }
+
+    window.__foOverflowAbProbe = {
+      ready: false,
+      bootError: null,
+      run: runAll,
+    }
+
+    runAll()
+      .then((payload) => {
+        window.__foOverflowAbProbe.last = payload
+        status.textContent = `Ready — ${payload.variants.length} variants probed.`
+      })
+      .catch((err) => {
+        window.__foOverflowAbProbe.bootError = String(err?.message || err)
+        status.textContent = `Boot failed: ${window.__foOverflowAbProbe.bootError}`
+      })
+      .finally(() => {
+        window.__foOverflowAbProbe.ready = true
+      })
+  </script>
+</body>
+</html>

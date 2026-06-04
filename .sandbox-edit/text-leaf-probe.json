@@ -1,0 +1,212 @@
+{
+  "fixture": "fo-text-leaf-probe",
+  "purpose": "Home nav link: flex anchor GBCR vs text-leaf Range/typography; live vs inline FO vs canvas; drift on parent box or leaf ink.",
+  "probe": "anchor-vs-text-leaf",
+  "recipeId": "product-baseline",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 500,
+    "cssH": 48
+  },
+  "measuredFixtureCss": {
+    "cssW": 492,
+    "cssH": 50
+  },
+  "roles": {
+    "anchor": {
+      "tag": "A",
+      "selector": "nav.mini-nav a (landmark text)"
+    },
+    "textLeaf": {
+      "finder": "findLandmarkElement (findTextLeaf alias)",
+      "landmark": "Home"
+    },
+    "sameDomNode": true
+  },
+  "anchor": {
+    "element": "flex-stretch <a>",
+    "live": {
+      "gbcrInContainer": {
+        "top": 1,
+        "left": 1,
+        "width": 68.859375,
+        "height": 48
+      },
+      "rangeInk": {
+        "topPx": 127.203125,
+        "heightPx": 19,
+        "topInBorderPx": 14.203125,
+        "bottomInBorderPx": -14.796875
+      },
+      "typography": {
+        "font": "600 16px / 21.6px system-ui, -apple-system, sans-serif",
+        "display": "flex",
+        "alignItems": "center",
+        "alignSelf": "auto",
+        "lineHeightComputed": "21.6px",
+        "lineHeightRaw": "21.6px",
+        "heightComputed": "48px",
+        "borderBoxHeightPx": 48,
+        "contentBoxHeightPx": 48,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0
+      }
+    },
+    "inlineFo": {
+      "gbcrInContainer": {
+        "top": 0.9599999785423279,
+        "left": 0.9599609375,
+        "width": 66.10546875,
+        "height": 46.08000183105469
+      },
+      "rangeInk": {
+        "topPx": 14.587499618530273,
+        "heightPx": 18.239999771118164,
+        "topInBorderPx": 13.627499639987946,
+        "bottomInBorderPx": -14.212502419948578
+      },
+      "typography": {
+        "font": "600 16px / 21.6px system-ui, -apple-system, sans-serif",
+        "display": "flex",
+        "alignItems": "center",
+        "alignSelf": "auto",
+        "lineHeightComputed": "21.6px",
+        "lineHeightRaw": "21.6px",
+        "heightComputed": "48px",
+        "borderBoxHeightPx": 46.08000183105469,
+        "contentBoxHeightPx": 46.08000183105469,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0
+      }
+    },
+    "canvas": {
+      "note": "Canvas ink scan uses live GBCR band; box position not re-measured on bitmap.",
+      "gbcrInCaptureRoot": {
+        "top": 1,
+        "left": 1,
+        "width": 68.859375,
+        "height": 48
+      },
+      "paintedInk": {
+        "top": 18.5,
+        "topInBorder": 17.5
+      }
+    },
+    "threeWayPainted": {
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 13.627499639987946,
+      "canvasPaintedTopInBorder": 17.5,
+      "liveVsSvgTopPx": -0.5756253600120544,
+      "liveVsCanvasTopPx": 3.296875,
+      "svgVsCanvasTopPx": 3.8725003600120544
+    }
+  },
+  "textLeaf": {
+    "element": "text-leaf",
+    "live": {
+      "gbcrInContainer": {
+        "top": 1,
+        "left": 1,
+        "width": 68.859375,
+        "height": 48
+      },
+      "rangeInk": {
+        "topPx": 127.203125,
+        "heightPx": 19,
+        "topInBorderPx": 14.203125,
+        "bottomInBorderPx": -14.796875
+      },
+      "typography": {
+        "font": "600 16px / 21.6px system-ui, -apple-system, sans-serif",
+        "display": "flex",
+        "alignItems": "center",
+        "alignSelf": "auto",
+        "lineHeightComputed": "21.6px",
+        "lineHeightRaw": "21.6px",
+        "heightComputed": "48px",
+        "borderBoxHeightPx": 48,
+        "contentBoxHeightPx": 48,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0
+      }
+    },
+    "inlineFo": {
+      "gbcrInContainer": {
+        "top": 0.9599999785423279,
+        "left": 0.9599609375,
+        "width": 66.10546875,
+        "height": 46.08000183105469
+      },
+      "rangeInk": {
+        "topPx": 14.587499618530273,
+        "heightPx": 18.239999771118164,
+        "topInBorderPx": 13.627499639987946,
+        "bottomInBorderPx": -14.212502419948578
+      },
+      "typography": {
+        "font": "600 16px / 21.6px system-ui, -apple-system, sans-serif",
+        "display": "flex",
+        "alignItems": "center",
+        "alignSelf": "auto",
+        "lineHeightComputed": "21.6px",
+        "lineHeightRaw": "21.6px",
+        "heightComputed": "48px",
+        "borderBoxHeightPx": 46.08000183105469,
+        "contentBoxHeightPx": 46.08000183105469,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0
+      }
+    },
+    "canvas": {
+      "note": "Canvas ink scan uses live GBCR band; box position not re-measured on bitmap.",
+      "gbcrInCaptureRoot": {
+        "top": 1,
+        "left": 1,
+        "width": 68.859375,
+        "height": 48
+      },
+      "paintedInk": {
+        "top": 18.5,
+        "topInBorder": 17.5
+      }
+    },
+    "threeWayPainted": {
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 13.627499639987946,
+      "canvasPaintedTopInBorder": 17.5,
+      "liveVsSvgTopPx": -0.5756253600120544,
+      "liveVsCanvasTopPx": 3.296875,
+      "svgVsCanvasTopPx": 3.8725003600120544
+    }
+  },
+  "liveComparison": {
+    "anchorVsLeafGbcrTopPx": 0,
+    "anchorVsLeafRangeTopInBorderPx": 0,
+    "halfLeadingInBorderPx": 14.5
+  },
+  "driftAttribution": {
+    "anchorGbcrTopLiveVsFoPx": -0.04000002145767212,
+    "leafGbcrTopLiveVsFoPx": -0.04000002145767212,
+    "anchorRangeTopInBorderLiveVsFoPx": -0.5756253600120544,
+    "leafRangeTopInBorderLiveVsFoPx": -0.5756253600120544,
+    "leafPaintedLiveVsSvgPx": -0.5756253600120544,
+    "leafPaintedLiveVsCanvasPx": 3.296875,
+    "anchorPaintedLiveVsCanvasPx": 3.296875,
+    "rangeVsPaintedTopInBorderLivePx": 0
+  },
+  "verdict": "LEAF_INK_RASTER_MIXED",
+  "interpretation": [
+    "Anchor GBCR top live→FO Δ=-0.040px; leaf Range topInBorder live→FO Δ=-0.576px.",
+    "Leaf painted ink live→svg Δ=-0.576px; live→canvas Δ=3.297px.",
+    "Canvas ink drifts with partial FO-stage box/range movement — inspect per-metric deltas."
+  ],
+  "generatedAt": "2026-06-02T16:24:02.164Z",
+  "port": 8765,
+  "headless": false,
+  "commands": [
+    "npm run compile",
+    "node __localtests__/fo-text-leaf-probe.mjs"
+  ]
+}

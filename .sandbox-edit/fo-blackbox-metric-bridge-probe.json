@@ -1,0 +1,79 @@
+{
+  "probe": "fo-blackbox-metric-bridge-probe",
+  "dpr": 2,
+  "checkoutUrl": "http://127.0.0.1:8765/__localtests__/checkout-example.html",
+  "pageLoaded": true,
+  "loadError": null,
+  "landmarks": [
+    {
+      "label": "Home",
+      "sectionTitle": "Nav: Home",
+      "structureReport": {
+        "capTop": {
+          "live": 5.16,
+          "compare": 5.41,
+          "delta": 0.25
+        },
+        "canvasTop": {
+          "live": 5.16,
+          "compare": 3.25,
+          "delta": -1.91
+        },
+        "lineBoxTop": {
+          "live": 0,
+          "compare": 0,
+          "delta": 0
+        }
+      },
+      "labRange": {
+        "topInBorderPx": 27.25,
+        "lineHeightPx": 23.5
+      },
+      "bridge": {
+        "rangeVsCapLivePx": 22.09,
+        "structureCanvasDeltaPx": -1.91,
+        "structureCapDeltaPx": 0.25,
+        "rangeMinusCapLivePx": 22.09
+      }
+    },
+    {
+      "label": "Products",
+      "sectionTitle": "Nav: Products",
+      "structureReport": {
+        "capTop": {
+          "live": 5.16,
+          "compare": 5.41,
+          "delta": 0.25
+        },
+        "canvasTop": {
+          "live": 5.16,
+          "compare": 3.25,
+          "delta": -1.91
+        },
+        "lineBoxTop": {
+          "live": 0,
+          "compare": 0,
+          "delta": 0
+        }
+      },
+      "labRange": {
+        "topInBorderPx": 27.25,
+        "lineHeightPx": 23.5
+      },
+      "bridge": {
+        "rangeVsCapLivePx": 22.09,
+        "structureCanvasDeltaPx": -1.91,
+        "structureCapDeltaPx": 0.25,
+        "rangeMinusCapLivePx": 22.09
+      }
+    }
+  ],
+  "synthesis": {
+    "checkoutLoaded": true,
+    "navCanvasDeltaSpreadPx": 0,
+    "note": "Lab Range top vs structure-report paint.cap live and paint.canvas delta (blackbox gate metric)."
+  },
+  "port": 8765,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

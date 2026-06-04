@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-06-03T06:25:10.011Z",
+  "headed": true,
+  "url": "http://127.0.0.1:9878/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=Home&includeInactive=1&debugInkLine=1",
+  "recipeId": "product-baseline",
+  "landmark": "Home",
+  "views": [
+    {
+      "view": "live",
+      "pass": true,
+      "reason": "line above cap",
+      "delta": -14.203125,
+      "lineYRoot": 0,
+      "textTopRoot": 14.203125,
+      "textHeight": 48,
+      "placementLineY": null,
+      "debugLinePresent": true,
+      "legend": "Live line Y 0.0000",
+      "screenshot": "/Users/pauldufour/Repos/snapdom/.sandbox-edit/fo-ink-line-visual-inspect/live.png"
+    },
+    {
+      "view": "svg",
+      "pass": true,
+      "reason": "line above cap",
+      "delta": -14.203125,
+      "lineYRoot": 0,
+      "textTopRoot": 14.203125,
+      "textHeight": 48,
+      "placementLineY": null,
+      "debugLinePresent": true,
+      "legend": "SVG line Y 0.0000 · matches live",
+      "screenshot": "/Users/pauldufour/Repos/snapdom/.sandbox-edit/fo-ink-line-visual-inspect/svg.png"
+    },
+    {
+      "view": "canvas",
+      "pass": true,
+      "reason": "line above cap",
+      "delta": -14.203125,
+      "lineYRoot": 0,
+      "textTopRoot": 14.203125,
+      "textHeight": 48,
+      "placementLineY": null,
+      "debugLinePresent": true,
+      "legend": "Canvas line Y 0.0000 · matches live (matches SVG)",
+      "screenshot": "/Users/pauldufour/Repos/snapdom/.sandbox-edit/fo-ink-line-visual-inspect/canvas.png"
+    }
+  ],
+  "pass": true
+}

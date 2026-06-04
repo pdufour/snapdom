@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-06-03T00:22:13.594Z",
+  "headed": true,
+  "dpr": 1,
+  "letters": [
+    "h",
+    "p"
+  ],
+  "thresholds": {
+    "stretchMinHeightPx": 48,
+    "slackBelowMinPx": 1
+  },
+  "layout": {
+    "navMinHeightPx": 56,
+    "rows": [
+      {
+        "letter": "h",
+        "anchorMinHeightPx": null,
+        "boxHeightPx": 56,
+        "navMinHeightPx": 56,
+        "slackBelowRangePx": 18.797,
+        "previewHasMinStretch": true,
+        "descenderSlackOk": true
+      },
+      {
+        "letter": "p",
+        "anchorMinHeightPx": null,
+        "boxHeightPx": 56,
+        "navMinHeightPx": 56,
+        "slackBelowRangePx": 18.797,
+        "previewHasMinStretch": true,
+        "descenderSlackOk": true
+      }
+    ]
+  },
+  "rows": [
+    {
+      "letter": "h",
+      "anchorMinHeightPx": null,
+      "boxHeightPx": 56,
+      "navMinHeightPx": 56,
+      "slackBelowRangePx": 18.797,
+      "previewHasMinStretch": true,
+      "descenderSlackOk": true,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "letter": "p",
+      "anchorMinHeightPx": null,
+      "boxHeightPx": 56,
+      "navMinHeightPx": 56,
+      "slackBelowRangePx": 18.797,
+      "previewHasMinStretch": true,
+      "descenderSlackOk": true,
+      "pass": true,
+      "errors": []
+    }
+  ],
+  "pass": true,
+  "failCount": 0
+}

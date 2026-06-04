@@ -1,0 +1,32 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-text-metric.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "elementRangeTopInBorder": 14.203125,
+    "textNodeRangeTopInBorder": 14.203125,
+    "gbcrTopInBorder": 0,
+    "svgPaintedTopInBorder": 14.1953125,
+    "canvasPaintedTopInBorder": 17,
+    "elementVsTextNodeDeltaPx": 0,
+    "svgAlignsTo": "text-node-range",
+    "canvasCloserTo": "element-range",
+    "canvasDeltaVsElementRangePx": 2.796875,
+    "verdict": "SVG_METRIC_INCONCLUSIVE",
+    "implication": "Inline FO svg leg tracks element Range (same as blackbox metric). Canvas bitmap diverges from both svg and live by ~half-leading."
+  }
+}

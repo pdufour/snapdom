@@ -1,0 +1,88 @@
+{
+  "probe": "fo-cross-browser-extended-probe",
+  "engines": [
+    "chromium",
+    "firefox",
+    "webkit"
+  ],
+  "dprs": [
+    1,
+    2
+  ],
+  "rows": [
+    {
+      "engine": "chromium",
+      "dpr": 1,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "canvasDelta": 2.797,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    },
+    {
+      "engine": "chromium",
+      "dpr": 2,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "canvasDelta": 3.297,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    },
+    {
+      "engine": "firefox",
+      "dpr": 1,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+      "canvasDelta": 3.5,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    },
+    {
+      "engine": "firefox",
+      "dpr": 2,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+      "canvasDelta": 4,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    },
+    {
+      "engine": "webkit",
+      "dpr": 1,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15",
+      "canvasDelta": 3.422,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    },
+    {
+      "engine": "webkit",
+      "dpr": 2,
+      "available": true,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15",
+      "canvasDelta": 3.922,
+      "svgDelta": 0,
+      "halfLeadingPx": 2.8,
+      "classification": "BITMAP_ONLY"
+    }
+  ],
+  "synthesis": {
+    "enginesRan": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "allBitmapOnly": true,
+    "crossEngineSpreadPx": 1.203,
+    "chromiumMeanCanvasDelta": 3.047,
+    "nonChromiumMeanCanvasDelta": 3.711,
+    "notChromiumExclusive": true,
+    "note": "Extended sweep: same hand-built FO on each engine × DPR."
+  },
+  "headed": true
+}

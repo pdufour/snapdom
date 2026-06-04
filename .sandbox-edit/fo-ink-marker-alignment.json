@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-06-03T06:28:19.676Z",
+  "headed": true,
+  "recipeId": "product-baseline",
+  "views": [
+    {
+      "view": "live",
+      "scannedInkViewportY": 358.0391,
+      "markerViewportY": 394.8906,
+      "lineViewportY": 355.5391,
+      "glyphViewportTop": 355.5391,
+      "lineVsGlyphPx": 0,
+      "markerVsInkPx": 36.8515,
+      "legend": "",
+      "livePreviewViewportTopPx": null,
+      "svgVisibleViewportTopPx": null,
+      "canvasBitmapViewportTopPx": null,
+      "liveVsSvgTopPx": null,
+      "liveVsCanvasTopPx": null,
+      "errors": []
+    },
+    {
+      "view": "svg",
+      "scannedInkViewportY": 356.0391,
+      "markerViewportY": 355.5391,
+      "lineViewportY": 356.0391,
+      "glyphViewportTop": 355.5391,
+      "lineVsGlyphPx": 0.5,
+      "markerVsInkPx": -0.5,
+      "legend": "",
+      "livePreviewViewportTopPx": null,
+      "svgVisibleViewportTopPx": null,
+      "canvasBitmapViewportTopPx": null,
+      "liveVsSvgTopPx": null,
+      "liveVsCanvasTopPx": null,
+      "errors": []
+    },
+    {
+      "view": "canvas",
+      "scannedInkViewportY": 356.0391,
+      "markerViewportY": 355.5391,
+      "lineViewportY": 356.0391,
+      "glyphViewportTop": 355.5391,
+      "lineVsGlyphPx": 0.5,
+      "markerVsInkPx": -0.5,
+      "legend": "",
+      "livePreviewViewportTopPx": null,
+      "svgVisibleViewportTopPx": null,
+      "canvasBitmapViewportTopPx": null,
+      "liveVsSvgTopPx": null,
+      "liveVsCanvasTopPx": null,
+      "errors": []
+    }
+  ],
+  "toggle": {
+    "svgMinusLive": -2,
+    "canvasMinusLive": -2
+  },
+  "pass": true,
+  "errors": []
+}

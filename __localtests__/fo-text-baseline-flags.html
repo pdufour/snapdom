@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO text baseline flags probe</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>FO text baseline flags — baselineFix vs lineHeightNormal</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const VARIANTS = [
+      {
+        id: 'baseline',
+        experimentalFoTextBaselineFix: false,
+        experimentalFoTextLineHeightNormal: false,
+      },
+      {
+        id: 'textBaselineFix',
+        experimentalFoTextBaselineFix: true,
+        experimentalFoTextLineHeightNormal: false,
+      },
+      {
+        id: 'lineHeightNormal',
+        experimentalFoTextBaselineFix: false,
+        experimentalFoTextLineHeightNormal: true,
+      },
+      {
+        id: 'both',
+        experimentalFoTextBaselineFix: true,
+        experimentalFoTextLineHeightNormal: true,
+      },
+    ]
+
+    async function runVariant(variant) {
+      const opts = {
+        dpr,
+        scale,
+        experimentalFoTextBaselineFix: variant.experimentalFoTextBaselineFix,
+        experimentalFoTextLineHeightNormal: variant.experimentalFoTextLineHeightNormal,
+      }
+      const snap = await snapdom(root, opts)
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const meta = parseCaptureMeta(svgText, root)
+      const canvas = await snap.toCanvas()
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      const liveCs = getComputedStyle(el)
+      return {
+        id: variant.id,
+        flags: {
+          experimentalFoTextBaselineFix: variant.experimentalFoTextBaselineFix,
+          experimentalFoTextLineHeightNormal: variant.experimentalFoTextLineHeightNormal,
+        },
+        liveLeaf: {
+          computedLineHeight: liveCs.lineHeight,
+          verticalAlign: liveCs.verticalAlign,
+        },
+        threeWay: {
+          livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+          svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        captureMeta: meta,
+        svgHasLeadingTrim: svgText.includes('leading-trim:both'),
+        svgHasBaselineFixCss: svgText.includes('vertical-align:baseline'),
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const rows = []
+      for (const variant of VARIANTS) {
+        rows.push(await runVariant(variant))
+      }
+
+      const baseline = rows.find((r) => r.id === 'baseline')
+      const baselineCanvas = baseline?.threeWay?.liveVsCanvasTopPx ?? null
+
+      return {
+        fixture: 'mini-nav-flex-stretch',
+        landmark,
+        dpr,
+        scale,
+        flagScope: ['experimentalFoTextBaselineFix', 'experimentalFoTextLineHeightNormal'],
+        variants: rows,
+        baselineCanvasDeltaPx: baselineCanvas,
+        comparisons: rows.map((row) => ({
+          id: row.id,
+          canvasDeltaPx: row.threeWay?.liveVsCanvasTopPx ?? null,
+          svgDeltaPx: row.threeWay?.liveVsSvgTopPx ?? null,
+          svgVsCanvasPx: row.threeWay?.svgVsCanvasTopPx ?? null,
+          deltaFromBaselinePx:
+            baselineCanvas != null && row.threeWay?.liveVsCanvasTopPx != null
+              ? row.threeWay.liveVsCanvasTopPx - baselineCanvas
+              : null,
+          svgHasLeadingTrim: row.svgHasLeadingTrim,
+          svgHasBaselineFixCss: row.svgHasBaselineFixCss,
+        })),
+      }
+    }
+
+    window.__foTextBaselineFlags = {
+      ready: false,
+      bootError: null,
+      run: runProbe,
+    }
+
+    runProbe()
+      .then((payload) => {
+        window.__foTextBaselineFlags.last = payload
+        const b = payload.baselineCanvasDeltaPx
+        status.textContent =
+          b != null
+            ? `Ready — baseline canvasΔ=${b.toFixed(3)}px (${payload.variants.length} flag combos).`
+            : 'Ready — probe complete.'
+      })
+      .catch((err) => {
+        window.__foTextBaselineFlags.bootError = String(err?.message || err)
+        status.textContent = `Boot failed: ${window.__foTextBaselineFlags.bootError}`
+      })
+      .finally(() => {
+        window.__foTextBaselineFlags.ready = true
+      })
+  </script>
+</body>
+</html>

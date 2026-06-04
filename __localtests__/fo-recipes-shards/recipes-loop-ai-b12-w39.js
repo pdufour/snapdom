@@ -1,0 +1,360 @@
+/**
+ * Loop AI batch-12 FO recipe shard (worker 39) — text-fix: capstone raster+capture pairs.
+ * PRIMARY: 5 lab live-pin radicalPatch × 8 rasterPatch (never radicalPatch|rasterPatch in b10/b11 shards)
+ * 40 recipes: loop-ai-b12-w39-001..040
+ * Merge: node __localtests__/fo-fix-recipes-merge.mjs --check-dupes
+ */
+import { FO_BASELINE_CSS } from '../fo-fix-recipes-constants.js'
+
+const TEXT_LEAF =
+  'foreignObject *{box-sizing:border-box!important;min-width:0!important}'
+
+/** @type {{ n: number, patch: string, raster: string, slug: string, idea: string, css: string }[]} */
+const SPECS = [
+  {
+    n: 1,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'blob-url-decode-interval',
+    slug: 'lh-normal + blob-url-decode-interval',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + line-height:normal on FO * + blob-url-decode-interval raster flush (inject both)',
+    css: 'foreignObject *{line-height:normal!important}',
+  },
+  {
+    n: 2,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'triple-decode',
+    slug: 'lh-from-font + triple-decode',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + line-height:from-font on FO * + triple-decode raster flush (inject both)',
+    css: 'foreignObject *{line-height:from-font!important}',
+  },
+  {
+    n: 3,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'fonts-ready',
+    slug: 'kerning-normal + fonts-ready',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + font-kerning:normal on FO root + fonts-ready raster flush (inject both)',
+    css: 'foreignObject{font-kerning:normal!important}',
+  },
+  {
+    n: 4,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'raf-before-draw',
+    slug: 'fo-div-normal + raf-before-draw',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + FO>div line-height:normal + raf-before-draw raster flush (inject both)',
+    css: 'foreignObject>div{line-height:normal!important}',
+  },
+  {
+    n: 5,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'two-stage',
+    slug: 'trim-none + two-stage',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + text-box-trim:none on FO * + two-stage raster flush (inject both)',
+    css: 'foreignObject *{text-box-trim:none!important}',
+  },
+  {
+    n: 6,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'load-event-interval',
+    slug: 'overflow-visible + load-event-interval',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + overflow:visible on FO * + load-event-interval raster flush (inject both)',
+    css: 'foreignObject *{overflow:visible!important}',
+  },
+  {
+    n: 7,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'wait-fonts-500ms',
+    slug: 'align-start + wait-fonts-500ms',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + align-self:flex-start on FO * + wait-fonts-500ms raster flush (inject both)',
+    css: 'foreignObject *{align-self:flex-start!important}',
+  },
+  {
+    n: 8,
+    patch: 'lab-pin-text-ascent-descent-from-range',
+    raster: 'offscreen-canvas',
+    slug: 'synthesis-none + offscreen-canvas',
+    idea: 'capstone raster+capture: lab-pin-text-ascent-descent-from-range + font-synthesis:none on FO * + offscreen-canvas raster flush (inject both)',
+    css: 'foreignObject *{font-synthesis:none!important}',
+  },
+  {
+    n: 9,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'blob-url-decode-interval',
+    slug: 'lh-normal + blob-url-decode-interval',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + line-height:normal on FO * + blob-url-decode-interval raster flush (inject both)',
+    css: 'foreignObject *{line-height:normal!important}',
+  },
+  {
+    n: 10,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'triple-decode',
+    slug: 'lh-from-font + triple-decode',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + line-height:from-font on FO * + triple-decode raster flush (inject both)',
+    css: 'foreignObject *{line-height:from-font!important}',
+  },
+  {
+    n: 11,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'fonts-ready',
+    slug: 'kerning-normal + fonts-ready',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + font-kerning:normal on FO root + fonts-ready raster flush (inject both)',
+    css: 'foreignObject{font-kerning:normal!important}',
+  },
+  {
+    n: 12,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'raf-before-draw',
+    slug: 'fo-div-normal + raf-before-draw',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + FO>div line-height:normal + raf-before-draw raster flush (inject both)',
+    css: 'foreignObject>div{line-height:normal!important}',
+  },
+  {
+    n: 13,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'two-stage',
+    slug: 'trim-none + two-stage',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + text-box-trim:none on FO * + two-stage raster flush (inject both)',
+    css: 'foreignObject *{text-box-trim:none!important}',
+  },
+  {
+    n: 14,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'load-event-interval',
+    slug: 'overflow-visible + load-event-interval',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + overflow:visible on FO * + load-event-interval raster flush (inject both)',
+    css: 'foreignObject *{overflow:visible!important}',
+  },
+  {
+    n: 15,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'wait-fonts-500ms',
+    slug: 'align-start + wait-fonts-500ms',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + align-self:flex-start on FO * + wait-fonts-500ms raster flush (inject both)',
+    css: 'foreignObject *{align-self:flex-start!important}',
+  },
+  {
+    n: 16,
+    patch: 'lab-pin-font-size-from-live',
+    raster: 'offscreen-canvas',
+    slug: 'synthesis-none + offscreen-canvas',
+    idea: 'capstone raster+capture: lab-pin-font-size-from-live + font-synthesis:none on FO * + offscreen-canvas raster flush (inject both)',
+    css: 'foreignObject *{font-synthesis:none!important}',
+  },
+  {
+    n: 17,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'blob-url-decode-interval',
+    slug: 'lh-normal + blob-url-decode-interval',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + line-height:normal on FO * + blob-url-decode-interval raster flush (inject both)',
+    css: 'foreignObject *{line-height:normal!important}',
+  },
+  {
+    n: 18,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'triple-decode',
+    slug: 'lh-from-font + triple-decode',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + line-height:from-font on FO * + triple-decode raster flush (inject both)',
+    css: 'foreignObject *{line-height:from-font!important}',
+  },
+  {
+    n: 19,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'fonts-ready',
+    slug: 'kerning-normal + fonts-ready',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + font-kerning:normal on FO root + fonts-ready raster flush (inject both)',
+    css: 'foreignObject{font-kerning:normal!important}',
+  },
+  {
+    n: 20,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'raf-before-draw',
+    slug: 'fo-div-normal + raf-before-draw',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + FO>div line-height:normal + raf-before-draw raster flush (inject both)',
+    css: 'foreignObject>div{line-height:normal!important}',
+  },
+  {
+    n: 21,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'two-stage',
+    slug: 'trim-none + two-stage',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + text-box-trim:none on FO * + two-stage raster flush (inject both)',
+    css: 'foreignObject *{text-box-trim:none!important}',
+  },
+  {
+    n: 22,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'load-event-interval',
+    slug: 'overflow-visible + load-event-interval',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + overflow:visible on FO * + load-event-interval raster flush (inject both)',
+    css: 'foreignObject *{overflow:visible!important}',
+  },
+  {
+    n: 23,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'wait-fonts-500ms',
+    slug: 'align-start + wait-fonts-500ms',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + align-self:flex-start on FO * + wait-fonts-500ms raster flush (inject both)',
+    css: 'foreignObject *{align-self:flex-start!important}',
+  },
+  {
+    n: 24,
+    patch: 'lab-pin-letter-spacing-from-live',
+    raster: 'offscreen-canvas',
+    slug: 'synthesis-none + offscreen-canvas',
+    idea: 'capstone raster+capture: lab-pin-letter-spacing-from-live + font-synthesis:none on FO * + offscreen-canvas raster flush (inject both)',
+    css: 'foreignObject *{font-synthesis:none!important}',
+  },
+  {
+    n: 25,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'blob-url-decode-interval',
+    slug: 'lh-normal + blob-url-decode-interval',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + line-height:normal on FO * + blob-url-decode-interval raster flush (inject both)',
+    css: 'foreignObject *{line-height:normal!important}',
+  },
+  {
+    n: 26,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'triple-decode',
+    slug: 'lh-from-font + triple-decode',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + line-height:from-font on FO * + triple-decode raster flush (inject both)',
+    css: 'foreignObject *{line-height:from-font!important}',
+  },
+  {
+    n: 27,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'fonts-ready',
+    slug: 'kerning-normal + fonts-ready',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + font-kerning:normal on FO root + fonts-ready raster flush (inject both)',
+    css: 'foreignObject{font-kerning:normal!important}',
+  },
+  {
+    n: 28,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'raf-before-draw',
+    slug: 'fo-div-normal + raf-before-draw',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + FO>div line-height:normal + raf-before-draw raster flush (inject both)',
+    css: 'foreignObject>div{line-height:normal!important}',
+  },
+  {
+    n: 29,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'two-stage',
+    slug: 'trim-none + two-stage',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + text-box-trim:none on FO * + two-stage raster flush (inject both)',
+    css: 'foreignObject *{text-box-trim:none!important}',
+  },
+  {
+    n: 30,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'load-event-interval',
+    slug: 'overflow-visible + load-event-interval',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + overflow:visible on FO * + load-event-interval raster flush (inject both)',
+    css: 'foreignObject *{overflow:visible!important}',
+  },
+  {
+    n: 31,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'wait-fonts-500ms',
+    slug: 'align-start + wait-fonts-500ms',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + align-self:flex-start on FO * + wait-fonts-500ms raster flush (inject both)',
+    css: 'foreignObject *{align-self:flex-start!important}',
+  },
+  {
+    n: 32,
+    patch: 'lab-pin-inline-box-height-from-clientrects',
+    raster: 'offscreen-canvas',
+    slug: 'synthesis-none + offscreen-canvas',
+    idea: 'capstone raster+capture: lab-pin-inline-box-height-from-clientrects + font-synthesis:none on FO * + offscreen-canvas raster flush (inject both)',
+    css: 'foreignObject *{font-synthesis:none!important}',
+  },
+  {
+    n: 33,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'blob-url-decode-interval',
+    slug: 'lh-normal + blob-url-decode-interval',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + line-height:normal on FO * + blob-url-decode-interval raster flush (inject both)',
+    css: 'foreignObject *{line-height:normal!important}',
+  },
+  {
+    n: 34,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'triple-decode',
+    slug: 'lh-from-font + triple-decode',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + line-height:from-font on FO * + triple-decode raster flush (inject both)',
+    css: 'foreignObject *{line-height:from-font!important}',
+  },
+  {
+    n: 35,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'fonts-ready',
+    slug: 'kerning-normal + fonts-ready',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + font-kerning:normal on FO root + fonts-ready raster flush (inject both)',
+    css: 'foreignObject{font-kerning:normal!important}',
+  },
+  {
+    n: 36,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'raf-before-draw',
+    slug: 'fo-div-normal + raf-before-draw',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + FO>div line-height:normal + raf-before-draw raster flush (inject both)',
+    css: 'foreignObject>div{line-height:normal!important}',
+  },
+  {
+    n: 37,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'two-stage',
+    slug: 'trim-none + two-stage',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + text-box-trim:none on FO * + two-stage raster flush (inject both)',
+    css: 'foreignObject *{text-box-trim:none!important}',
+  },
+  {
+    n: 38,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'load-event-interval',
+    slug: 'overflow-visible + load-event-interval',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + overflow:visible on FO * + load-event-interval raster flush (inject both)',
+    css: 'foreignObject *{overflow:visible!important}',
+  },
+  {
+    n: 39,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'wait-fonts-500ms',
+    slug: 'align-start + wait-fonts-500ms',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + align-self:flex-start on FO * + wait-fonts-500ms raster flush (inject both)',
+    css: 'foreignObject *{align-self:flex-start!important}',
+  },
+  {
+    n: 40,
+    patch: 'lab-pin-flex-cross-size-from-anchor',
+    raster: 'offscreen-canvas',
+    slug: 'synthesis-none + offscreen-canvas',
+    idea: 'capstone raster+capture: lab-pin-flex-cross-size-from-anchor + font-synthesis:none on FO * + offscreen-canvas raster flush (inject both)',
+    css: 'foreignObject *{font-synthesis:none!important}',
+  }
+]
+
+/** @type {import('../fo-fix-recipes.js').FoFixRecipe[]} */
+const RECIPES = SPECS.map(({ n, patch, raster, slug, idea, css }) => {
+  const num = String(n).padStart(3, '0')
+  const patchShort = patch.replace(/^lab-pin-/, '').replace(/-from-(live|range|clientrects|anchor)$/, '')
+  return {
+    id: `loop-ai-b12-w39-${num}`,
+    label: `Loop AI b12 w39 #${n}: ${slug}`,
+    idea,
+    css: FO_BASELINE_CSS + TEXT_LEAF + css,
+    inject: 'both',
+    category: 'text-fix',
+    active: true,
+    radicalPatch: patch,
+    rasterPatch: raster,
+    notes:
+      `Loop AI b12 w39; capstone pair ${patchShort}|${raster}; capture+ raster both — no text bypass.`,
+  }
+})
+
+if (RECIPES.length !== 40) {
+  throw new Error(`recipes-loop-ai-b12-w39: expected 40 recipes, got ${RECIPES.length}`)
+}
+
+export const FO_FIX_RECIPES_SHARD = RECIPES
+export default FO_FIX_RECIPES_SHARD

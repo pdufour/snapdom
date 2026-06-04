@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium-only — typography, no flex</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px 14px 24px; font: 14px/1.4 system-ui, sans-serif; background: #f8fafc; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    #fixture {
+      width: 200px;
+      padding: 8px 12px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #canvas-out { display: block; border: 1px solid #e2e8f0; margin-top: 12px; image-rendering: pixelated; }
+    #metrics { font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 12px; color: #334155; white-space: pre-wrap; }
+    pre#report { margin-top: 12px; padding: 10px; background: #fff; border: 1px solid #e2e8f0;
+      font: 11px/1.4 ui-monospace, Menlo, monospace; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Chromium-only: bare span (no flex)</h1>
+  <p style="font-size:13px;color:#475569;max-width:72ch">
+    Isolates line-height / strut without flex stretch. Same FO→Image→canvas path as nav repro.
+  </p>
+  <div id="fixture"><span>Home</span></div>
+  <canvas id="canvas-out"></canvas>
+  <p id="metrics">Booting…</p>
+  <pre id="report" hidden></pre>
+  <script type="module">
+    import {
+      buildTypographyNoFlexFoSvg,
+      probeChromiumFoOnly,
+    } from './chromium-fo-only-shared.js'
+
+    const root = document.getElementById('fixture')
+    const outCanvas = document.getElementById('canvas-out')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    async function run() {
+      const result = await probeChromiumFoOnly({
+        root,
+        landmark: 'Home',
+        dpr,
+        buildSvg: buildTypographyNoFlexFoSvg,
+      })
+      const { cssW, cssH } = result.fixtureDims
+      const canvas = result.canvas
+      outCanvas.width = canvas.width
+      outCanvas.height = canvas.height
+      outCanvas.style.width = `${cssW}px`
+      outCanvas.style.height = `${cssH}px`
+      outCanvas.getContext('2d').drawImage(canvas, 0, 0)
+
+      const t = result.threeWay
+      document.getElementById('metrics').textContent =
+        `${result.verdict} · svgΔ ${fmt(t.liveVsSvgTopPx)} · canvasΔ ${fmt(t.liveVsCanvasTopPx)} · dpr=${dpr}`
+      document.getElementById('report').hidden = false
+      document.getElementById('report').textContent = JSON.stringify(result, null, 2)
+      return result
+    }
+
+    window.__chromiumFoOnlyProbe = {
+      ready: false,
+      pageId: 'minimal-typography-no-flex',
+      run,
+    }
+
+    run()
+      .then(() => { window.__chromiumFoOnlyProbe.ready = true })
+      .catch((err) => {
+        document.getElementById('metrics').textContent = err.message
+        window.__chromiumFoOnlyProbe.bootError = String(err)
+        window.__chromiumFoOnlyProbe.ready = true
+      })
+  </script>
+</body>
+</html>

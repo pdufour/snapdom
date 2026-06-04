@@ -1,0 +1,71 @@
+{
+  "port": 8801,
+  "landmark": "Home",
+  "fixture": "mini flex+text-leaf (fo-fix-lab)",
+  "matrixIds": [
+    "product-baseline",
+    "tc-text-w1-display-inline-leaf",
+    "tc-text-w1-rfork-leading-trim-leaf",
+    "tc-text-w1-rfork-lh-normal-leaf"
+  ],
+  "snapdomFlag": "experimentalFoTextLeafNormalize",
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "path": "lab",
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "pass": false
+    },
+    {
+      "recipeId": "tc-text-w1-rfork-leading-trim-leaf",
+      "path": "lab",
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "pass": false
+    },
+    {
+      "recipeId": "tc-text-w1-rfork-lh-normal-leaf",
+      "path": "lab",
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 3.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 3.797,
+      "pass": false
+    },
+    {
+      "recipeId": "tc-text-w1-display-inline-leaf",
+      "path": "lab",
+      "svgDeltaPx": -13.203,
+      "canvasDeltaPx": -10.203,
+      "absSvgDeltaPx": 13.203,
+      "absCanvasDeltaPx": 10.203,
+      "pass": false
+    },
+    {
+      "recipeId": "experimentalFoTextLeafNormalize",
+      "path": "snapdom",
+      "svgDeltaPx": -0.008,
+      "canvasDeltaPx": 2.797,
+      "absSvgDeltaPx": 0.008,
+      "absCanvasDeltaPx": 2.797,
+      "pass": false
+    }
+  ],
+  "bestCanvasDelta": {
+    "recipeId": "product-baseline",
+    "delta": 2.797,
+    "abs": 2.797
+  },
+  "bestSvgDelta": {
+    "recipeId": "experimentalFoTextLeafNormalize",
+    "delta": -0.008,
+    "abs": 0.008
+  },
+  "generatedAt": "2026-06-02T16:25:25.629Z",
+  "flagProbeNote": "experimentalFoTextLeafNormalize canvasΔ from fresh-page retry (matrix same-page run returned null canvas/taint)"
+}

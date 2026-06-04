@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-06-03T05:26:16.869Z",
+  "headed": true,
+  "mode": "force-active",
+  "recipeIds": [
+    "product-baseline",
+    "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "tc-reg-lock-w7-half-leading-meta",
+    "tc-reg-lock-src-mirror-w7",
+    "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+    "baseline-plateau-2797",
+    "w7-beats-baseline",
+    "fork-red-changes-canvas"
+  ],
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "pass": false
+    },
+    {
+      "recipeId": "baseline-plateau-2797",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "pass": false
+    },
+    {
+      "recipeId": "fork-red-changes-canvas",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "pass": false
+    }
+  ],
+  "parsedCount": 3,
+  "expectedCount": 8,
+  "exitCode": 0,
+  "pass": false,
+  "failCount": 3
+}

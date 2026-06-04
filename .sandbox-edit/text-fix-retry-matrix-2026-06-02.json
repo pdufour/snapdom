@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-06-02T17:00:00.000Z",
+  "landmark": "Home",
+  "dpr": 1,
+  "recipeFilter": "product-baseline,tc-blh-w1-*,tc-text-w1-*,tc-fix-w6-*,tc-blh-w2-*",
+  "rowCount": 57,
+  "referencePlateauAbsCanvasDeltaPx": 2.797,
+  "verdict": "NOT_FIXED",
+  "forkWiringConfirmed": {
+    "recipeId": "tc-fix-w6-rfork-fork-visible-red",
+    "canvasDeltaPx": -14.203,
+    "note": "Red bg at decode changes bitmap — raster fork path live"
+  },
+  "lhForkMovesInk": {
+    "recipeId": "tc-fix-w6-rfork-lh-1-leaf",
+    "canvasDeltaPx": 3.797,
+    "note": "lh:1 at decode moves canvas +1px vs plateau; correct 21.6px lh patches still tie 2.797"
+  },
+  "promotableBest": {
+    "recipeId": "product-baseline",
+    "liveVsCanvasTopPx": 2.797,
+    "absCanvasDeltaPx": 2.797
+  },
+  "lowestAbsCanvasDeltaPx": {
+    "recipeId": "tc-fix-w6-meta-ink-align",
+    "liveVsCanvasTopPx": -2.203,
+    "absCanvasDeltaPx": 2.203,
+    "promotable": false,
+    "reason": "inkAlign drawImage dest dy — blit nudge only, svg↔canvas gap unchanged"
+  },
+  "plateauTieCount": 25,
+  "newExperiments": {
+    "tc-blh-w2-rfork-lh-meta-leaf": { "canvasDeltaPx": 2.797, "svgDeltaPx": -0.008 },
+    "tc-research-w1-leading-trim-both-edges": { "canvasDeltaPx": 2.797, "svgDeltaPx": -0.008 },
+    "tc-research-w1-strut-neutralize-flex-center": { "canvasDeltaPx": 2.797, "svgDeltaPx": -0.008 },
+    "tc-blh-w2-rfork-chromium-copy-lh-baseline": { "canvasDeltaPx": 2.797, "svgDeltaPx": -0.008 },
+    "tc-blh-w1-combo-capture-rfork-lh-1-leaf": { "canvasDeltaPx": 3.797, "svgDeltaPx": -0.008 },
+    "tc-fix-w6-rfork-inline-block-linepx": { "canvasDeltaPx": -11.203, "svgDeltaPx": -0.008 },
+    "tc-fix-w6-combo-linebox-lh-pin-flex": { "canvasDeltaPx": -10.203, "svgDeltaPx": -0.008 },
+    "tc-blh-w2-rfork-strut-translate-y-meta": { "canvasDeltaPx": 5.797, "svgDeltaPx": -0.008 }
+  },
+  "blackboxRun": false,
+  "blackboxSkipReason": "No recipe |canvasΔ| ≤ 0.06; best structural tie 2.797 px"
+}

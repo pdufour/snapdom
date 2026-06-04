@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flex align-items vs canvas lh drift</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px 14px 24px; font-family: system-ui, sans-serif; background: #f8fafc; color: #111; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px; max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff; border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #111; }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Flex align-items sweep (leaf lh 1.35)</h1>
+  <p class="hint">
+    Param <code>align=stretch|flex-start|baseline</code> on <code>nav.mini-nav</code>.
+    Leaf keeps font shorthand <code>16px/1.35</code>. product-baseline FO raster.
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { findLandmarkElement, getFoFixRecipe, runFoFixProbe } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const alignVariant = (params.get('align') || 'stretch').trim()
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) return n
+      }
+      return fs * 1.35
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const nav = root.querySelector('nav.mini-nav')
+      if (!nav) throw new Error('nav.mini-nav missing')
+      nav.style.alignItems = alignVariant
+
+      const leaf = findLandmarkElement(root, landmark)
+      if (!leaf) throw new Error(`landmark "${landmark}" not found`)
+
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const cs = getComputedStyle(leaf)
+      const pcs = getComputedStyle(nav)
+      const fs = parseFloat(cs.fontSize) || 16
+      const lhPx = resolveLineHeightPx(cs, leaf)
+      const halfLeading = (lhPx - fs) / 2
+      const leafBox = leaf.getBoundingClientRect()
+      const navBox = nav.getBoundingClientRect()
+
+      const recipe = getFoFixRecipe('product-baseline')
+      recipe.rasterPatch = 'product-toCanvas'
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      return {
+        alignVariant,
+        landmark,
+        metrics: {
+          parentAlignItems: pcs.alignItems,
+          leafLineHeightPx: roundPx(lhPx),
+          fontSizePx: roundPx(fs),
+          halfLeadingLhFsPx: roundPx(halfLeading),
+          leafHeightGbcr: roundPx(leafBox.height),
+          navHeightGbcr: roundPx(navBox.height),
+        },
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+        },
+        canvasDeltaPx: probe.liveVsCanvasTopPx,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__flexAlignLhProbe = { ready: false, bootError: null, alignVariant, run: runProbe }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        window.__flexAlignLhProbe.ready = true
+        status.textContent = `Ready — align=${alignVariant}, landmark=${landmark}`
+      } catch (err) {
+        window.__flexAlignLhProbe.bootError = String(err?.message || err)
+        status.textContent = window.__flexAlignLhProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__flexAlignLhProbe = window.__flexAlignLhProbe || {}
+      window.__flexAlignLhProbe.bootError = String(err?.message || err)
+    })
+  </script>
+</body>
+</html>

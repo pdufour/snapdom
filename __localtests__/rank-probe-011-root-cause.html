@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rank-probe-011 root cause (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>rank-probe-011 — unitless lh vs int-floor (decomposed)</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { FO_BASELINE_CSS } from './fo-fix-recipes-constants.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      parseCaptureMeta,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import { resolveLabHook } from './tocanvas-lab-hooks-registry.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    /** Historical rank-probe-011 (removed from active corpus). */
+    const RANK_PROBE_011 = {
+      id: 'rank-probe-011-line-height-unitless-int-floor',
+      label: 'rank-probe: line-height 1 + int floor',
+      idea: 'Unitless line-height:1 on FO * with int-floor viewBox',
+      css:
+        FO_BASELINE_CSS +
+        'foreignObject *{line-height:1!important;box-sizing:border-box!important}',
+      inject: 'both',
+      category: 'rank-probe',
+      svgRootRound: 'int-floor',
+      rasterPatch: 'decode-interval',
+    }
+
+    /** @type {{ armId: string, mechanism: string, recipe: object }[]} */
+    const ARMS = [
+      {
+        armId: 'product-baseline',
+        mechanism: 'capture.js foNormalize only (lab control)',
+        recipe: () => getFoFixRecipe('product-baseline'),
+      },
+      {
+        armId: 'unitless-lh-only',
+        mechanism: 'FO * line-height:1 (unitless) + FO_BASELINE_CSS; default SVG root round',
+        recipe: () => ({
+          id: 'synth-unitless-lh-only',
+          css:
+            FO_BASELINE_CSS +
+            'foreignObject *{line-height:1!important;box-sizing:border-box!important}',
+          inject: 'both',
+          rasterPatch: 'decode-interval',
+        }),
+      },
+      {
+        armId: 'int-floor-only',
+        mechanism: 'svgRootRound int-floor + decode-interval; no line-height override',
+        recipe: () => ({
+          id: 'synth-int-floor-only',
+          css: FO_BASELINE_CSS,
+          inject: 'both',
+          svgRootRound: 'int-floor',
+          rasterPatch: 'decode-interval',
+        }),
+      },
+      {
+        armId: 'rank-probe-011-replica',
+        mechanism: 'Historical rank-probe-011: unitless lh:1 + int-floor + decode-interval',
+        recipe: () => RANK_PROBE_011,
+      },
+    ]
+
+    function liveNavMetrics() {
+      const nav = root.querySelector('nav')
+      const a = nav?.querySelector('a')
+      if (!a) return { error: 'no Home nav anchor' }
+      const cs = getComputedStyle(a)
+      const rect = a.getBoundingClientRect()
+      const pt = parseFloat(cs.paddingTop) || 0
+      const pb = parseFloat(cs.paddingBottom) || 0
+      const bt = parseFloat(cs.borderTopWidth) || 0
+      const bb = parseFloat(cs.borderBottomWidth) || 0
+      return {
+        text: (a.textContent || '').trim(),
+        font: cs.font,
+        lineHeightComputed: cs.lineHeight,
+        lineHeightRaw: cs.getPropertyValue('line-height'),
+        borderBoxHeightPx: rect.height,
+        contentBoxHeightPx: rect.height - pt - pb - bt - bb,
+      }
+    }
+
+    async function probeArm({ armId, mechanism, recipe }) {
+      const r = typeof recipe === 'function' ? recipe() : recipe
+      if (!r) throw new Error(`recipe missing for ${armId}`)
+      const hook = resolveLabHook(r.labHook, r)
+      const probe = await runFoFixProbe(r, { root, landmark, dpr, scale })
+      const el = findLandmarkElement(root, landmark)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const fixtureDims = { cssW: cssW * scale, cssH: cssH * scale }
+      const ink = compareThreeWayInk(root, probe.canvas, probe.svgText, el, dpr, fixtureDims)
+      const meta = parseCaptureMeta(probe.svgText, root)
+      return {
+        armId,
+        recipeId: r.id,
+        mechanism,
+        hookId: hook?.id ?? null,
+        svgRootRound: r.svgRootRound ?? null,
+        rasterPatch: r.rasterPatch ?? null,
+        ink: {
+          liveVsCanvasTopPx: ink.liveVsCanvasTopPx,
+          liveVsSvgTopPx: ink.liveVsSvgTopPx,
+          svgVsCanvasTopPx: ink.svgVsCanvasTopPx,
+          livePaintedTopInBorder: ink.livePaintedTopInBorder,
+          svgPaintedTopInBorder: ink.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: ink.canvasPaintedTopInBorder,
+        },
+        captureMeta: {
+          svgWidth: meta?.w,
+          svgHeight: meta?.h,
+          viewBox: meta?.viewBox,
+          foWidth: meta?.foW,
+          foHeight: meta?.foH,
+        },
+      }
+    }
+
+    async function run() {
+      const liveNavLinkMetrics = liveNavMetrics()
+      const variants = []
+      for (const arm of ARMS) {
+        status.textContent = `Probing ${arm.armId}…`
+        variants.push(await probeArm(arm))
+      }
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        recipeId: 'product-baseline',
+        liveNavLinkMetrics,
+        variants,
+      }
+    }
+
+    window.__rankProbe011RootCause = {
+      ready: false,
+      done: false,
+      error: null,
+      payload: null,
+      async run() {
+        const payload = await run()
+        window.__rankProbe011RootCause.payload = payload
+        window.__rankProbe011RootCause.done = true
+        status.textContent = 'Done.'
+        return payload
+      },
+    }
+
+    async function boot() {
+      const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+      if (!head.ok) throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}) — run npm run compile`)
+      window.snapdom = snapdom
+      window.__rankProbe011RootCause.ready = true
+      if (params.get('auto') === '1') {
+        await window.__rankProbe011RootCause.run()
+      }
+    }
+
+    boot().catch((err) => {
+      window.__rankProbe011RootCause.error = String(err?.message || err)
+      status.textContent = `Error: ${window.__rankProbe011RootCause.error}`
+    })
+  </script>
+</body>
+</html>

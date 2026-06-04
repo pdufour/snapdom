@@ -1,0 +1,275 @@
+{
+  "probe": "fo-research-round-8",
+  "generatedAt": "2026-06-03T00:24:45.395Z",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "section": "all",
+  "sections": {
+    "w7Ceiling": {
+      "rangeSubpixelPx": 0.203,
+      "halfLeadingFsPx": 2.8,
+      "baseline": {
+        "snapdomCanvasDelta": 2.797,
+        "chromiumCanvasDelta": 2.797
+      },
+      "w7": {
+        "snapdomCanvasDelta": -0.203,
+        "chromiumCanvasDelta": -0.203,
+        "snapdomVsChromiumPx": 0,
+        "liveRangeTop": 14.203,
+        "canvasIntegerTop": 14,
+        "canvasIntegerDeviceRow": 14,
+        "mathCheck": {
+          "rangeMinusIntegerCanvasTop": 0.203,
+          "reportedCanvasDelta": -0.203,
+          "matchesRangeSubpixel": true
+        }
+      },
+      "verdict": "W7_CEILING_IS_INTEGER_SCAN_NOT_DECODE",
+      "implication": "w7 FO y −2.8px lands integer ink row floor(live Range); residual |Δ| = Range subpixel fraction — same on Chromium-only and snapdom lab path."
+    },
+    "labBlackboxCapReconcile": {
+      "rows": [
+        {
+          "recipeId": "product-baseline",
+          "labRangeCanvasDelta": 2.797,
+          "labCapModelCanvasDelta": -1.727,
+          "rangeMinusCapLiveTopPx": -4.523,
+          "rangeMinusCapDeltaPx": 4.523
+        },
+        {
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "labRangeCanvasDelta": -0.203,
+          "labCapModelCanvasDelta": -4.727,
+          "rangeMinusCapLiveTopPx": -4.523,
+          "rangeMinusCapDeltaPx": 4.523
+        }
+      ],
+      "capDeltaShiftBaselineToW7": -3,
+      "rangeDeltaShiftBaselineToW7": -3,
+      "capAndRangeShiftTogether": true,
+      "blackboxWouldAgreeWithLabRangeIfW7": false,
+      "verdict": "CAP_MODEL_DIVERGES_FROM_RANGE_AT_W7",
+      "implication": "Blackbox paint.canvas.vs-border.top uses cap-model live reference — w7 closes Range gap (−0.203) but cap-model delta shifts differently; do not gate w7 on blackbox without metric alignment."
+    },
+    "foBitmapRowDump": {
+      "liveRangeTopInBorderPx": 14.203,
+      "rangeSubpixelPx": 0.203,
+      "baseline": {
+        "firstInkDeviceRow": 17,
+        "rangeTopDevicePx": 14.203,
+        "rangeMinusFirstInkRowPx": -2.797,
+        "rows": [
+          {
+            "deviceRow": 17,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 18,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 19,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 20,
+            "coverage": 0.321
+          },
+          {
+            "deviceRow": 21,
+            "coverage": 0.393
+          }
+        ]
+      },
+      "w7": {
+        "firstInkDeviceRow": 14,
+        "rangeTopDevicePx": 14.203,
+        "rangeMinusFirstInkRowPx": 0.203,
+        "rows": [
+          {
+            "deviceRow": 14,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 15,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 16,
+            "coverage": 0.179
+          },
+          {
+            "deviceRow": 17,
+            "coverage": 0.321
+          },
+          {
+            "deviceRow": 18,
+            "coverage": 0.393
+          }
+        ]
+      },
+      "rowDeltaBaselineToW7": 3,
+      "verdict": "INTEGER_ROW_LANDS_BELOW_RANGE_SUBPIXEL",
+      "implication": "First-ink device row sits at floor(Range×dpr); fractional 0.203px above row origin explains w7 −0.203px residual."
+    }
+  },
+  "synthesis": {
+    "known": [
+      "BITMAP_ONLY — svg≈live; canvas drifts ~½(lh−fs)",
+      "w7 FO y −2.8px closes strut class; integer residual ≈ Range subpixel",
+      "Snapdom decode adds 0px vs chromium-only on same SVG (round 5/7)",
+      "Active matrix 56 recipes: w7 best at |−0.203| — no row ≤0.06"
+    ],
+    "unknown": [
+      "Whether blackbox cap gate passes with w7 enabled on checkout (empirical)",
+      "Whether fractional ink scan can gate promotion without FO attr change",
+      "Blink FO paint-origin code path — filing vs workaround",
+      "Whether w15/w16 recipe shards add signal beyond w7 plateau",
+      "Checkout vs mini cap/Range offset — same 4.5px reconcile on both fixtures?"
+    ],
+    "top5Unknowns": [
+      "Whether blackbox cap gate passes with w7 enabled on checkout (empirical)",
+      "Whether fractional ink scan can gate promotion without FO attr change",
+      "Blink FO paint-origin code path — filing vs workaround",
+      "Whether w15/w16 recipe shards add signal beyond w7 plateau",
+      "Checkout vs mini cap/Range offset — same 4.5px reconcile on both fixtures?"
+    ],
+    "recommendedNextStep": "metric-reconcile — w7 does not pass blackbox cap gate on checkout",
+    "pauseFixWaves": true,
+    "refuted": [
+      "Snapdom decode as cause of w7 −0.203 ceiling"
+    ],
+    "newFindings": [
+      "w7 |-0.203| ≈ Range subpixel 0.203",
+      "First-ink row shift baseline→w7: 3px",
+      "Cap-model Δ shift baseline→w7: -3px (Range shift -3px)",
+      "Blackbox Home cap Δ: baseline -0.91px → w7 -1.91px (shift -1px)"
+    ]
+  },
+  "port": 19879,
+  "headed": true,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+  "activeMatrixIngest": {
+    "found": true,
+    "path": "__localtests__/.matrix-active-full-run.log",
+    "rowCount": 56,
+    "passCount": 0,
+    "bestRow": {
+      "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+      "svgDelta": 0,
+      "canvasDelta": -0.203,
+      "stage": "raster",
+      "pass": false
+    },
+    "w7Best": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "svgDelta": 0,
+      "canvasDelta": -0.203,
+      "stage": "raster",
+      "pass": false
+    },
+    "baselineRow": {
+      "recipeId": "product-baseline",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "stage": "raster",
+      "pass": false
+    },
+    "top8": [
+      {
+        "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "loop-ai-b10-w01-025",
+        "svgDelta": 9.797,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "loop-ai-b10-w01-035",
+        "svgDelta": 9.797,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-reg-lock-w7-half-leading-meta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-reg-lock-src-mirror-w7",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "src-mirror-experimentalRasterMetaInkAlign",
+        "svgDelta": 0,
+        "canvasDelta": -2.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "product-baseline",
+        "svgDelta": 0,
+        "canvasDelta": 2.797,
+        "stage": "raster",
+        "pass": false
+      }
+    ],
+    "note": "Ingested 56 matrix rows from log"
+  },
+  "blackboxCompare": {
+    "baseline": {
+      "patch": "none",
+      "exitCode": 1,
+      "passed": false,
+      "capDeltas": {
+        "Home": -0.91,
+        "Products": -0.91,
+        "Checkout": -0.16,
+        "Email Address": -0.43,
+        "Promo Code": 0.07
+      },
+      "navInkParityPx": 0,
+      "stdoutTail": "44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t4.25\t-0.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t31.5\t-0.91px  (canvas raster)\n  Nav: Products\n    paint.cap.vs-border.top\t5.16\t5.41\t+0.25px  (SVG clone)\n    paint.cap.vs-border.bottom\t19.44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t4.25\t-0.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t31.5\t-0.91px  (canvas raster)\n\nCanvas ink (from structure report; top gated ≤0.06px per landmark):\n  Home: paint.canvas.vs-border.top -0.91px\n  Products: paint.canvas.vs-border.top -0.91px\n  Checkout: paint.canvas.vs-border.top -0.16px\n  Email Address: paint.canvas.vs-border.top -0.43px\n  Promo Code: paint.canvas.vs-border.top +0.07px\n  Nav |Δtop(Home)-Δtop(Products)|: 0.00px\n\nToggle bounce: none\n\nFAIL (5):\n  Home paint.canvas.vs-border.top Δ=-0.91px (fail>0.06px)\n  Products paint.canvas.vs-border.top Δ=-0.91px (fail>0.06px)\n  Checkout paint.canvas.vs-border.top Δ=-0.16px (fail>0.06px)\n  Email Address paint.canvas.vs-border.top Δ=-0.43px (fail>0.06px)\n  Promo Code paint.canvas.vs-border.top Δ=+0.07px (fail>0.06px)\n\n"
+    },
+    "w7": {
+      "patch": "fo-y-half-leading-meta",
+      "exitCode": 1,
+      "passed": false,
+      "capDeltas": {
+        "Home": -1.91,
+        "Products": -1.91,
+        "Checkout": -2.16,
+        "Email Address": -2.43,
+        "Promo Code": -1.93
+      },
+      "navInkParityPx": 0,
+      "stdoutTail": "44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t3.25\t-1.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t30.5\t-1.91px  (canvas raster)\n  Nav: Products\n    paint.cap.vs-border.top\t5.16\t5.41\t+0.25px  (SVG clone)\n    paint.cap.vs-border.bottom\t19.44\t19.69\t+0.25px  (SVG clone)\n    paint.cap.vs-border.height\t14.28\t14.28\t+0.00px  (SVG clone)\n    paint.canvas.vs-border.top\t5.16\t3.25\t-1.91px  (canvas raster)\n    paint.canvas.vs-border.height\t14.28\t14.5\t+0.22px  (canvas raster)\n    paint.cap.root.top\t32.41\t32.66\t+0.25px  (SVG clone)\n    paint.canvas.root.top\t32.41\t30.5\t-1.91px  (canvas raster)\n\nCanvas ink (from structure report; top gated ≤0.06px per landmark):\n  Home: paint.canvas.vs-border.top -1.91px\n  Products: paint.canvas.vs-border.top -1.91px\n  Checkout: paint.canvas.vs-border.top -2.16px\n  Email Address: paint.canvas.vs-border.top -2.43px\n  Promo Code: paint.canvas.vs-border.top -1.93px\n  Nav |Δtop(Home)-Δtop(Products)|: 0.00px\n\nToggle bounce: none\n\nFAIL (5):\n  Home paint.canvas.vs-border.top Δ=-1.91px (fail>0.06px)\n  Products paint.canvas.vs-border.top Δ=-1.91px (fail>0.06px)\n  Checkout paint.canvas.vs-border.top Δ=-2.16px (fail>0.06px)\n  Email Address paint.canvas.vs-border.top Δ=-2.43px (fail>0.06px)\n  Promo Code paint.canvas.vs-border.top Δ=-1.93px (fail>0.06px)\n\n"
+    },
+    "homeCapDeltaShift": -1,
+    "w7CapPassesGate": false,
+    "w7CapAgreesWithLabRange": false,
+    "verdict": "BLACKBOX_CAP_DIVERGES_FROM_LAB_RANGE",
+    "implication": "Checkout blackbox uses cap-model ink reference — compare shift magnitude to mini lab Range Δ, not absolute equality."
+  }
+}

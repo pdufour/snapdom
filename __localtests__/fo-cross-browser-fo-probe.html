@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cross-browser — minimal nav FO raster</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px 14px 24px; font: 14px/1.4 system-ui, sans-serif; background: #f8fafc; color: #111; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 78ch; }
+    #fixture {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #fixture .row { display: flex; align-items: stretch; min-height: 48px; }
+    #fixture .row a {
+      display: flex; align-items: center; padding: 0 12px;
+      text-decoration: none; color: #111;
+    }
+    #metrics { font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 12px; color: #334155; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Cross-browser FO probe</h1>
+  <p class="hint">
+    Hand-built static minimal nav FO (<code>buildStaticMinimalNavFoSvg</code>) →
+    <code>data:image/svg+xml</code> + <code>decode</code> + <code>drawImage</code>.
+    Measures live vs inline-FO svg vs canvas ink (Range + scan). No snapdom.
+  </p>
+  <div id="fixture">
+    <div class="row"><a href="#">Home</a></div>
+  </div>
+  <p id="metrics">Running…</p>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      halfLeadingFromComputed,
+      probeChromiumFoOnly,
+    } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const root = document.getElementById('fixture')
+    const metrics = document.getElementById('metrics')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    window.__foCrossBrowserFoProbe = { ready: false, bootError: null, result: null }
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    async function run() {
+      const el = root.querySelector('a')
+      const halfLeadingPx = el ? halfLeadingFromComputed(el) : null
+      const raw = await probeChromiumFoOnly({
+        root,
+        landmark,
+        dpr,
+        buildSvg: buildStaticMinimalNavFoSvg,
+      })
+      const t = raw.threeWay ?? {}
+      return {
+        landmark: raw.landmark,
+        dpr: raw.dpr,
+        fixtureDims: raw.fixtureDims,
+        rasterPath: raw.rasterPath,
+        halfLeadingPx,
+        threeWay: {
+          liveVsCanvasTopPx: t.liveVsCanvasTopPx,
+          liveVsSvgTopPx: t.liveVsSvgTopPx,
+          svgVsCanvasTopPx: t.svgVsCanvasTopPx,
+          livePaintedTopInBorder: t.livePaintedTopInBorder,
+          svgPaintedTopInBorder: t.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: t.canvasPaintedTopInBorder,
+        },
+        verdict: raw.verdict,
+        bitmapOnly: raw.bitmapOnly,
+        glyphMetrics: raw.glyphMetrics,
+      }
+    }
+
+    run()
+      .then((result) => {
+        window.__foCrossBrowserFoProbe.result = result
+        window.__foCrossBrowserFoProbe.ready = true
+        const t = result.threeWay
+        metrics.textContent =
+          `canvasΔ=${fmt(t.liveVsCanvasTopPx)} px · svgΔ=${fmt(t.liveVsSvgTopPx)} px · ` +
+          `½lh≈${fmt(result.halfLeadingPx)} px · ${result.verdict}`
+      })
+      .catch((err) => {
+        window.__foCrossBrowserFoProbe.bootError = String(err?.message || err)
+        window.__foCrossBrowserFoProbe.ready = true
+        metrics.textContent = `Error: ${window.__foCrossBrowserFoProbe.bootError}`
+      })
+  </script>
+</body>
+</html>

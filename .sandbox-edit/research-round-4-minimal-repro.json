@@ -1,0 +1,110 @@
+{
+  "probe": "fo-research-round-4",
+  "section": "research-round-4-minimal-repro.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "domVariant": "bare-span",
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": 0.2,
+        "leafGbcrHeight": 19,
+        "computedLh": "21.6px",
+        "driftBucket": "other"
+      },
+      {
+        "domVariant": "span-lh-1.35",
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": 0.2,
+        "leafGbcrHeight": 19,
+        "computedLh": "21.6px",
+        "driftBucket": "other"
+      },
+      {
+        "domVariant": "block-div",
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": 0.2,
+        "leafGbcrHeight": 45.59375,
+        "computedLh": "21.6px",
+        "driftBucket": "other"
+      },
+      {
+        "domVariant": "flex-start-link",
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": 0.2,
+        "leafGbcrHeight": 21.59375,
+        "computedLh": "21.6px",
+        "driftBucket": "other"
+      },
+      {
+        "domVariant": "flex-stretch-link",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": -0.003,
+        "leafGbcrHeight": 48,
+        "computedLh": "21.6px",
+        "driftBucket": "2.797"
+      },
+      {
+        "domVariant": "flex-center-link",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": -0.003,
+        "leafGbcrHeight": 21.59375,
+        "computedLh": "21.6px",
+        "driftBucket": "2.797"
+      },
+      {
+        "domVariant": "stretch-lh-1",
+        "liveVsCanvasTopPx": 3.5,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 0,
+        "residualCanvasMinusHalfLeadingPx": 3.5,
+        "leafGbcrHeight": 48,
+        "computedLh": "16px",
+        "driftBucket": "3.5"
+      },
+      {
+        "domVariant": "stretch-lh-normal",
+        "liveVsCanvasTopPx": 3,
+        "liveVsSvgTopPx": 0,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "residualCanvasMinusHalfLeadingPx": 0.2,
+        "leafGbcrHeight": 48,
+        "computedLh": "normal",
+        "driftBucket": "other"
+      }
+    ],
+    "smallestReproducingVariant": "bare-span",
+    "driftBuckets": [
+      "other",
+      "2.797",
+      "3.5"
+    ],
+    "implication": "Bare span with lh 1.35 shows drift without flex — flex is context, not root cause."
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-landmark-parity.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "landmark": "Home",
+        "layout": {
+          "text": "Home",
+          "gbcrHeight": 48,
+          "gbcrWidth": 68.859,
+          "fontSizePx": 16,
+          "lineHeightPx": 21.6,
+          "computedLineHeight": "21.6px",
+          "paddingTop": 0,
+          "paddingBottom": 0,
+          "halfLeadingFs": 2.8,
+          "rangeTopInBorder": 14.203,
+          "capTopInBorder": 5.527,
+          "lineBoxTopInBorder": 13.2,
+          "rangeSubpixelPx": 0.203,
+          "halfLeadingFsMinusRangeSubpixel": 2.597,
+          "rangeLineHeightPx": 19
+        },
+        "productBaseline": {
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008
+        },
+        "chromiumRaster": {
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 2.796875,
+          "svgVsCanvasTopPx": 2.8046875,
+          "deltaTopCapModel": null,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17,
+          "liveCapTopInBorder": null,
+          "inkScanMode": "integer",
+          "fractionalCanvasDelta": null
+        }
+      },
+      {
+        "landmark": "Products",
+        "layout": {
+          "text": "Products",
+          "gbcrHeight": 48,
+          "gbcrWidth": 92.75,
+          "fontSizePx": 16,
+          "lineHeightPx": 21.6,
+          "computedLineHeight": "21.6px",
+          "paddingTop": 0,
+          "paddingBottom": 0,
+          "halfLeadingFs": 2.8,
+          "rangeTopInBorder": 14.203,
+          "capTopInBorder": 5.527,
+          "lineBoxTopInBorder": 13.2,
+          "rangeSubpixelPx": 0.203,
+          "halfLeadingFsMinusRangeSubpixel": 2.597,
+          "rangeLineHeightPx": 19
+        },
+        "productBaseline": {
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008
+        },
+        "chromiumRaster": {
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 2.796875,
+          "svgVsCanvasTopPx": 2.8046875,
+          "deltaTopCapModel": null,
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17,
+          "liveCapTopInBorder": null,
+          "inkScanMode": "integer",
+          "fractionalCanvasDelta": null
+        }
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "layoutDiffMaxPx": 23.891,
+    "layoutDiffs": {
+      "gbcrHeight": 0,
+      "gbcrWidth": 23.891,
+      "fontSizePx": 0,
+      "lineHeightPx": 0,
+      "paddingTop": 0,
+      "paddingBottom": 0,
+      "halfLeadingFs": 0,
+      "rangeTopInBorder": 0,
+      "capTopInBorder": 0,
+      "lineBoxTopInBorder": 0,
+      "rangeSubpixelPx": 0,
+      "halfLeadingFsMinusRangeSubpixel": 0,
+      "rangeLineHeightPx": 0
+    },
+    "verdict": "LANDMARK_CANVAS_DELTA_IDENTICAL",
+    "rootCause": "No Products-vs-Home painted drift — any blackbox nav parity failure is metric/coordinate, not FO raster class."
+  }
+}

@@ -1,0 +1,355 @@
+{
+  "probe": "fo-glyph-bounds-probe",
+  "generatedAt": "2026-06-03T00:15:07.296Z",
+  "dpr": 1,
+  "scale": 1,
+  "landmark": "Home",
+  "section": "all",
+  "baseline": {
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "landmark": "Home",
+    "dpr": 1
+  },
+  "sections": {
+    "glyphVs48": {
+      "layout": {
+        "anchorHeightPx": 48,
+        "stretchMinHeightPx": 48,
+        "computedLhPx": 21.6,
+        "fontSizePx": 16,
+        "halfLeadingLhFsPx": 2.8000000000000007,
+        "overflow": "visible",
+        "parentAlignItems": "stretch"
+      },
+      "range": {
+        "topInBorder": 14.203125,
+        "bottomInBorder": 33.203125,
+        "heightInBorder": 19,
+        "slackAbovePx": 14.203125,
+        "slackBelowPx": 14.796875,
+        "rangeFillsStretchBox": false
+      },
+      "canvasScan": {
+        "bandRegionDev": {
+          "box": {
+            "top": 1,
+            "left": 1,
+            "width": 64.859375,
+            "height": 48
+          },
+          "leftCss": 1,
+          "topCss": 1,
+          "x": 5,
+          "y": 1,
+          "w": 28,
+          "h": 48,
+          "dpr": 1
+        },
+        "topInBorder": 17,
+        "integerTopInBorder": 17,
+        "fractionalTopInBorder": 18.75,
+        "bottomInBorder": 29,
+        "inkHeightInBorder": 12,
+        "bottomDeltaVsRangePx": -4.203
+      },
+      "threeWay": {
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "livePaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 17,
+        "liveGlyphTopInBorder": 14.203125
+      },
+      "verdict": {
+        "stretch48NotSerializedLh": true,
+        "scanUsesFullElementHeight": true,
+        "topDriftMatchesHalfLeading": true,
+        "previewCutoffRisk": true,
+        "implication": "Canvas ink bottom sits above Range bottom — possible FO clip or preview crop."
+      }
+    },
+    "letterDrift": {
+      "rows": [
+        {
+          "label": "H",
+          "letterClass": "capital",
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "h",
+          "letterClass": "has-ascender",
+          "liveVsCanvasTopPx": 1.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "l",
+          "letterClass": "has-ascender",
+          "liveVsCanvasTopPx": 1.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "p",
+          "letterClass": "has-descender",
+          "liveVsCanvasTopPx": 5.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "g",
+          "letterClass": "has-descender",
+          "liveVsCanvasTopPx": 5.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "Hg",
+          "letterClass": "has-descender",
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "pg",
+          "letterClass": "has-descender",
+          "liveVsCanvasTopPx": 5.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        },
+        {
+          "label": "HOME",
+          "letterClass": "word-caps",
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008,
+          "boxHeightPx": 56,
+          "rangeHeightInBorder": 19,
+          "halfLeadingLhFsPx": 2.8
+        }
+      ],
+      "canvasDeltaSpreadPx": 4,
+      "classMeans": {
+        "capital": 2.797,
+        "has-ascender": 1.797,
+        "has-descender": 5.047,
+        "word-caps": 2.797
+      },
+      "verdict": "LETTER_SHAPE_AFFECTS_DRIFT",
+      "implication": "Letter shape changes canvasΔ — check Range vs FO bitmap per class."
+    },
+    "wave13Spot": {
+      "rows": [
+        {
+          "recipeId": "product-baseline",
+          "liveVsCanvasTopPx": 2.797,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        },
+        {
+          "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+          "liveVsCanvasTopPx": -0.203,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        },
+        {
+          "recipeId": "tc-fix-w13-rfork-viewbox-y-half-leading",
+          "liveVsCanvasTopPx": 5.797,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        },
+        {
+          "recipeId": "tc-fix-w13-rfork-leaf-translate-y-half-leading",
+          "liveVsCanvasTopPx": -0.203,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        },
+        {
+          "recipeId": "tc-fix-w13-rfork-y-w7-minus-range-subpixel",
+          "liveVsCanvasTopPx": 0.797,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        },
+        {
+          "recipeId": "tc-fix-w13-settle100-w7-y",
+          "liveVsCanvasTopPx": -0.203,
+          "liveVsSvgTopPx": -0.008,
+          "passesGate006": false
+        }
+      ],
+      "shard": "recipes-tocanvas-fix-wave13.js",
+      "matrixCommitted": false,
+      "bestRow": {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      "noRowPassesGate": true
+    },
+    "chromiumFoPages": {
+      "pages": [
+        {
+          "pageId": "minimal-nav-fo-raster",
+          "verdict": "BITMAP_ONLY",
+          "bitmapOnly": true,
+          "threeWay": {
+            "live": {
+              "top": 15.203125,
+              "topInBorder": 14.203125
+            },
+            "svg": {
+              "top": 15.203125,
+              "topInBorder": 14.203125
+            },
+            "canvas": {
+              "top": 18,
+              "topInBorder": 17
+            },
+            "liveVsCanvasTopPx": 2.796875,
+            "liveVsSvgTopPx": 0,
+            "svgVsCanvasTopPx": 2.796875,
+            "livePaintedTopInBorder": 14.203125,
+            "svgPaintedTopInBorder": 14.203125,
+            "canvasPaintedTopInBorder": 17
+          },
+          "glyphMetrics": {
+            "boxHeightPx": 48,
+            "boxWidthPx": 68.859375,
+            "rangeTopInBorder": 14.203125,
+            "rangeBottomInBorder": 33.203125,
+            "rangeHeightInBorder": 19,
+            "computedLhPx": 21.6,
+            "fontSizePx": 16,
+            "halfLeadingLhFsPx": 2.8000000000000007,
+            "slackAboveRangePx": 14.203125,
+            "slackBelowRangePx": 14.796875,
+            "rangeFillsStretchBox": false
+          },
+          "canvasInkExtents": {
+            "topInBorder": 17,
+            "bottomInBorder": 29,
+            "inkHeightInBorder": 12,
+            "scanBandWidthDev": 28,
+            "scanRegionHeightDev": 48
+          },
+          "rasterPath": "image-decode"
+        },
+        {
+          "pageId": "minimal-typography-no-flex",
+          "verdict": "BITMAP_ONLY",
+          "bitmapOnly": true,
+          "threeWay": {
+            "live": {
+              "top": 10,
+              "topInBorder": 0
+            },
+            "svg": {
+              "top": 10,
+              "topInBorder": 0
+            },
+            "canvas": {
+              "top": 13,
+              "topInBorder": 3
+            },
+            "liveVsCanvasTopPx": 3,
+            "liveVsSvgTopPx": 0,
+            "svgVsCanvasTopPx": 3,
+            "livePaintedTopInBorder": 0,
+            "svgPaintedTopInBorder": 0,
+            "canvasPaintedTopInBorder": 3
+          },
+          "glyphMetrics": {
+            "boxHeightPx": 19,
+            "boxWidthPx": 44.859375,
+            "rangeTopInBorder": 0,
+            "rangeBottomInBorder": 19,
+            "rangeHeightInBorder": 19,
+            "computedLhPx": 21.6,
+            "fontSizePx": 16,
+            "halfLeadingLhFsPx": 2.8000000000000007,
+            "slackAboveRangePx": 0,
+            "slackBelowRangePx": 0,
+            "rangeFillsStretchBox": true
+          },
+          "canvasInkExtents": {
+            "topInBorder": 3,
+            "bottomInBorder": 15,
+            "inkHeightInBorder": 12,
+            "scanBandWidthDev": 28,
+            "scanRegionHeightDev": 19
+          },
+          "rasterPath": "image-decode"
+        },
+        {
+          "pageId": "minimal-nav-fo-y-nudge"
+        }
+      ]
+    },
+    "crossBrowser": {
+      "rows": [
+        {
+          "engine": "chrome",
+          "available": true,
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": 0,
+          "verdict": "BITMAP_ONLY",
+          "bitmapOnly": true,
+          "largeStrutDrift": true
+        },
+        {
+          "engine": "webkit",
+          "available": true,
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Safari/605.1.15",
+          "liveVsCanvasTopPx": 3.421875,
+          "liveVsSvgTopPx": 0,
+          "verdict": "BITMAP_ONLY",
+          "bitmapOnly": true,
+          "largeStrutDrift": true
+        },
+        {
+          "engine": "firefox",
+          "available": true,
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+          "liveVsCanvasTopPx": 3.5,
+          "liveVsSvgTopPx": 0,
+          "verdict": "BITMAP_ONLY",
+          "bitmapOnly": true,
+          "largeStrutDrift": true
+        }
+      ],
+      "chromiumOnlyDrift": false,
+      "summary": "Strut drift reproduces on non-Chromium engines — not Blink-only"
+    }
+  },
+  "synthesis": {
+    "winningHypothesis": "Vertical FO strut offset is class-wide (~2.8px); 48px stretch box has Range slack — preview h/p cutoff is not ink-scan height truncation",
+    "top5Findings": [
+      "Home stretch box 48px; canvasΔ≈½(lh−fs) strut (2.8000000000000007px)",
+      "Letter drift spread 4px by shape class",
+      "Wave-13 spot best tc-fix-w7-rfork-fo-y-half-leading-meta |canvasΔ|=0.203px",
+      "Strut drift reproduces on non-Chromium engines — not Blink-only"
+    ],
+    "refuted": [
+      "Canvas ink scan missing descenders due to 48px band height cap"
+    ],
+    "bestNextFixDirection": "Pursue w13 viewBox/leaf-translate strut paint-origin; verify preview crop separately from parity metric"
+  },
+  "port": 8772,
+  "chromeVersion": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+}

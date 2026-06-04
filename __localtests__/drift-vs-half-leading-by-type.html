@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drift vs half-leading by landmark type</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 90ch; }
+    #capture-target {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 720px;
+    }
+    /* nav-link — checkout calibrate header */
+    #fixture-nav-link .checkout-header {
+      display: flex;
+      align-items: stretch;
+      min-height: 56px;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 16px;
+      gap: 24px;
+    }
+    #fixture-nav-link .checkout-logo {
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    #fixture-nav-link nav.nav-links {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      min-width: 0;
+    }
+    #fixture-nav-link nav.nav-links a {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      text-decoration: none;
+      color: #0f172a;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      border-top: 3px solid transparent;
+    }
+    /* h2 — minimal block heading leaf */
+    #fixture-h2 {
+      padding: 20px 16px;
+    }
+    #fixture-h2 h2 {
+      margin: 0;
+      font: 700 22px/1.35 system-ui, -apple-system, sans-serif;
+      color: #0f172a;
+    }
+    /* label — minimal form label leaf */
+    #fixture-label {
+      padding: 20px 16px;
+      font: 400 15px/1.5 system-ui, -apple-system, sans-serif;
+      color: #475569;
+    }
+    #fixture-label label {
+      display: block;
+      margin: 0;
+      font: inherit;
+      color: #0f172a;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Canvas drift vs (lh−fs)/2 by landmark type</h1>
+  <p class="hint">
+    Params: <code>type=nav-link|h2|label</code>, <code>lh=1|normal|1.35</code>.
+    Pins line-height on the live text leaf, mirrors in FO CSS, then three-way ink (product-baseline + product-toCanvas).
+  </p>
+  <div id="capture-target">
+    <div id="fixture-nav-link" hidden>
+      <div class="checkout-header">
+        <div class="checkout-logo">Acme</div>
+        <nav class="nav-links" aria-label="Checkout navigation">
+          <a href="#">Home</a>
+        </nav>
+      </div>
+    </div>
+    <div id="fixture-h2" hidden>
+      <h2>Section title</h2>
+    </div>
+    <div id="fixture-label" hidden>
+      <form><label>Email</label></form>
+    </div>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { findLandmarkElement, getFoFixRecipe, runFoFixProbe } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmarkType = (params.get('type') || 'nav-link').trim()
+    const lhVariant = (params.get('lh') || '1.35').trim()
+
+    /** @type {Record<string, { fixtureId: string, landmark: string, textLeafCss: string, source: string }>} */
+    const TYPE_CONFIG = {
+      'nav-link': {
+        fixtureId: 'fixture-nav-link',
+        landmark: 'Home',
+        textLeafCss: 'foreignObject nav a',
+        source: 'checkout-calibrate-header',
+      },
+      h2: {
+        fixtureId: 'fixture-h2',
+        landmark: 'Section title',
+        textLeafCss: 'foreignObject h2',
+        source: 'minimal-h2-block',
+      },
+      label: {
+        fixtureId: 'fixture-label',
+        landmark: 'Email',
+        textLeafCss: 'foreignObject label',
+        source: 'minimal-form-label',
+      },
+    }
+
+    const cfg = TYPE_CONFIG[landmarkType]
+    if (!cfg) throw new Error(`Unknown type "${landmarkType}"`)
+
+    for (const [id, c] of Object.entries(TYPE_CONFIG)) {
+      const el = document.getElementById(c.fixtureId)
+      if (el) el.hidden = c.fixtureId !== cfg.fixtureId
+    }
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function measureLayoutLineBoxPx(style, el) {
+      if (!(el instanceof Element) || el.childElementCount > 0) return null
+      if (!(el.textContent || '').trim()) return null
+      const pad =
+        (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+      const h = el.getBoundingClientRect().height
+      if (h <= pad) return null
+      const content = h - pad
+      return el.scrollHeight <= content + 2 ? content : null
+    }
+
+    function resolveLineHeightPx(cs, el) {
+      const fs = parseFloat(cs.fontSize) || 16
+      let px = NaN
+      const lhUsed = cs.lineHeight
+      if (lhUsed && lhUsed !== 'normal') {
+        const n = parseFloat(lhUsed)
+        if (Number.isFinite(n) && n > 0) px = n
+      }
+      if (!Number.isFinite(px) || px <= 0) {
+        const layout = measureLayoutLineBoxPx(cs, el)
+        px = layout != null && layout > 0 ? layout : fs * 1.35
+      }
+      return px
+    }
+
+    function resolveLhInjectValue(variant) {
+      if (variant === '1') return '1'
+      if (variant === 'normal') return 'normal'
+      if (variant === '1.35') return '1.35'
+      throw new Error(`Unknown lh variant: ${variant}`)
+    }
+
+  /**
+   * @param {Element} leaf
+   */
+    function leafMetrics(leaf) {
+      const cs = getComputedStyle(leaf)
+      const fontSizePx = parseFloat(cs.fontSize) || 0
+      const lineHeightPx = resolveLineHeightPx(cs, leaf)
+      const halfLeadingLhFs = (lineHeightPx - fontSizePx) / 2
+      const box = leaf.getBoundingClientRect()
+      return {
+        tag: leaf.tagName,
+        computedLineHeight: cs.lineHeight,
+        fontSizePx: roundPx(fontSizePx),
+        lineHeightPx: roundPx(lineHeightPx),
+        halfLeadingLhFsPx: roundPx(halfLeadingLhFs),
+        heightGbcr: roundPx(box.height),
+        display: cs.display,
+        alignSelf: cs.alignSelf,
+      }
+    }
+
+    /**
+     * @param {Element} leaf
+     * @param {string} lhValue
+     */
+    function buildRecipe(leaf, lhValue) {
+      const css = `${cfg.textLeafCss}{line-height:${lhValue}!important}`
+      return {
+        ...getFoFixRecipe('product-baseline'),
+        id: `lab-drift-hl-${landmarkType}-${lhVariant.replace(/[^a-z0-9]+/gi, '-')}`,
+        label: `Drift half-leading ${landmarkType} lh=${lhValue}`,
+        css,
+        inject: 'capture',
+        rasterPatch: 'product-toCanvas',
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const leaf = findLandmarkElement(root, cfg.landmark)
+      if (!leaf) throw new Error(`landmark "${cfg.landmark}" not found for type ${landmarkType}`)
+
+      const lhInject = resolveLhInjectValue(lhVariant)
+      leaf.style.setProperty('line-height', lhInject, 'important')
+
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const metrics = leafMetrics(leaf)
+      const recipe = buildRecipe(leaf, lhInject)
+
+      status.textContent = `Probing ${landmarkType} lh=${lhInject}…`
+      const probe = await runFoFixProbe(recipe, { root, landmark: cfg.landmark, dpr, scale })
+
+      const canvasDeltaPx = probe.liveVsCanvasTopPx ?? null
+      const halfLeading = metrics.halfLeadingLhFsPx
+      const residualPx =
+        canvasDeltaPx != null && halfLeading != null
+          ? roundPx(canvasDeltaPx - halfLeading)
+          : null
+
+      return {
+        landmarkType,
+        fixtureSource: cfg.source,
+        landmark: cfg.landmark,
+        textLeafSelector: cfg.textLeafCss,
+        lhVariant,
+        lhInjected: lhInject,
+        injectCss: recipe.css,
+        metrics,
+        threeWay: {
+          livePaintedTopInBorder: probe.livePaintedTopInBorder,
+          svgPaintedTopInBorder: probe.svgPaintedTopInBorder,
+          canvasPaintedTopInBorder: probe.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: probe.liveVsSvgTopPx,
+          liveVsCanvasTopPx: probe.liveVsCanvasTopPx,
+          svgVsCanvasTopPx: probe.svgVsCanvasTopPx,
+        },
+        canvasDeltaPx: roundPx(canvasDeltaPx),
+        halfLeadingLhFsPx: halfLeading,
+        residualCanvasMinusHalfLeadingPx: residualPx,
+        recipeId: recipe.id,
+        dpr,
+        scale,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__driftVsHalfLeadingByType = {
+        ready: false,
+        bootError: null,
+        landmarkType,
+        lhVariant,
+        run: runProbe,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__driftVsHalfLeadingByType.ready = true
+        status.textContent = `Ready — type=${landmarkType} lh=${lhVariant}. CLI invokes run().`
+      } catch (err) {
+        window.__driftVsHalfLeadingByType.bootError = String(err?.message || err)
+        status.textContent = window.__driftVsHalfLeadingByType.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__driftVsHalfLeadingByType = window.__driftVsHalfLeadingByType || {}
+      window.__driftVsHalfLeadingByType.bootError = String(err?.message || err)
+      status.textContent = window.__driftVsHalfLeadingByType.bootError
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-06-03T00:34:24.270Z",
+  "headed": true,
+  "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+  "landmark": "Home",
+  "dpr": 1,
+  "thresholds": {
+    "w7GoodBand": [
+      -0.35,
+      0.05
+    ],
+    "underShiftBand": [
+      0.22,
+      0.38
+    ],
+    "uiCliMaxGap": 0.08
+  },
+  "paths": [
+    {
+      "path": "ui-single-recipe",
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "liveVsCanvasTopPx": -0.203,
+      "liveVsSvgTopPx": 0,
+      "rasterForkApplied": true,
+      "lhStrutHalfLeadingPx": 2.8,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "path": "cli-matrix-url",
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "liveVsCanvasTopPx": -0.203,
+      "liveVsSvgTopPx": 0,
+      "rasterForkApplied": true,
+      "lhStrutHalfLeadingPx": 2.8,
+      "matrixRowCount": 2,
+      "pass": true,
+      "errors": []
+    }
+  ],
+  "uiCliCanvasGapPx": 0,
+  "uiCliMismatch": false,
+  "parityErrors": [],
+  "pass": true,
+  "failCount": 0
+}

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wave-5 experimental flags probe (mini Home, all combos)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Wave-5 flags — pinLh, svgPatch, backingCeil, disableGbcr (16 combos)</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    /** Raster-only fork patch when svgPatch bit is on (product short alias). */
+    const SVG_PATCH_ON = 'fo-lh-pin'
+
+    const FLAG_DEFAULTS = {
+      experimentalFoPinLineHeightFromLive: false,
+      experimentalRasterBackingCeil: false,
+      experimentalRasterDisableGbcrNudge: false,
+      experimentalRasterSvgPatch: undefined,
+    }
+
+    /** @param {number} mask 4-bit: pinLh | backingCeil | disableGbcr | svgPatch */
+    function variantFromMask(mask) {
+      const flags = {
+        experimentalFoPinLineHeightFromLive: !!(mask & 1),
+        experimentalRasterBackingCeil: !!(mask & 2),
+        experimentalRasterDisableGbcrNudge: !!(mask & 4),
+        experimentalRasterSvgPatch: mask & 8 ? SVG_PATCH_ON : undefined,
+      }
+      const id =
+        mask === 0
+          ? 'baseline'
+          : `combo-${[!!(mask & 8), !!(mask & 4), !!(mask & 2), !!(mask & 1)].map((b) => (b ? '1' : '0')).join('')}`
+      return { id, ...flags }
+    }
+
+    const VARIANTS = Array.from({ length: 16 }, (_, mask) => variantFromMask(mask))
+
+    /** @param {ReturnType<typeof variantFromMask>} variantRow */
+    function snapOptsFromVariant(variantRow) {
+      const opts = { dpr, scale, ...FLAG_DEFAULTS }
+      opts.experimentalFoPinLineHeightFromLive = variantRow.experimentalFoPinLineHeightFromLive
+      opts.experimentalRasterBackingCeil = variantRow.experimentalRasterBackingCeil
+      opts.experimentalRasterDisableGbcrNudge = variantRow.experimentalRasterDisableGbcrNudge
+      if (variantRow.experimentalRasterSvgPatch) {
+        opts.experimentalRasterSvgPatch = variantRow.experimentalRasterSvgPatch
+      }
+      return opts
+    }
+
+    /** @param {ReturnType<typeof variantFromMask>} variantRow */
+    async function runVariant(variantRow) {
+      const opts = snapOptsFromVariant(variantRow)
+      const snap = await snapdom(root, opts)
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const meta = parseCaptureMeta(svgText, root)
+      const canvas = await snap.toCanvas()
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return {
+        id: variantRow.id,
+        flags: {
+          experimentalFoPinLineHeightFromLive: opts.experimentalFoPinLineHeightFromLive,
+          experimentalRasterBackingCeil: opts.experimentalRasterBackingCeil,
+          experimentalRasterDisableGbcrNudge: opts.experimentalRasterDisableGbcrNudge,
+          experimentalRasterSvgPatch: opts.experimentalRasterSvgPatch ?? null,
+        },
+        threeWay: {
+          livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+          svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        canvasBacking: canvas ? { width: canvas.width, height: canvas.height } : null,
+        captureMeta: meta,
+      }
+    }
+
+    async function verifyFlagsWired() {
+      const baseOpts = { dpr: 1, scale: 1 }
+      const snapBase = await snapdom(root, baseOpts)
+      const svgBase = svgFromDataUrl(await snapBase.toRaw())
+      const canvasBase = await snapBase.toCanvas()
+
+      const snapPin = await snapdom(root, {
+        ...baseOpts,
+        experimentalFoPinLineHeightFromLive: true,
+      })
+      const svgPin = svgFromDataUrl(await snapPin.toRaw())
+
+      const snapPatch = await snapdom(root, {
+        ...baseOpts,
+        experimentalRasterSvgPatch: SVG_PATCH_ON,
+      })
+      const svgPatch = svgFromDataUrl(await snapPatch.toRaw())
+      const canvasPatch = await snapPatch.toCanvas()
+
+      const snapNoGbcr = await snapdom(root, {
+        ...baseOpts,
+        experimentalRasterDisableGbcrNudge: true,
+      })
+      const canvasNoGbcr = await snapNoGbcr.toCanvas()
+      const metaFromProduct = snapBase.meta ?? {}
+
+      const snapCeil = await snapdom(root, {
+        ...baseOpts,
+        dpr: 1.001,
+        experimentalRasterBackingCeil: true,
+      })
+      const canvasCeil = await snapCeil.toCanvas()
+      const snapCeilOff = await snapdom(root, { ...baseOpts, dpr: 1.001 })
+      const canvasCeilOff = await snapCeilOff.toCanvas()
+
+      return {
+        experimentalFoPinLineHeightFromLive:
+          svgBase !== svgPin ||
+          /line-height:\s*[\d.]+px/i.test(svgPin),
+        experimentalRasterSvgPatch:
+          svgBase === svgPatch && canvasBase.height === canvasPatch.height,
+        experimentalRasterDisableGbcrNudge:
+          Number.isFinite(metaFromProduct?.gbcrFracY) &&
+          metaFromProduct.gbcrFracY !== 0 &&
+          canvasBase.height === canvasNoGbcr.height &&
+          canvasBase !== canvasNoGbcr,
+        experimentalRasterBackingCeil:
+          canvasCeil.width !== canvasCeilOff.width ||
+          canvasCeil.height !== canvasCeilOff.height,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const flagsWired = await verifyFlagsWired()
+      const rows = []
+      for (const v of VARIANTS) {
+        rows.push(await runVariant(v))
+      }
+
+      const baseline = rows.find((r) => r.id === 'baseline')
+      const baselineCanvas = baseline?.threeWay?.liveVsCanvasTopPx ?? null
+
+      return {
+        fixture: 'mini-nav',
+        wave: 5,
+        landmark,
+        dpr,
+        scale,
+        flagKeys: [
+          'experimentalFoPinLineHeightFromLive',
+          'experimentalRasterSvgPatch',
+          'experimentalRasterBackingCeil',
+          'experimentalRasterDisableGbcrNudge',
+        ],
+        flagsWired,
+        variants: rows,
+        baselineCanvasDeltaPx: baselineCanvas,
+        comparisons: rows.map((row) => ({
+          id: row.id,
+          canvasDeltaPx: row.threeWay?.liveVsCanvasTopPx ?? null,
+          svgDeltaPx: row.threeWay?.liveVsSvgTopPx ?? null,
+          svgVsCanvasPx: row.threeWay?.svgVsCanvasTopPx ?? null,
+          absCanvasDeltaPx:
+            row.threeWay?.liveVsCanvasTopPx != null
+              ? Math.abs(row.threeWay.liveVsCanvasTopPx)
+              : null,
+          absSvgDeltaPx:
+            row.threeWay?.liveVsSvgTopPx != null ? Math.abs(row.threeWay.liveVsSvgTopPx) : null,
+          deltaFromBaselinePx:
+            baselineCanvas != null && row.threeWay?.liveVsCanvasTopPx != null
+              ? row.threeWay.liveVsCanvasTopPx - baselineCanvas
+              : null,
+        })),
+      }
+    }
+
+    window.__foExperimentalFlagsProbe = {
+      ready: false,
+      bootError: null,
+      run: runProbe,
+    }
+
+    runProbe()
+      .then((payload) => {
+        window.__foExperimentalFlagsProbe.last = payload
+        const b = payload.baselineCanvasDeltaPx
+        const wired = Object.entries(payload.flagsWired ?? {})
+          .filter(([, ok]) => ok)
+          .map(([k]) => k)
+        status.textContent =
+          b != null
+            ? `Ready — baseline canvasΔ=${b.toFixed(3)}px; ${payload.variants.length} combos; wired: ${wired.join(', ') || 'none'}.`
+            : 'Ready — probe complete.'
+      })
+      .catch((err) => {
+        window.__foExperimentalFlagsProbe.bootError = String(err?.message || err)
+        status.textContent = `Boot failed: ${window.__foExperimentalFlagsProbe.bootError}`
+      })
+      .finally(() => {
+        window.__foExperimentalFlagsProbe.ready = true
+      })
+  </script>
+</body>
+</html>

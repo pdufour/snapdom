@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-06-03T00:24:53.557Z",
+  "headed": true,
+  "recipeId": "product-baseline",
+  "landmarks": [
+    "Home",
+    "Products"
+  ],
+  "dprs": [
+    1,
+    2
+  ],
+  "thresholds": {
+    "canvasDriftMin": 0.5,
+    "svgNearLiveMax": 0.15
+  },
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Home",
+      "dpr": 1,
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": 0,
+      "liveTopPx": 14.203125,
+      "svgTopPx": 14.203125,
+      "canvasTopPx": 17,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Home",
+      "dpr": 2,
+      "liveVsCanvasTopPx": 3.297,
+      "liveVsSvgTopPx": 0,
+      "liveTopPx": 14.203125,
+      "svgTopPx": 14.203125,
+      "canvasTopPx": 17.5,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Products",
+      "dpr": 1,
+      "liveVsCanvasTopPx": 2.797,
+      "liveVsSvgTopPx": 0,
+      "liveTopPx": 14.203125,
+      "svgTopPx": 14.203125,
+      "canvasTopPx": 17,
+      "pass": true,
+      "errors": []
+    },
+    {
+      "recipeId": "product-baseline",
+      "landmark": "Products",
+      "dpr": 2,
+      "liveVsCanvasTopPx": 3.297,
+      "liveVsSvgTopPx": 0,
+      "liveTopPx": 14.203125,
+      "svgTopPx": 14.203125,
+      "canvasTopPx": 17.5,
+      "pass": true,
+      "errors": []
+    }
+  ],
+  "pass": true,
+  "failCount": 0
+}

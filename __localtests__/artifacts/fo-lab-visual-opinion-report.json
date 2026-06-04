@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-06-03T06:27:13.053Z",
+  "labUrl": "http://127.0.0.1:9334/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=H&includeInactive=1&debugInkLine=1",
+  "recipe": "product-baseline",
+  "views": {
+    "live": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-opinion-live.png",
+      "legend": "Live"
+    },
+    "svg": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-opinion-svg.png",
+      "legend": "SVG"
+    },
+    "canvas": {
+      "screenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-opinion-canvas.png",
+      "legend": "Canvas"
+    }
+  },
+  "ui": {
+    "navLinkText": [
+      "H"
+    ],
+    "inkPanelHidden": false,
+    "inkSummary": "svg−live 0.00 · canvas−live 0.00 · svg−canvas 0.00 · pass",
+    "viewLegend": "Live",
+    "status": "",
+    "hasInkTopOverlay": false,
+    "hasMarkerLine": false,
+    "debugInkLineOn": true
+  },
+  "metrics": {
+    "liveLineY": null,
+    "svgLineY": null,
+    "canvasLineY": null,
+    "svgVsLive": null,
+    "canvasVsLive": null
+  },
+  "uiScreenshot": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/fo-lab-visual-opinion-ui.png"
+}

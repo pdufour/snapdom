@@ -1,0 +1,310 @@
+{
+  "fixture": "fo-minimal-repro",
+  "purpose": "Smallest hand-built foreignObject+flex+16px/1.35 text; three-way ink; prove BITMAP_ONLY without snapdom.",
+  "probe": "three-way",
+  "dpr": 2,
+  "scale": 1,
+  "landmark": "Home",
+  "sweep": true,
+  "includeSnapdom": true,
+  "primaryVariantId": "static-inline-flex",
+  "verdict": "BITMAP_ONLY",
+  "handBuiltVerdict": "BITMAP_ONLY — inline FO SVG ink ≈ live (svgΔ 0.000px), canvas raster only drifts (canvasΔ 3.297px); no snapdom capture.",
+  "bitmapOnly": {
+    "handBuilt": true,
+    "snapdom": true,
+    "criteria": "|liveVsSvgTopPx| < 0.35 and |liveVsCanvasTopPx| > 1.5"
+  },
+  "requiresSnapdomCapture": false,
+  "smallestReproducingVariant": {
+    "id": "static-inline-flex",
+    "description": "Static inline FO SVG — smallest hand-built (no class sheet, no snapdom)",
+    "markupBytes": 43,
+    "svgBytes": 572
+  },
+  "staticMinimalSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"492\" height=\"50\" viewBox=\"0 0 492 50\"><foreignObject width=\"100%\" height=\"100%\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"margin:0;padding:0;box-sizing:border-box;width:492px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0\"><div style=\"display:flex;align-items:stretch;min-height:48px;box-sizing:border-box\"><a href=\"#\" style=\"display:flex;align-items:center;padding:0 12px;text-decoration:none;color:#111;box-sizing:border-box\">Home</a></div></div></foreignObject></svg>",
+  "variants": [
+    {
+      "id": "mini-nav-2link",
+      "description": "Reference mini checkout nav (500×48, two links)",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 89,
+      "svgBytes": 747,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.296875
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.3046875
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    },
+    {
+      "id": "static-inline-flex",
+      "description": "Static inline FO SVG — smallest hand-built (no class sheet, no snapdom)",
+      "svgMode": "static-minimal",
+      "markupBytes": 43,
+      "svgBytes": 572,
+      "handBuilt": {
+        "method": "static-inline-foreignObject-svg",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.296875
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.3046875
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true,
+      "staticMinimalSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"492\" height=\"50\" viewBox=\"0 0 492 50\"><foreignObject width=\"100%\" height=\"100%\"><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"margin:0;padding:0;box-sizing:border-box;width:492px;font:600 16px/1.35 system-ui,-apple-system,sans-serif;background:#fff;border:1px solid #e2e8f0\"><div style=\"display:flex;align-items:stretch;min-height:48px;box-sizing:border-box\"><a href=\"#\" style=\"display:flex;align-items:center;padding:0 12px;text-decoration:none;color:#111;box-sizing:border-box\">Home</a></div></div></foreignObject></svg>"
+    },
+    {
+      "id": "single-link-stretch",
+      "description": "One flex row + one stretched link (fixture CSS + outerHTML)",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 43,
+      "svgBytes": 701,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.296875
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.3046875
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    },
+    {
+      "id": "no-min-height",
+      "description": "Drop min-height:48px on flex row",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 68,
+      "svgBytes": 726,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 24
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    },
+    {
+      "id": "no-anchor-padding",
+      "description": "Drop anchor horizontal padding",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 61,
+      "svgBytes": 719,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.203125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.296875
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203125,
+          "svgPaintedTopInBorder": 14.1953125,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": -0.0078125,
+          "liveVsCanvasTopPx": 3.296875,
+          "svgVsCanvasTopPx": 3.3046875
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    },
+    {
+      "id": "baseline-align",
+      "description": "align-items:baseline on flex row (not stretch)",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 72,
+      "svgBytes": 730,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    },
+    {
+      "id": "bare-text-in-flex",
+      "description": "Text leaf directly in flex row (no anchor wrapper)",
+      "svgMode": "fixture-css-outerHTML",
+      "markupBytes": 40,
+      "svgBytes": 698,
+      "handBuilt": {
+        "method": "fixture-css-plus-capture-target-outerHTML-in-foreignObject",
+        "usesSnapdomCapture": false,
+        "fixtureDims": {
+          "cssW": 492,
+          "cssH": 50
+        },
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true,
+        "reproducesDrift": true
+      },
+      "snapdomBaseline": {
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "bitmapOnlyDrift": true
+      },
+      "snapdomMatchesHandBuilt": true
+    }
+  ],
+  "threeWay": {
+    "livePaintedTopInBorder": 14.203125,
+    "svgPaintedTopInBorder": 14.203125,
+    "canvasPaintedTopInBorder": 17.5,
+    "liveVsSvgTopPx": 0,
+    "liveVsCanvasTopPx": 3.296875,
+    "svgVsCanvasTopPx": 3.296875
+  },
+  "summary": {
+    "handBuiltCanvasDriftPx": 3.296875,
+    "handBuiltSvgDriftPx": 0,
+    "snapdomCanvasDriftPx": 3.296875,
+    "snapdomSvgDriftPx": -0.0078125,
+    "snapdomMatchesHandBuilt": true
+  },
+  "generatedAt": "2026-06-02T16:17:22.730Z",
+  "port": 8765,
+  "commands": [
+    "npm run compile",
+    "npm run debug:fo-minimal-repro",
+    "node __localtests__/fo-minimal-repro.mjs --variant static-inline-flex"
+  ]
+}

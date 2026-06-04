@@ -1,0 +1,160 @@
+{
+  "generatedAt": "2026-06-02T16:23:03.011Z",
+  "headed": true,
+  "port": 8791,
+  "plateauReferencePx": 2.797,
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 1,
+  "scale": 1,
+  "baselineCanvasDeltaPx": 2.796875,
+  "captureMetaAlign": {
+    "w0": 500,
+    "h0": 50,
+    "vbW": 500,
+    "vbH": 50,
+    "targetW": 500,
+    "targetH": 50,
+    "inkTopFracInBorder": 0.2958984375,
+    "inkTopFracExpected": 0.39013671875,
+    "inkRefBorderH": 48,
+    "inkTopInRootFrac": 0.3040625
+  },
+  "variants": [
+    {
+      "id": "baseline",
+      "flags": {
+        "experimentalCaptureInkMeta": false,
+        "experimentalRasterInkAlign": false
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "vbW": 500,
+        "vbH": 50,
+        "targetW": 500,
+        "targetH": 50
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "liveInkTopInBorder": 14.203125
+    },
+    {
+      "id": "capture-meta-only",
+      "flags": {
+        "experimentalCaptureInkMeta": true,
+        "experimentalRasterInkAlign": false
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "vbW": 500,
+        "vbH": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "inkTopFracInBorder": 0.2958984375,
+        "inkTopFracExpected": 0.39013671875,
+        "inkRefBorderH": 48,
+        "inkTopInRootFrac": 0.3040625
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "liveInkTopInBorder": 14.203125
+    },
+    {
+      "id": "raster-align-only",
+      "flags": {
+        "experimentalCaptureInkMeta": false,
+        "experimentalRasterInkAlign": true
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "vbW": 500,
+        "vbH": 50,
+        "targetW": 500,
+        "targetH": 50
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875
+      },
+      "liveInkTopInBorder": 14.203125
+    },
+    {
+      "id": "ink-meta-align",
+      "flags": {
+        "experimentalCaptureInkMeta": true,
+        "experimentalRasterInkAlign": true
+      },
+      "captureMeta": {
+        "w0": 500,
+        "h0": 50,
+        "vbW": 500,
+        "vbH": 50,
+        "targetW": 500,
+        "targetH": 50,
+        "inkTopFracInBorder": 0.2958984375,
+        "inkTopFracExpected": 0.39013671875,
+        "inkRefBorderH": 48,
+        "inkTopInRootFrac": 0.3040625
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 12,
+        "liveVsCanvasTopPx": -2.203125,
+        "svgVsCanvasTopPx": -2.1953125
+      },
+      "liveInkTopInBorder": 14.203125
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "baseline",
+      "canvasDeltaPx": 2.796875,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "capture-meta-only",
+      "canvasDeltaPx": 2.796875,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "raster-align-only",
+      "canvasDeltaPx": 2.796875,
+      "deltaFromBaselinePx": 0
+    },
+    {
+      "id": "ink-meta-align",
+      "canvasDeltaPx": -2.203125,
+      "deltaFromBaselinePx": -5
+    }
+  ],
+  "evaluation": {
+    "verdict": "INK_META_PARTIAL",
+    "atPlateau": true,
+    "improved": true,
+    "lines": [
+      "Baseline canvasΔ=2.797px (|Δ|=2.797px).",
+      "Capture meta: inkTopFracInBorder=0.296 expected=0.39 refBorderH=48.",
+      "Fraction delta (measured−expected)=-0.094.",
+      "ink-meta-align canvasΔ=-2.203px.",
+      "ink-meta-align improved |canvasΔ| vs baseline."
+    ],
+    "fixed": true
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-ink-bounds-scan e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  {
+    "imports": {
+      "image-trim": "https://esm.sh/image-trim@1.0.0"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="fixture" width="120" height="100"></canvas>
+  <script type="module">
+    import {
+      DEFAULT_INK_BACKEND,
+      ensureInkScanBackend,
+      inkTopIntegerRowFromImageData,
+      registerImageTrimGetBorders,
+      scanCanvasInkTopFromImageData,
+    } from './fo-ink-bounds-scan.mjs'
+
+    const EXPECT_ROW = 45
+    const TOL = 5
+    const SCAN_OPTS = {
+      mode: 'integer',
+      capCrest: true,
+      refineUpward: true,
+      minRowCoverage: 0.02,
+      lumMax: 170,
+      minAlpha: 32,
+    }
+
+    function paintFixture(canvas) {
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#111'
+      ctx.fillRect(20, EXPECT_ROW, 60, 8)
+    }
+
+    async function scanBackend(name, canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      let row = null
+      let backend = name
+
+      if (name === 'native') {
+        row = inkTopIntegerRowFromImageData(data, canvas.width, canvas.height, SCAN_OPTS)
+        backend = 'native-lum'
+      } else if (name === 'image-trim') {
+        await ensureInkScanBackend('image-trim')
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        const scan = scanCanvasInkTopFromImageData(data, canvas.width, canvas.height, {
+          ...SCAN_OPTS,
+          backend: 'image-trim',
+        })
+        row = scan.integerRow
+        backend = scan.backend ?? 'image-trim'
+      } else if (name === 'opencv') {
+        try {
+          await ensureInkScanBackend('opencv', { timeoutMs: 90_000 })
+        } catch (err) {
+          return { backend: name, row: null, err: Infinity, pass: true, skipped: true, error: String(err?.message || err) }
+        }
+        if (!globalThis.cv?.Mat) {
+          return { backend: name, row: null, err: Infinity, pass: true, skipped: true }
+        }
+        const lumMax = SCAN_OPTS.lumMax
+        const cv = globalThis.cv
+        const src = cv.matFromImageData({ data, width: canvas.width, height: canvas.height })
+        const gray = new cv.Mat()
+        const binary = new cv.Mat()
+        try {
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
+          cv.threshold(gray, binary, lumMax, 255, cv.THRESH_BINARY_INV)
+          const rect = cv.boundingRect(binary)
+          if (rect?.height >= 1) {
+            row = rect.y
+            backend = 'opencv'
+          }
+        } catch (err) {
+          return { backend: name, row: null, err: Infinity, pass: true, skipped: true, error: String(err?.message || err) }
+        } finally {
+          src.delete()
+          gray.delete()
+          binary.delete()
+        }
+      }
+
+      const err = row == null ? Infinity : Math.abs(row - EXPECT_ROW)
+      return { backend, row, err, pass: err <= TOL, skipped: false }
+    }
+
+    window.__foInkBoundsScanE2e = {
+      ready: true,
+      bootError: null,
+      defaultBackend: DEFAULT_INK_BACKEND,
+      async run() {
+        const canvas = document.getElementById('fixture')
+        paintFixture(canvas)
+        const backends = ['native', 'image-trim', 'opencv']
+        const results = []
+        for (const b of backends) {
+          results.push(await scanBackend(b, canvas))
+        }
+        const required = results.filter((r) => !r.skipped)
+        const pass = required.length > 0 && required.every((r) => r.pass)
+        return { expectRow: EXPECT_ROW, tol: TOL, results, pass }
+      },
+    }
+
+  </script>
+</body>
+</html>

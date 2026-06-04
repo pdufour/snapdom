@@ -1,0 +1,243 @@
+{
+  "generatedAt": "2026-06-02T16:53:04.495Z",
+  "landmark": "Home",
+  "dpr": 1,
+  "referencePlateauAbsCanvasDeltaPx": 2.797,
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-pin-lh-used-value",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-lh-normal-leaf",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-lh-1-leaf",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-lh-fontsize-px",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-vertical-align-baseline",
+      "liveVsSvgTopPx": -13.203125,
+      "liveVsCanvasTopPx": -10.203125,
+      "absCanvasDeltaPx": 10.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-used",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-normal-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-1-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-1em-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": -10.203125,
+      "absCanvasDeltaPx": 10.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-combo-lh-baseline",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": -12.203125,
+      "absCanvasDeltaPx": 12.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-flex-start-fo",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": -11.203125,
+      "absCanvasDeltaPx": 11.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-pin-lh",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-lh-normal",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-baseline-fix",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": -11.203125,
+      "absCanvasDeltaPx": 11.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": -11.203125,
+      "absCanvasDeltaPx": 11.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-combo-lh-baseline",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": -12.203125,
+      "absCanvasDeltaPx": 12.203125
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-lh-1-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-flex-text-leaf-align-start",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-fo-height-linebox",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-combo-lh-flexstart",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-raster-meta-ink-align",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-raster-backing-ceil",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-raster-decode-settle",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-raster-no-gbcr",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-pin-lh-backing-ceil",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-rfork-pin-lh-backing-ceil",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-rfork-pin-lh-decode-settle",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-decode-settle",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-full-lh-raster",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-text-w1-pin-lh-leaf-live",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-text-w1-lh-1em-leaf",
+      "liveVsSvgTopPx": 0.296875,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    },
+    {
+      "recipeId": "tc-text-w1-vertical-align-top-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-text-w1-display-inline-leaf",
+      "liveVsSvgTopPx": -13.203125,
+      "liveVsCanvasTopPx": -10.203125,
+      "absCanvasDeltaPx": 10.203125
+    },
+    {
+      "recipeId": "tc-text-w1-rfork-leading-trim-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "absCanvasDeltaPx": 2.796875
+    },
+    {
+      "recipeId": "tc-text-w1-rfork-lh-normal-leaf",
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 3.796875,
+      "absCanvasDeltaPx": 3.796875
+    }
+  ],
+  "summary": {
+    "baselineAbsCanvasDeltaPx": 2.796875,
+    "bestRecipeId": "product-baseline",
+    "bestAbsCanvasDeltaPx": 2.796875,
+    "beatsBaseline": false,
+    "promotable": false
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "probe": "line-box-strut-math",
+  "generatedAt": "2026-06-02T16:17:26.741Z",
+  "port": 9930,
+  "headed": true,
+  "fixture": "mini-nav",
+  "landmark": "Home",
+  "dpr": 2,
+  "scale": 1,
+  "recipeId": "product-baseline",
+  "commands": [
+    "npm run compile",
+    "SNAPDOM_LOCAL_PORT=9930 node __localtests__/line-box-strut-math.mjs"
+  ],
+  "strutMath": {
+    "fontSizePx": 16,
+    "lineHeightPx": 21.6,
+    "lineHeightComputed": "21.6px",
+    "contentBoxPx": 48,
+    "fontBoxHeightPx": 18,
+    "borderTopPx": 0,
+    "paddingTopPx": 0,
+    "paddingBottomPx": 0,
+    "boxHeightPx": 48,
+    "halfLeadingLhFs": 2.8,
+    "halfStrutContentLh": 13.2,
+    "halfLeadingFontMetrics": 1.8
+  },
+  "topsInBorder": {
+    "liveRangeTopInBorder": 14.203,
+    "capModelTopInBorder": 18.727,
+    "inlineSvgTopInBorder": 14.195,
+    "canvasTopInBorder": 17.5
+  },
+  "offsetsFromLiveRange": {
+    "capModelOffsetPx": 4.523,
+    "inlineSvgOffsetPx": -0.008,
+    "canvasOffsetPx": 3.297
+  },
+  "capModelHalfLeading": 1.8,
+  "threeWay": {
+    "liveVsCanvasTopPx": 3.297,
+    "liveVsSvgTopPx": -0.008,
+    "deltaTopCapModel": -1.227,
+    "deltaSvgCapModel": 0
+  },
+  "analysis": {
+    "metrics": {
+      "halfLeadingLhFs": 2.8,
+      "halfStrutContentLh": 13.2,
+      "halfLeadingFontMetrics": 1.8,
+      "capModelHalfLeading": 1.8,
+      "capModelOffsetFromLive": 4.523,
+      "inlineSvgOffsetFromLive": -0.008,
+      "paddingTopPx": 0,
+      "borderTopPx": 0,
+      "lineHeightPx": 21.6,
+      "fontSizePx": 16,
+      "contentBoxPx": 48,
+      "fontBoxHeightPx": 18
+    },
+    "correlation": {
+      "matchEpsilonPx": 0.06,
+      "canvasOffsetPx": 3.297,
+      "rows": [
+        {
+          "id": "halfLeadingLhFs",
+          "value": 2.8,
+          "deltaSigned": 0.497,
+          "deltaAbs": 0.497
+        },
+        {
+          "id": "capModelOffsetFromLive",
+          "value": 4.523,
+          "deltaSigned": -1.226,
+          "deltaAbs": 1.226
+        },
+        {
+          "id": "halfLeadingFontMetrics",
+          "value": 1.8,
+          "deltaSigned": 1.497,
+          "deltaAbs": 1.497
+        },
+        {
+          "id": "capModelHalfLeading",
+          "value": 1.8,
+          "deltaSigned": 1.497,
+          "deltaAbs": 1.497
+        },
+        {
+          "id": "inlineSvgOffsetFromLive (negated)",
+          "value": 0.008,
+          "deltaSigned": 3.289,
+          "deltaAbs": 3.289
+        },
+        {
+          "id": "paddingTopPx",
+          "value": 0,
+          "deltaSigned": 3.297,
+          "deltaAbs": 3.297
+        },
+        {
+          "id": "paddingTopPx (negated)",
+          "value": 0,
+          "deltaSigned": 3.297,
+          "deltaAbs": 3.297
+        },
+        {
+          "id": "borderTopPx",
+          "value": 0,
+          "deltaSigned": 3.297,
+          "deltaAbs": 3.297
+        },
+        {
+          "id": "borderTopPx (negated)",
+          "value": 0,
+          "deltaSigned": 3.297,
+          "deltaAbs": 3.297
+        },
+        {
+          "id": "inlineSvgOffsetFromLive",
+          "value": -0.008,
+          "deltaSigned": 3.305,
+          "deltaAbs": 3.305
+        },
+        {
+          "id": "halfLeadingFontMetrics (negated)",
+          "value": -1.8,
+          "deltaSigned": 5.097,
+          "deltaAbs": 5.097
+        },
+        {
+          "id": "capModelHalfLeading (negated)",
+          "value": -1.8,
+          "deltaSigned": 5.097,
+          "deltaAbs": 5.097
+        },
+        {
+          "id": "halfLeadingLhFs (negated)",
+          "value": -2.8,
+          "deltaSigned": 6.097,
+          "deltaAbs": 6.097
+        },
+        {
+          "id": "capModelOffsetFromLive (negated)",
+          "value": -4.523,
+          "deltaSigned": 7.82,
+          "deltaAbs": 7.82
+        },
+        {
+          "id": "halfStrutContentLh",
+          "value": 13.2,
+          "deltaSigned": -9.903,
+          "deltaAbs": 9.903
+        },
+        {
+          "id": "fontSizePx",
+          "value": 16,
+          "deltaSigned": -12.703,
+          "deltaAbs": 12.703
+        },
+        {
+          "id": "fontBoxHeightPx",
+          "value": 18,
+          "deltaSigned": -14.703,
+          "deltaAbs": 14.703
+        },
+        {
+          "id": "halfStrutContentLh (negated)",
+          "value": -13.2,
+          "deltaSigned": 16.497,
+          "deltaAbs": 16.497
+        },
+        {
+          "id": "lineHeightPx",
+          "value": 21.6,
+          "deltaSigned": -18.303,
+          "deltaAbs": 18.303
+        },
+        {
+          "id": "fontSizePx (negated)",
+          "value": -16,
+          "deltaSigned": 19.297,
+          "deltaAbs": 19.297
+        },
+        {
+          "id": "fontBoxHeightPx (negated)",
+          "value": -18,
+          "deltaSigned": 21.297,
+          "deltaAbs": 21.297
+        },
+        {
+          "id": "lineHeightPx (negated)",
+          "value": -21.6,
+          "deltaSigned": 24.897,
+          "deltaAbs": 24.897
+        },
+        {
+          "id": "contentBoxPx",
+          "value": 48,
+          "deltaSigned": -44.703,
+          "deltaAbs": 44.703
+        },
+        {
+          "id": "contentBoxPx (negated)",
+          "value": -48,
+          "deltaSigned": 51.297,
+          "deltaAbs": 51.297
+        }
+      ],
+      "matches": [],
+      "best": {
+        "id": "halfLeadingLhFs",
+        "value": 2.8,
+        "deltaSigned": 0.497,
+        "deltaAbs": 0.497
+      },
+      "notes": [
+        "Closest single metric: halfLeadingLhFs=2.8px — |canvasOffset−metric|=0.497px (canvasOffset=3.297px).",
+        "No single computed metric within 0.06px of canvas offset."
+      ]
+    },
+    "notes": [
+      "Closest single metric: halfLeadingLhFs=2.8px — |canvasOffset−metric|=0.497px (canvasOffset=3.297px).",
+      "No single computed metric within 0.06px of canvas offset.",
+      "Inline SVG ink ≈ live Range — canvas gap is FO→bitmap raster, not serialization.",
+      "Strut: (lh−fs)/2=2.8px; (contentBox−lh)/2=13.2px; contentBox=48px lh=21.6px."
+    ]
+  },
+  "conclusion": "Closest single metric: halfLeadingLhFs=2.8px — |canvasOffset−metric|=0.497px (canvasOffset=3.297px). No single computed metric within 0.06px of canvas offset. Inline SVG ink ≈ live Range — canvas gap is FO→bitmap raster, not serialization. Strut: (lh−fs)/2=2.8px; (contentBox−lh)/2=13.2px; contentBox=48px lh=21.6px."
+}

@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-06-03T00:19:56.994Z",
+  "workspace": "/Users/pauldufour/Repos/snapdom",
+  "battery": [
+    {
+      "id": "compile",
+      "script": "npm run compile",
+      "status": "pass",
+      "exitCode": 0
+    },
+    {
+      "id": "test:fo-smoke-active",
+      "script": "npm run test:fo-smoke-active",
+      "status": "fail",
+      "exitCode": 1,
+      "note": "fo-fix-recipe-shared.js:228 SyntaxError Unexpected token : (TS JSDoc in .js)"
+    },
+    {
+      "id": "test:fo-three-way",
+      "script": "npm run test:fo-three-way",
+      "status": "skipped",
+      "note": "not run; OR with test:fo-smoke-active (both present in package.json)"
+    },
+    {
+      "id": "chromium-fo-only-probe",
+      "script": "node __localtests__/chromium-fo-only-probe.mjs",
+      "status": "pass",
+      "exitCode": 0,
+      "env": {
+        "SNAPDOM_LOCAL_PORT": 19487
+      },
+      "note": "default port 8765 in use; passed on SNAPDOM_LOCAL_PORT=19487",
+      "artifact": ".sandbox-edit/chromium-fo-only-probe.json"
+    },
+    {
+      "id": "fo-fix-lab-calibrate",
+      "script": "node __localtests__/fo-fix-lab.mjs --calibrate --ids 'product-baseline,tc-fix-w7-rfork-fo-y-half-leading-meta' --landmarks Home,Products --open-browser",
+      "status": "fail",
+      "exitCode": 1,
+      "note": "same fo-fix-recipe-shared.js SyntaxError; did not reach browser calibrate"
+    }
+  ],
+  "summary": {
+    "pass": 2,
+    "fail": 2,
+    "skipped": 1
+  },
+  "overall": "fail"
+}

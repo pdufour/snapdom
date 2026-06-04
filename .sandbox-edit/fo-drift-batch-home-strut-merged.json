@@ -1,0 +1,98 @@
+{
+  "landmark": "Home",
+  "limit": 30,
+  "offsets": [
+    0,
+    30,
+    60
+  ],
+  "matrixIds": [
+    "product-baseline",
+    "tc-blh-*",
+    "tc-fix-w7-*",
+    "tc-fix-w16-*",
+    "tc-fix-w18-*"
+  ],
+  "recipeCount": 65,
+  "baselineAbsCanvasVsLive": 1.1875,
+  "blackboxGate": "Home paint.canvas.vs-border.top default ≈ -0.91px; do not promote fo-y-strut-range-meta (-1.91) or fo-y-half-leading-meta (-1.91)",
+  "top10": [
+    {
+      "offset": 0,
+      "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 0,
+      "id": "tc-fix-w16-rfork-leaf-subpx-positive-only",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 30,
+      "id": "tc-blh-w1-lh-normal-leaf",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 30,
+      "id": "tc-blh-w1-rfork-lh-normal-leaf",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 30,
+      "id": "tc-blh-w1-combo-capture-rfork-lh-normal",
+      "canvasVsLive": -0.1875,
+      "absCanvasVsLive": 0.1875,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 60,
+      "id": "tc-blh-w2-rfork-strut-translate-y-meta",
+      "canvasVsLive": -1,
+      "absCanvasVsLive": 1,
+      "beatsBaseline": true
+    },
+    {
+      "offset": 0,
+      "id": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "tc-fix-w16-rfork-w7-viewbox-subpx",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "tc-fix-w16-rfork-w7-leaf-subpx-draw",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    },
+    {
+      "offset": 0,
+      "id": "tc-fix-w16-rfork-viewbox-fo-adjust-trim",
+      "canvasVsLive": -1.1875,
+      "absCanvasVsLive": 1.1875,
+      "beatsBaseline": false
+    }
+  ],
+  "best": {
+    "offset": 0,
+    "id": "tc-fix-w7-capture-parent-lh-leaf-pin",
+    "canvasVsLive": -0.1875,
+    "absCanvasVsLive": 0.1875,
+    "beatsBaseline": true
+  }
+}

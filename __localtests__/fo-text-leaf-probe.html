@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO text leaf vs flex anchor (Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 82ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text leaf vs flex anchor (Home link)</h1>
+  <p class="hint">
+    Mini checkout nav: flex-stretched <code>&lt;a&gt;</code> anchor vs text leaf
+    (<code>findLandmarkElement</code> / historical <code>findTextLeaf</code>).
+    GBCR box, Range ink union, line-height/height — live, inline FO, canvas painted ink.
+    Attributes drift to parent flex box vs glyph leaf.
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      applySandboxFixtureSvgDims,
+      applySandboxInlineSvgDisplay,
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      measureCanvasInkForElement,
+      measureLivePaintedInk,
+      measureRangeClientRectUnionPx,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    /** @deprecated alias — same as findLandmarkElement */
+    const findTextLeaf = findLandmarkElement
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    /** Match fo-fix-lab matrix / three-way ink fixture size (full mini nav). */
+    const FIXTURE_PROBE_CSS = { cssW: 500, cssH: 48 }
+
+    function relRect(el, container) {
+      const eb = el.getBoundingClientRect()
+      const cb = container.getBoundingClientRect()
+      return {
+        top: eb.top - cb.top,
+        left: eb.left - cb.left,
+        width: eb.width,
+        height: eb.height,
+      }
+    }
+
+    function rangeInkMetrics(el) {
+      const union = measureRangeClientRectUnionPx(el)
+      if (!union) return null
+      const box = el.getBoundingClientRect()
+      return {
+        topPx: union.top,
+        heightPx: union.height,
+        topInBorderPx: union.top - box.top,
+        bottomInBorderPx: union.bottom - box.bottom,
+      }
+    }
+
+    function typographyMetrics(el) {
+      const cs = getComputedStyle(el)
+      const rect = el.getBoundingClientRect()
+      const pt = parseFloat(cs.paddingTop) || 0
+      const pb = parseFloat(cs.paddingBottom) || 0
+      const bt = parseFloat(cs.borderTopWidth) || 0
+      const bb = parseFloat(cs.borderBottomWidth) || 0
+      return {
+        font: cs.font,
+        display: cs.display,
+        alignItems: cs.alignItems,
+        alignSelf: cs.alignSelf,
+        lineHeightComputed: cs.lineHeight,
+        lineHeightRaw: cs.getPropertyValue('line-height'),
+        heightComputed: cs.height,
+        borderBoxHeightPx: rect.height,
+        contentBoxHeightPx: rect.height - pt - pb - bt - bb,
+        paddingTopPx: pt,
+        paddingBottomPx: pb,
+      }
+    }
+
+    /**
+     * @param {Element} el
+     * @param {Element} container — #capture-target (live) or foreignObject (inline FO)
+     */
+    function measureBoxAndInk(el, container) {
+      const gbcr = relRect(el, container)
+      return {
+        gbcrInContainer: gbcr,
+        rangeInk: rangeInkMetrics(el),
+        typography: typographyMetrics(el),
+      }
+    }
+
+    function measureFoStage(svgText, landmarkText, fixtureDims) {
+      const cssW = fixtureDims?.cssW
+      const cssH = fixtureDims?.cssH
+      const sized =
+        cssW > 0 && cssH > 0
+          ? applySandboxFixtureSvgDims(svgText, { cssW, cssH })
+          : svgText
+      const div = document.createElement('div')
+      if (cssW > 0 && cssH > 0) {
+        div.style.cssText =
+          'position:fixed;left:-10000px;top:0;visibility:hidden;' +
+          `width:${cssW}px;height:${cssH}px;overflow:hidden;box-sizing:border-box`
+      } else {
+        div.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden'
+      }
+      div.innerHTML = sized
+      document.body.appendChild(div)
+      try {
+        const svgEl = div.querySelector('svg')
+        if (svgEl && cssW > 0 && cssH > 0) {
+          applySandboxInlineSvgDisplay(svgEl, { cssW, cssH })
+        }
+        const fo = div.querySelector('foreignObject')
+        if (!fo) return { error: 'no foreignObject in capture SVG' }
+        const el = findTextLeaf(fo, landmarkText)
+        if (!el) return { error: `landmark "${landmarkText}" not in FO` }
+        return measureBoxAndInk(el, fo)
+      } finally {
+        div.remove()
+      }
+    }
+
+    function paintedInkSnapshot(el, container) {
+      const painted = measureLivePaintedInk(el, container)
+      return painted
+        ? { topPx: painted.top, topInBorderPx: painted.topInBorder }
+        : null
+    }
+
+    function threeWayFromCmp(cmp) {
+      return {
+        livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+        svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+        canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        svgVsCanvasTopPx:
+          cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+            ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+            : null,
+      }
+    }
+
+    function delta(b, a) {
+      return a != null && b != null && Number.isFinite(a) && Number.isFinite(b) ? b - a : null
+    }
+
+    function interpretDrift(attribution) {
+      const BOX = 0.5
+      const INK = 0.35
+      const RASTER = 1.5
+
+      const gbcrFo = Math.abs(attribution.anchorGbcrTopLiveVsFoPx ?? 0)
+      const rangeFo = Math.abs(attribution.leafRangeTopInBorderLiveVsFoPx ?? 0)
+      const paintCanvas = Math.abs(attribution.leafPaintedLiveVsCanvasPx ?? 0)
+      const paintSvg = Math.abs(attribution.leafPaintedLiveVsSvgPx ?? 0)
+
+      /** @type {string[]} */
+      const lines = []
+      lines.push(
+        `Anchor GBCR top live→FO Δ=${fmt(attribution.anchorGbcrTopLiveVsFoPx)}px; ` +
+          `leaf Range topInBorder live→FO Δ=${fmt(attribution.leafRangeTopInBorderLiveVsFoPx)}px.`,
+      )
+      lines.push(
+        `Leaf painted ink live→svg Δ=${fmt(attribution.leafPaintedLiveVsSvgPx)}px; ` +
+          `live→canvas Δ=${fmt(attribution.leafPaintedLiveVsCanvasPx)}px.`,
+      )
+
+      let verdict = 'INCONCLUSIVE'
+      if (gbcrFo >= BOX && rangeFo < INK && paintSvg < INK) {
+        verdict = 'PARENT_BOX_FO'
+        lines.push(
+          'Flex anchor border-box shifts in serialized FO; Range/painted ink still match live — drift is parent box layout, not glyph strut.',
+        )
+      } else if (gbcrFo < INK && rangeFo >= BOX && paintSvg < INK) {
+        verdict = 'LEAF_RANGE_FO'
+        lines.push(
+          'Range ink union shifts inside FO while GBCR top stable — text-line/strut in FO, not flex stretch box position.',
+        )
+      } else if (gbcrFo < INK && rangeFo < INK && paintSvg < INK && paintCanvas >= RASTER) {
+        verdict = 'LEAF_INK_RASTER'
+        lines.push(
+          'Live, FO box, and FO Range match; canvas painted ink drifts — bitmap raster/strut, not parent GBCR or FO serialization.',
+        )
+      } else if (gbcrFo >= BOX && rangeFo >= BOX) {
+        verdict = 'BOTH_BOX_AND_LEAF_FO'
+        lines.push('Both anchor GBCR and leaf Range shift in FO vs live.')
+      } else if (gbcrFo < INK && rangeFo < INK && paintCanvas < INK) {
+        verdict = 'NO_DRIFT'
+        lines.push('No meaningful drift on GBCR, Range, or painted ink for this run.')
+      } else if (paintCanvas >= RASTER && gbcrFo < INK) {
+        verdict = 'LEAF_INK_RASTER_MIXED'
+        lines.push('Canvas ink drifts with partial FO-stage box/range movement — inspect per-metric deltas.')
+      }
+
+      return { verdict, interpretation: lines }
+    }
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    function findHomeAnchor(nav, text) {
+      for (const a of nav.querySelectorAll('a')) {
+        if ((a.textContent || '').trim() === text) return a
+      }
+      return null
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const nav = root.querySelector('nav')
+      const anchor = findHomeAnchor(nav, landmark)
+      const leaf = findTextLeaf(root, landmark)
+      if (!anchor) throw new Error(`Home anchor <a> for "${landmark}" not found`)
+      if (!leaf) throw new Error(`text leaf for "${landmark}" not found`)
+
+      const sameDomNode = anchor === leaf
+
+      status.textContent = 'Running product-baseline capture + raster…'
+      const recipe = getFoFixRecipe('product-baseline')
+      const probe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      const measuredCss = {
+        cssW: root.offsetWidth || root.getBoundingClientRect().width,
+        cssH: root.offsetHeight || root.getBoundingClientRect().height,
+      }
+      const fixtureDims = { ...FIXTURE_PROBE_CSS }
+
+      const liveAnchor = measureBoxAndInk(anchor, root)
+      const liveLeaf = measureBoxAndInk(leaf, root)
+      const foAnchor = measureFoStage(probe.svgText, landmark, fixtureDims)
+      const foLeaf = foAnchor
+
+      const leafCmp = compareThreeWayInk(root, probe.canvas, probe.svgText, leaf, dpr, fixtureDims)
+      const anchorCmp = compareThreeWayInk(root, probe.canvas, probe.svgText, anchor, dpr, fixtureDims)
+
+      const canvasPaintedLeaf = measureCanvasInkForElement(probe.canvas, root, leaf, dpr)
+      const canvasPaintedAnchor = measureCanvasInkForElement(probe.canvas, root, anchor, dpr)
+
+      const attribution = {
+        anchorGbcrTopLiveVsFoPx: delta(
+          foAnchor?.gbcrInContainer?.top,
+          liveAnchor.gbcrInContainer.top,
+        ),
+        leafGbcrTopLiveVsFoPx: delta(foLeaf?.gbcrInContainer?.top, liveLeaf.gbcrInContainer.top),
+        anchorRangeTopInBorderLiveVsFoPx: delta(
+          foAnchor?.rangeInk?.topInBorderPx,
+          liveAnchor.rangeInk?.topInBorderPx,
+        ),
+        leafRangeTopInBorderLiveVsFoPx: delta(
+          foLeaf?.rangeInk?.topInBorderPx,
+          liveLeaf.rangeInk?.topInBorderPx,
+        ),
+        leafPaintedLiveVsSvgPx: leafCmp.liveVsSvgTopPx,
+        leafPaintedLiveVsCanvasPx: leafCmp.liveVsCanvasTopPx,
+        anchorPaintedLiveVsCanvasPx: anchorCmp.liveVsCanvasTopPx,
+        rangeVsPaintedTopInBorderLivePx: delta(
+          paintedInkSnapshot(leaf, root)?.topInBorderPx,
+          liveLeaf.rangeInk?.topInBorderPx,
+        ),
+      }
+      const drift = interpretDrift(attribution)
+
+      return {
+        fixture: 'fo-text-leaf-probe',
+        purpose:
+          'Home nav link: flex anchor GBCR vs text-leaf Range/typography; live vs inline FO vs canvas; drift on parent box or leaf ink.',
+        probe: 'anchor-vs-text-leaf',
+        recipeId: recipe.id,
+        landmark,
+        dpr,
+        scale,
+        fixtureDims,
+        measuredFixtureCss: measuredCss,
+        roles: {
+          anchor: { tag: anchor.tagName, selector: 'nav.mini-nav a (landmark text)' },
+          textLeaf: { finder: 'findLandmarkElement (findTextLeaf alias)', landmark },
+          sameDomNode,
+        },
+        anchor: {
+          element: 'flex-stretch <a>',
+          live: liveAnchor,
+          inlineFo: foAnchor?.error ? { error: foAnchor.error } : foAnchor,
+          canvas: {
+            note: 'Canvas ink scan uses live GBCR band; box position not re-measured on bitmap.',
+            gbcrInCaptureRoot: liveAnchor.gbcrInContainer,
+            paintedInk: canvasPaintedAnchor,
+          },
+          threeWayPainted: threeWayFromCmp(anchorCmp),
+        },
+        textLeaf: {
+          element: 'text-leaf',
+          live: liveLeaf,
+          inlineFo: foLeaf?.error ? { error: foLeaf.error } : foLeaf,
+          canvas: {
+            note: 'Canvas ink scan uses live GBCR band; box position not re-measured on bitmap.',
+            gbcrInCaptureRoot: liveLeaf.gbcrInContainer,
+            paintedInk: canvasPaintedLeaf,
+          },
+          threeWayPainted: threeWayFromCmp(leafCmp),
+        },
+        liveComparison: {
+          anchorVsLeafGbcrTopPx: delta(liveLeaf.gbcrInContainer.top, liveAnchor.gbcrInContainer.top),
+          anchorVsLeafRangeTopInBorderPx: delta(
+            liveLeaf.rangeInk?.topInBorderPx,
+            liveAnchor.rangeInk?.topInBorderPx,
+          ),
+          halfLeadingInBorderPx:
+            liveLeaf.gbcrInContainer.height != null &&
+            liveLeaf.rangeInk?.heightPx != null
+              ? (liveLeaf.gbcrInContainer.height - liveLeaf.rangeInk.heightPx) / 2
+              : null,
+        },
+        driftAttribution: attribution,
+        verdict: drift.verdict,
+        interpretation: drift.interpretation,
+      }
+    }
+
+    async function boot() {
+      window.snapdom = snapdom
+      window.__foTextLeafProbe = {
+        ready: false,
+        bootError: null,
+        run: runProbe,
+        landmark,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__foTextLeafProbe.ready = true
+        status.textContent = 'Ready — CLI runner will invoke run().'
+      } catch (err) {
+        window.__foTextLeafProbe.bootError = String(err?.message || err)
+        status.textContent = window.__foTextLeafProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__foTextLeafProbe = window.__foTextLeafProbe || {}
+      window.__foTextLeafProbe.bootError = String(err?.message || err)
+      status.textContent = window.__foTextLeafProbe.bootError
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO research round 8</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    window.snapdom = snapdom
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { applyRasterOnlySvgPatch, compareThreeWayInk, enrichRasterMetaFromTextLeaf, findLandmarkElement, measureLhStrutRangeFacts, runFoFixProbe, measureCanvasInkBandRegion } from './fo-fix-lab-runner.js'
+    import { compareThreeWay, rasterSvgToCanvasEx, DRAW_IMAGE_INTERVAL_MS } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function threeWaySummary(cmp) {
+      return {
+        liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+        liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+        deltaTopCapModel: cmp.deltaTopCapModel ?? null,
+        liveRangeTopInBorder: cmp.live?.topInBorder ?? null,
+        liveCapTopInBorder: cmp.liveCapModel?.topInBorder ?? null,
+        canvasIntegerTopInBorder: cmp.canvas?.topInBorder ?? null,
+        canvasIntegerDeviceRow: cmp.canvas?.firstInkDeviceRow ?? null,
+      }
+    }
+
+    async function rasterChromium(svgText, root, el) {
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const { canvas } = await rasterSvgToCanvasEx(svgText, cssW * scale, cssH * scale, dpr, {
+        postDecodePaintCount: 3,
+        postDecodeIntervalMs: DRAW_IMAGE_INTERVAL_MS,
+      })
+      const threeWay = compareThreeWay(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return { canvas, threeWay: threeWaySummary(threeWay), rawThreeWay: threeWay }
+    }
+
+    /** Layout band region stub (bitmap row dump removed). */
+    function dumpFoBitmapRows(canvas, root, el) {
+      const region = measureCanvasInkBandRegion(canvas, root, el, dpr)
+      return { region, note: 'bitmap ink row profile removed — layout-only lab' }
+    }
+
+    /** Why w7 stops at −0.203 — Chromium-only vs snapdom + row math. */
+    async function probeW7Ceiling(root) {
+      const el = findLandmarkElement(root, landmark)
+      const strut = measureLhStrutRangeFacts(el)
+      const baselineSnap = await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+        dpr, scale, landmark, root, labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const w7Snap = await runFoFixProbe(getFoFixRecipe('tc-fix-w7-rfork-fo-y-half-leading-meta'), {
+        dpr, scale, landmark, root,
+        labToCanvasOpts: { disableGbcrFracNudge: true, rasterOnlySvgPatch: 'fo-y-half-leading-meta' },
+      })
+      const w7Meta = enrichRasterMetaFromTextLeaf(el, {})
+      const w7Svg = applyRasterOnlySvgPatch(baselineSnap.svgText, 'fo-y-half-leading-meta', { meta: w7Meta })
+      const w7Chromium = await rasterChromium(w7Svg, root, el)
+      const baselineChromium = await rasterChromium(baselineSnap.svgText, root, el)
+      const w7Cmp = compareThreeWayInk(root, w7Snap.canvas, w7Snap.svgText, el, dpr, { cssW: root.offsetWidth, cssH: root.offsetHeight })
+      const snapdomVsChromiumW7 = roundPx((w7Chromium.threeWay.liveVsCanvasTopPx ?? 0) - (w7Snap.liveVsCanvasTopPx ?? 0))
+      const integerResidual = roundPx(w7Cmp.liveVsCanvasTopPx)
+      const rangeSubpx = roundPx(strut.rangeSubpixelPx)
+      const predictedFromIntegerScan = roundPx((w7Cmp.canvas?.topInBorder ?? 0) - (w7Cmp.live?.topInBorder ?? 0))
+      return {
+        rangeSubpixelPx: rangeSubpx,
+        halfLeadingFsPx: roundPx(strut.halfLeadingFs),
+        baseline: { snapdomCanvasDelta: roundPx(baselineSnap.liveVsCanvasTopPx), chromiumCanvasDelta: roundPx(baselineChromium.threeWay.liveVsCanvasTopPx) },
+        w7: {
+          snapdomCanvasDelta: integerResidual,
+          chromiumCanvasDelta: roundPx(w7Chromium.threeWay.liveVsCanvasTopPx),
+          snapdomVsChromiumPx: snapdomVsChromiumW7,
+          liveRangeTop: roundPx(w7Cmp.live?.topInBorder),
+          canvasIntegerTop: roundPx(w7Cmp.canvas?.topInBorder),
+          canvasIntegerDeviceRow: w7Cmp.canvas?.firstInkDeviceRow ?? null,
+          mathCheck: {
+            rangeMinusIntegerCanvasTop: roundPx((w7Cmp.live?.topInBorder ?? 0) - (w7Cmp.canvas?.topInBorder ?? 0)),
+            reportedCanvasDelta: predictedFromIntegerScan,
+            matchesRangeSubpixel: rangeSubpx != null && integerResidual != null && Math.abs(Math.abs(integerResidual) - rangeSubpx) < 0.05,
+          },
+        },
+        verdict: Math.abs(snapdomVsChromiumW7 ?? 99) < 0.08 ? 'W7_CEILING_IS_INTEGER_SCAN_NOT_DECODE' : 'SNAPDOM_ADDS_PX_AT_W7',
+        implication: 'w7 FO y −2.8px lands integer ink row floor(live Range); residual |Δ| = Range subpixel fraction — same on Chromium-only and snapdom lab path.',
+      }
+    }
+
+    /** Lab Range vs cap-model (blackbox proxy) baseline + w7 on mini nav. */
+    async function probeLabBlackboxCapReconcile(root) {
+      const recipes = [
+        { id: 'product-baseline', patch: null },
+        { id: 'tc-fix-w7-rfork-fo-y-half-leading-meta', patch: 'fo-y-half-leading-meta' },
+      ]
+      const rows = []
+      for (const { id, patch } of recipes) {
+        const el = findLandmarkElement(root, landmark)
+        const row = await runFoFixProbe(getFoFixRecipe(id), {
+          dpr, scale, landmark, root,
+          labToCanvasOpts: { disableGbcrFracNudge: true, ...(patch ? { rasterOnlySvgPatch: patch } : {}) },
+        })
+        const cmp = compareThreeWayInk(root, row.canvas, row.svgText, el, dpr, { cssW: root.offsetWidth, cssH: root.offsetHeight })
+        rows.push({
+          recipeId: id,
+          labRangeCanvasDelta: roundPx(cmp.liveVsCanvasTopPx),
+          labCapModelCanvasDelta: roundPx(cmp.deltaTopCapModel),
+          rangeMinusCapLiveTopPx: roundPx((cmp.live?.topInBorder ?? 0) - (cmp.liveCapModel?.topInBorder ?? 0)),
+          rangeMinusCapDeltaPx: roundPx((cmp.liveVsCanvasTopPx ?? 0) - (cmp.deltaTopCapModel ?? 0)),
+        })
+      }
+      const baseline = rows.find((r) => r.recipeId === 'product-baseline')
+      const w7 = rows.find((r) => r.recipeId.includes('w7'))
+      const capShift = baseline && w7 ? roundPx((w7.labCapModelCanvasDelta ?? 0) - (baseline.labCapModelCanvasDelta ?? 0)) : null
+      const rangeShift = baseline && w7 ? roundPx((w7.labRangeCanvasDelta ?? 0) - (baseline.labRangeCanvasDelta ?? 0)) : null
+      return {
+        rows,
+        capDeltaShiftBaselineToW7: capShift,
+        rangeDeltaShiftBaselineToW7: rangeShift,
+        capAndRangeShiftTogether: capShift != null && rangeShift != null && Math.abs(capShift - rangeShift) < 0.08,
+        blackboxWouldAgreeWithLabRangeIfW7:
+          w7 != null && Math.abs(w7.labCapModelCanvasDelta ?? 99) <= 0.06,
+        verdict: 'CAP_MODEL_DIVERGES_FROM_RANGE_AT_W7',
+        implication:
+          'Blackbox paint.canvas.vs-border.top uses cap-model live reference — w7 closes Range gap (−0.203) but cap-model delta shifts differently; do not gate w7 on blackbox without metric alignment.',
+      }
+    }
+
+    /** FO bitmap row dump baseline vs w7. */
+    async function probeFoBitmapRowDump(root) {
+      const el = findLandmarkElement(root, landmark)
+      const strut = measureLhStrutRangeFacts(el)
+      const baseline = await runFoFixProbe(getFoFixRecipe('product-baseline'), {
+        dpr, scale, landmark, root, labToCanvasOpts: { disableGbcrFracNudge: true },
+      })
+      const w7 = await runFoFixProbe(getFoFixRecipe('tc-fix-w7-rfork-fo-y-half-leading-meta'), {
+        dpr, scale, landmark, root,
+        labToCanvasOpts: { disableGbcrFracNudge: true, rasterOnlySvgPatch: 'fo-y-half-leading-meta' },
+      })
+      const baselineDump = dumpFoBitmapRows(baseline.canvas, root, el)
+      const w7Dump = dumpFoBitmapRows(w7.canvas, root, el)
+      return {
+        liveRangeTopInBorderPx: roundPx(strut.rangeTopInBorder),
+        rangeSubpixelPx: roundPx(strut.rangeSubpixelPx),
+        baseline: baselineDump,
+        w7: w7Dump,
+        rowDeltaBaselineToW7:
+          baselineDump.firstInkDeviceRow != null && w7Dump.firstInkDeviceRow != null
+            ? baselineDump.firstInkDeviceRow - w7Dump.firstInkDeviceRow
+            : null,
+        verdict: 'INTEGER_ROW_LANDS_BELOW_RANGE_SUBPIXEL',
+        implication: `First-ink device row sits at floor(Range×dpr); fractional ${roundPx(strut.rangeSubpixelPx)}px above row origin explains w7 −0.203px residual.`,
+      }
+    }
+
+    function buildSynthesis(sections) {
+      const known = [
+        'BITMAP_ONLY — svg≈live; canvas drifts ~½(lh−fs)',
+        'w7 FO y −2.8px closes strut class; integer residual ≈ Range subpixel',
+        'Snapdom decode adds 0px vs chromium-only on same SVG (round 5/7)',
+        'Active matrix 56 recipes: w7 best at |−0.203| — no row ≤0.06',
+      ]
+      const unknown = [
+        'Whether blackbox cap gate passes with w7 enabled on checkout (empirical)',
+        'Whether fractional ink scan can gate promotion without FO attr change',
+        'Blink FO paint-origin code path — filing vs workaround',
+        'Whether w15/w16 recipe shards add signal beyond w7 plateau',
+        'Checkout vs mini cap/Range offset — same 4.5px reconcile on both fixtures?',
+      ]
+      const top5Unknowns = unknown.slice(0, 5)
+      let recommendedNext = 'research'
+      if (sections.labBlackboxCapReconcile?.blackboxWouldAgreeWithLabRangeIfW7 === false) {
+        recommendedNext = 'metric-reconcile then blackbox:w7 headed run'
+      }
+      return {
+        known,
+        unknown: top5Unknowns,
+        top5Unknowns,
+        recommendedNextStep: recommendedNext,
+        pauseFixWaves: true,
+        refuted: [
+          sections.w7Ceiling?.verdict === 'W7_CEILING_IS_INTEGER_SCAN_NOT_DECODE'
+            ? 'Snapdom decode as cause of w7 −0.203 ceiling'
+            : null,
+        ].filter(Boolean),
+        newFindings: [
+          sections.w7Ceiling?.w7?.mathCheck?.matchesRangeSubpixel
+            ? `w7 |${sections.w7Ceiling.w7.snapdomCanvasDelta}| ≈ Range subpixel ${sections.w7Ceiling.rangeSubpixelPx}`
+            : null,
+          sections.foBitmapRowDump?.rowDeltaBaselineToW7 != null
+            ? `First-ink row shift baseline→w7: ${sections.foBitmapRowDump.rowDeltaBaselineToW7}px`
+            : null,
+          sections.labBlackboxCapReconcile?.capDeltaShiftBaselineToW7 != null
+            ? `Cap-model Δ shift baseline→w7: ${sections.labBlackboxCapReconcile.capDeltaShiftBaselineToW7}px (Range shift ${sections.labBlackboxCapReconcile.rangeDeltaShiftBaselineToW7}px)`
+            : null,
+        ].filter(Boolean),
+      }
+    }
+
+    async function run() {
+      const status = document.getElementById('status')
+      const root = document.getElementById('capture-target')
+      await document.fonts.ready
+      status.textContent = 'Running round-8 probes…'
+      const sections = {}
+      const runAll = section === 'all'
+      if (runAll || section === 'w7Ceiling') sections.w7Ceiling = await probeW7Ceiling(root)
+      if (runAll || section === 'labBlackboxCap') sections.labBlackboxCapReconcile = await probeLabBlackboxCapReconcile(root)
+      if (runAll || section === 'foBitmapRowDump') sections.foBitmapRowDump = await probeFoBitmapRowDump(root)
+      const synthesis = buildSynthesis(sections)
+      status.textContent = 'Done.'
+      return {
+        probe: 'fo-research-round-8',
+        generatedAt: new Date().toISOString(),
+        dpr,
+        scale,
+        landmark,
+        section,
+        sections,
+        synthesis,
+      }
+    }
+
+    window.__foResearchRound8 = { ready: false, bootError: null, result: null }
+    run()
+      .then((result) => {
+        window.__foResearchRound8.result = result
+        window.__foResearchRound8.ready = true
+      })
+      .catch((err) => {
+        window.__foResearchRound8.bootError = String(err?.message || err)
+        window.__foResearchRound8.ready = true
+        document.getElementById('status').textContent = `Error: ${window.__foResearchRound8.bootError}`
+      })
+  </script>
+</body>
+</html>

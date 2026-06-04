@@ -39,10 +39,10 @@ const CSS_RULE_SCAN_BUDGET = 1000
  */
 function preflightWithFp(doc, sessionCache) {
   const fp = styleFingerprint(doc)
-  if (!sessionCache) return shouldProcessPseudos(doc)
+  if (!sessionCache) return shouldProcessPseudos(doc, fp)
   // Recompute when the fingerprint changes
   if (sessionCache.__pseudoPreflightFp !== fp) {
-    sessionCache.__pseudoPreflight = shouldProcessPseudos(doc)
+    sessionCache.__pseudoPreflight = shouldProcessPseudos(doc, fp)
     sessionCache.__pseudoPreflightFp = fp
   }
   return !!sessionCache.__pseudoPreflight
@@ -153,8 +153,7 @@ function sheetHasNeedles(sheet, needles, state) {
  * @param {Document} doc
  * @returns {boolean}
  */
-export function shouldProcessPseudos(doc = document) {
-  const fp = styleFingerprint(doc)
+export function shouldProcessPseudos(doc = document, fp = styleFingerprint(doc)) {
   const memo = __preflightMemo.get(doc)
   if (memo && memo.fingerprint === fp) return memo.result
 
@@ -223,6 +222,22 @@ export function shouldProcessPseudos(doc = document) {
 
 /** Acumulador de contadores por padre para propagar increments en pseudos entre hermanos */
 var __siblingCounters = new WeakMap() // parentElement -> Map<counterName, number>
+
+/**
+ * True if any single side paints a border. The `border-width`/`border-style` shorthands
+ * can't be parsed with parseFloat: a `border-bottom` resolves to "0px 0px 1px 0px", whose
+ * first token (top) is 0, so single-side borders were wrongly read as absent (#419).
+ * @param {CSSStyleDeclaration} style
+ * @returns {boolean}
+ */
+function hasPaintedBorder(style) {
+  for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+    const w = parseFloat(style[`border${side}Width`]) || 0
+    const s = style[`border${side}Style`]
+    if (w > 0 && s && s !== 'none' && s !== 'hidden') return true
+  }
+  return false
+}
 var __pseudoEpoch = -1
 
 /**
@@ -300,6 +315,7 @@ function deriveCounterCtxForPseudo(node, pseudoStyle, baseCtx) {
   }
 
   const resets = parseListDecl(pseudoStyle?.counterReset)
+  const sets = parseListDecl(pseudoStyle?.counterSet)
   const incs = parseListDecl(pseudoStyle?.counterIncrement)
 
   function getStackDerived(name) {
@@ -312,6 +328,14 @@ function deriveCounterCtxForPseudo(node, pseudoStyle, baseCtx) {
     if (r) {
       const val = Number.isFinite(r.num) ? r.num : 0
       stack = stack.length ? [...stack, val] : [val]
+    }
+
+    // counter-set: fija el valor del top sin crear scope (orden CSS: reset → set → increment)
+    const s = sets.find(x => x.name === name)
+    if (s) {
+      const val = Number.isFinite(s.num) ? s.num : 0
+      if (stack.length === 0) stack = [0]
+      stack[stack.length - 1] = val
     }
 
     // increment: sobre el top, crear top=0 si no existe
@@ -413,7 +437,7 @@ export async function inlinePseudoElements(source, clone, sessionCache, options)
         style.content === 'none' &&
         style.backgroundImage === 'none' &&
         style.backgroundColor === 'transparent' &&
-        (style.borderStyle === 'none' || parseFloat(style.borderWidth) === 0) &&
+        !hasPaintedBorder(style) &&
         (!style.transform || style.transform === 'none') &&
         style.display === 'inline'
 
@@ -480,8 +504,6 @@ const { text: cleanContent, incs } =
       const fontSize = parseInt(style.fontSize) || 32
       const fontWeight = parseInt(style.fontWeight) || false
       const color = style.color || '#000'
-      const borderStyle = style.borderStyle
-      const borderWidth = parseFloat(style.borderWidth)
       const transform = style.transform
 
       const isIconFont2 = isIconFont(fontFamily)
@@ -490,12 +512,19 @@ const hasExplicitContent = !isNoExplicitContent && cleanContent !== ''
       const hasBg = bg && bg !== 'none'
       const hasBgColor =
         bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)'
-      const hasBorder =
-        borderStyle && borderStyle !== 'none' && borderWidth > 0
+      const hasBorder = hasPaintedBorder(style)
       const hasTransform = transform && transform !== 'none'
 
+      // A box-generating pseudo (content not none/normal) with real width/height occupies
+      // layout space even with no visible paint — e.g. antd's `::before { content:'';
+      // display:inline-block; height:100%; vertical-align:middle }` that vertically centers a
+      // modal. Dropping it collapses the layout it controls (#418).
+      const boxGenerating = rawContent !== 'none' && rawContent !== 'normal'
+      const hasLayoutBox = boxGenerating &&
+        ((parseFloat(style.width) || 0) > 0 || (parseFloat(style.height) || 0) > 0)
+
       const shouldRender =
-        hasExplicitContent || hasBg || hasBgColor || hasBorder || hasTransform
+        hasExplicitContent || hasBg || hasBgColor || hasBorder || hasTransform || hasLayoutBox
 
       if (!shouldRender) {
         // Aun si no renderizamos caja, si el pseudo tenía increments, propagar a hermanos
@@ -610,7 +639,7 @@ const hasExplicitContent = !isNoExplicitContent && cleanContent !== ''
       const hasContent2 =
         pseudoEl.childNodes.length > 0 || (pseudoEl.textContent?.trim() !== '')
       const hasVisibleBox =
-        hasContent2 || hasBg || hasBgColor || hasBorder || hasTransform
+        hasContent2 || hasBg || hasBgColor || hasBorder || hasTransform || hasLayoutBox
 
       // Antes de insertar, si hubo increments en el pseudo, propagar valor final a los hermanos
       if (incs && incs.length && source.parentElement) {

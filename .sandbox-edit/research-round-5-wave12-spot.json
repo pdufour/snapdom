@@ -1,0 +1,62 @@
+{
+  "probe": "fo-research-round-5",
+  "section": "research-round-5-wave12-spot.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17
+    },
+    "halfLeadingLhFsPx": null,
+    "residualCanvasMinusHalfLeadingPx": 2.797,
+    "svgBytes": 31110
+  },
+  "data": {
+    "rows": [
+      {
+        "recipeId": "product-baseline",
+        "liveVsCanvasTopPx": 2.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "liveVsCanvasTopPx": -0.203125,
+        "liveVsSvgTopPx": -0.0078125,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w12-rfork-viewbox-y-half-leading",
+        "liveVsCanvasTopPx": 5.796875,
+        "liveVsSvgTopPx": -0.0078125,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w12-bitmap-w7-y",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.0078125,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w12-rfork-leaf-translate-y-half-leading",
+        "liveVsCanvasTopPx": -0.203125,
+        "liveVsSvgTopPx": -0.0078125,
+        "passesGate006": false
+      }
+    ],
+    "matrixCommitted": false,
+    "note": "Wave-12 recipes in recipes-tocanvas-fix-wave12.js — run full --ids tc-fix-w12-* calibrate separately.",
+    "bestRow": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "liveVsCanvasTopPx": -0.203125,
+      "liveVsSvgTopPx": -0.0078125,
+      "passesGate006": false
+    },
+    "noRowPassesGate": true
+  }
+}

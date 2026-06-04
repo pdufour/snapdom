@@ -149,3 +149,9 @@ __snapshots__
 .cursor/
 bench/
 AGENTS.md
+
+__localtests__/.sandbox-edit/
+__localtests__/.artifacts/
+
+# macOS
+.DS_Store

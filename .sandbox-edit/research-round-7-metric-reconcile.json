@@ -1,0 +1,48 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-metric-reconcile.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "metrics": {
+      "labRangeLiveVsCanvasTopPx": 2.797,
+      "labCapModelCanvasDeltaPx": -1.727,
+      "blackboxProxyPaintCanvasVsBorderTopPx": -1.727,
+      "rangeMinusCapLiveTopInBorderPx": -4.523,
+      "reconciliation": 4.523
+    },
+    "live": {
+      "rangeTopInBorder": 14.203,
+      "capTopInBorder": 18.727
+    },
+    "canvas": {
+      "integerTopInBorder": 17,
+      "integerDeviceRow": 17
+    },
+    "fractionalCanvasDelta": {
+      "integer": 2.796875,
+      "fractionalThreshold": 1.9088749999999983,
+      "fractionalCom": 4.546875
+    },
+    "verdict": "METRIC_FAMILIES_DIFFER_BY_DESIGN",
+    "implication": "+2.797 (Range) vs ~−1.727 (cap-model on mini nav) vs blackbox ~−0.91 are different ink boxes — reconcile before gating; do not treat as contradictory bugs.",
+    "formula": "blackbox Δ ≈ canvas(cap scan) − live(cap model); lab Δ ≈ canvas(integer scan) − live(Range union)"
+  }
+}

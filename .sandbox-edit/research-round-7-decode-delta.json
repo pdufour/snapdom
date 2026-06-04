@@ -1,0 +1,70 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-decode-delta.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "baseline": {
+      "snapdomLab": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": null,
+        "deltaTopCapModel": -1.7265625,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveCapTopInBorder": 18.7265625,
+        "inkScanMode": "integer",
+        "fractionalCanvasDelta": null
+      },
+      "chromiumOnlySameSvg": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 2.796875,
+        "svgVsCanvasTopPx": 2.8046875,
+        "deltaTopCapModel": null,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17,
+        "liveCapTopInBorder": null,
+        "inkScanMode": "integer",
+        "fractionalCanvasDelta": null
+      },
+      "snapdomVsChromiumDecodeDeltaPx": 0
+    },
+    "w7": {
+      "snapdomLabCanvasDelta": -0.203,
+      "chromiumOnlyPatchedSvg": {
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": -0.203125,
+        "svgVsCanvasTopPx": -0.1953125,
+        "deltaTopCapModel": null,
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 14,
+        "liveCapTopInBorder": null,
+        "inkScanMode": "integer",
+        "fractionalCanvasDelta": null
+      },
+      "snapdomVsChromiumDecodeDeltaPx": 0
+    },
+    "verdict": "SNAPDOM_ZERO_PX_AT_DECODE",
+    "implication": "Same SVG bytes: lab toCanvas vs chromium-only raster — non-zero delta means snapdom decode/blit adds px beyond Chromium FO paint."
+  }
+}

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVG height 50 vs 48 investigation</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; font-family: system-ui, sans-serif; background: #f8fafc; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a {
+      display: flex; align-items: center; padding: 0 12px;
+      text-decoration: none; color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { createContext } from '/src/core/context.js'
+    import { captureDOM } from '/src/core/capture.js'
+    import { toCanvas } from '/src/exporters/toCanvas.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      parseCaptureMeta,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    window.snapdom = snapdom
+    const nav = root.querySelector('nav.mini-nav')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    function parseSvgDeep(svgText) {
+      const rootM = svgText.match(/<svg\b([^>]*)>/i)
+      const attrs = rootM?.[1] || ''
+      const pick = (name) => {
+        const re = new RegExp(`\\b${name}=["']([^"']+)`, 'i')
+        const v = attrs.match(re)?.[1]
+        return v != null ? parseFloat(v) : NaN
+      }
+      const vbStr = attrs.match(/\bviewBox=["']([^"']+)["']/i)?.[1]
+      let vbMinX = 0, vbMinY = 0, vbW = NaN, vbH = NaN
+      if (vbStr) {
+        const p = vbStr.trim().split(/\s+/).map(Number)
+        if (p.length >= 4) { vbMinX = p[0]; vbMinY = p[1]; vbW = p[2]; vbH = p[3] }
+      }
+      const foM = svgText.match(/<foreignObject\b([^>]*)>/i)
+      const foAttrs = foM?.[1] || ''
+      const foPick = (name) => {
+        const re = new RegExp(`\\b${name}=["']([^"']+)`, 'i')
+        const v = foAttrs.match(re)?.[1]
+        return v != null ? parseFloat(v) : NaN
+      }
+      const containerH = svgText.match(
+        /foreignObject[^>]*>[\s\S]*?<div[^>]*style=["'][^"']*height:([\d.]+)px/i,
+      )?.[1]
+      const containerW = svgText.match(
+        /foreignObject[^>]*>[\s\S]*?<div[^>]*style=["'][^"']*width:([\d.]+)px/i,
+      )?.[1]
+      return {
+        svgOutW: pick('width'),
+        svgOutH: pick('height'),
+        viewBox: { minX: vbMinX, minY: vbMinY, w: vbW, h: vbH },
+        fo: {
+          x: foPick('x'),
+          y: foPick('y'),
+          width: foPick('width'),
+          height: foPick('height'),
+        },
+        containerDiv: {
+          widthPx: containerW != null ? parseFloat(containerW) : NaN,
+          heightPx: containerH != null ? parseFloat(containerH) : NaN,
+        },
+      }
+    }
+
+    function inferPadFromCaptureMeta(meta, svg) {
+      const h0 = meta?.h0
+      const vbH = meta?.vbH ?? svg.viewBox.h
+      const w0 = meta?.w0
+      const vbW = meta?.vbW ?? svg.viewBox.w
+      if (!Number.isFinite(h0) || !Number.isFinite(vbH)) return { padH: null, padW: null }
+      const padH = (vbH - h0) / 2
+      const padW = Number.isFinite(w0) && Number.isFinite(vbW) ? (vbW - w0) / 2 : null
+      return { padH, padW, vbHMinusH0: vbH - h0, svgOutHMinusH0: svg.svgOutH - h0 }
+    }
+
+    function layoutSnapshot(el) {
+      const cs = getComputedStyle(el)
+      const rect = el.getBoundingClientRect()
+      return {
+        offsetWidth: el.offsetWidth,
+        offsetHeight: el.offsetHeight,
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight,
+        gbcr: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+        borderTop: parseFloat(cs.borderTopWidth) || 0,
+        borderBottom: parseFloat(cs.borderBottomWidth) || 0,
+        borderLeft: parseFloat(cs.borderLeftWidth) || 0,
+        borderRight: parseFloat(cs.borderRightWidth) || 0,
+        paddingTop: parseFloat(cs.paddingTop) || 0,
+        paddingBottom: parseFloat(cs.paddingBottom) || 0,
+        boxSizing: cs.boxSizing,
+        minHeight: cs.minHeight,
+      }
+    }
+
+    async function decodeIntrinsic(dataUrl) {
+      const img = new Image()
+      img.loading = 'eager'
+      img.decoding = 'sync'
+      img.src = dataUrl
+      await img.decode()
+      return { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight }
+    }
+
+    function stretchYOffsetModel(natH, outH, inkTopInBitmapCss) {
+      if (!Number.isFinite(natH) || natH <= 0 || !Number.isFinite(outH)) return null
+      const ky = outH / natH
+      const t = Number.isFinite(inkTopInBitmapCss) ? inkTopInBitmapCss / natH : null
+      if (t == null) return { ky, extraHeightPx: natH - outH, yStretchAtInkTop: null }
+      return {
+        ky,
+        extraHeightPx: natH - outH,
+        yStretchAtInkTop: t * natH * ky,
+        yIfNoExtraHeight: t * outH,
+        stretchDeltaFromExtraHeightPx: t * natH * ky - t * outH,
+      }
+    }
+
+    async function run() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const ctx = createContext({ dpr, scale })
+      const dataUrl = await captureDOM(root, ctx)
+      const captureMeta = ctx.meta ? { ...ctx.meta } : null
+
+      const prefix = 'data:image/svg+xml;charset=utf-8,'
+      const svgText = dataUrl.startsWith(prefix)
+        ? decodeURIComponent(dataUrl.slice(prefix.length))
+        : dataUrl
+
+      const svg = parseSvgDeep(svgText)
+      const parsedMeta = parseCaptureMeta(svgText, root)
+      const padInfer = inferPadFromCaptureMeta(captureMeta, svg)
+      const intrinsic = await decodeIntrinsic(dataUrl)
+
+      const cssW = root.offsetWidth
+      const cssH = root.offsetHeight
+      const fixtureDims = { cssW: cssW * scale, cssH: cssH * scale }
+
+      const canvas = await toCanvas(dataUrl, {
+        width: fixtureDims.cssW,
+        height: fixtureDims.cssH,
+        scale,
+        dpr,
+        meta: parsedMeta,
+      })
+
+      const el = findLandmarkElement(root, landmark)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, fixtureDims)
+
+      const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+      const foProbe = await runFoFixProbe(recipe, { root, landmark, dpr, scale })
+
+      const rootLayout = layoutSnapshot(root)
+      const navLayout = nav ? layoutSnapshot(nav) : null
+      const landmarkLayout = el ? layoutSnapshot(el) : null
+
+      const extraSvgH = intrinsic.naturalHeight - (navLayout?.offsetHeight ?? 48)
+      const extraSvgHvsRoot = intrinsic.naturalHeight - cssH
+      const borderSumV = rootLayout.borderTop + rootLayout.borderBottom
+      const navVsRootH = cssH - (navLayout?.offsetHeight ?? NaN)
+
+      const gap28 = cmp.liveVsCanvasTopPx
+      const stretchFromExtra2 = stretchYOffsetModel(
+        intrinsic.naturalHeight,
+        cssH,
+        cmp.svg?.topInBorder ?? cmp.live?.topInBorder,
+      )
+
+      const contentOffsetInFo = {
+        foY: svg.fo.y,
+        foHeight: svg.fo.height,
+        containerHeight: svg.containerDiv.heightPx,
+        foYPlusPad: Number.isFinite(svg.fo.y) && padInfer.padH != null
+          ? svg.fo.y + padInfer.padH
+          : svg.fo.y,
+        clipVsContent:
+          Number.isFinite(svg.fo.height) && Number.isFinite(svg.containerDiv.heightPx)
+            ? svg.fo.height - svg.containerDiv.heightPx
+            : null,
+      }
+
+      const summary = {
+        decodeNatural: `${intrinsic.naturalWidth}×${intrinsic.naturalHeight}`,
+        captureTargetOffset: `${cssW}×${cssH}`,
+        navOffset: navLayout ? `${navLayout.offsetWidth}×${navLayout.offsetHeight}` : null,
+        svgRoot: `${svg.svgOutW}×${svg.svgOutH}`,
+        viewBoxH: svg.viewBox.h,
+        captureMetaH0: captureMeta?.h0,
+        padInferH: padInfer.padH,
+        extra2pxSource:
+          borderSumV === 2 && navVsRootH === 2
+            ? 'capture-target 1px top+bottom border (box-sizing:border-box), not capture pad'
+            : padInfer.padH === 1
+              ? 'capture.js pad=1 (outerTransforms=false path)'
+              : 'mixed/other',
+        liveVsCanvasTopPx: gap28,
+        extraSvgHvsNav: extraSvgH,
+        explains28pxDrift:
+          gap28 != null && Math.abs(extraSvgH - gap28) < 0.35
+            ? 'unlikely-full-explanation'
+            : stretchFromExtra2?.stretchDeltaFromExtraHeightPx != null &&
+                Math.abs(stretchFromExtra2.stretchDeltaFromExtraHeightPx - gap28) < 0.35
+              ? 'vertical-stretch-from-intrinsic-mismatch-may-contribute'
+              : 'no-direct-2px-equals-2.8px',
+      }
+
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        summary,
+        liveLayout: { root: rootLayout, nav: navLayout, landmark: landmarkLayout },
+        captureMeta,
+        parsedMeta,
+        svgParsed: svg,
+        padInference: padInfer,
+        intrinsic,
+        productOut: {
+          cssW: fixtureDims.cssW,
+          cssH: fixtureDims.cssH,
+          outW: fixtureDims.cssW * scale,
+          outH: fixtureDims.cssH * scale,
+          canvasBacking: { width: canvas.width, height: canvas.height },
+        },
+        ink: {
+          liveTopInBorder: cmp.live?.topInBorder ?? null,
+          svgTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        contentOffsetInFo,
+        stretchModel: stretchFromExtra2,
+        foProbe: {
+          liveVsCanvasTopPx: foProbe.liveVsCanvasTopPx,
+          canvasPaintedTopInBorder: foProbe.canvasPaintedTopInBorder,
+          decodedNatural: foProbe.decodedNatural ?? null,
+        },
+        captureJsFormula: {
+          note: 'capture.js: pad=basePad+(outerTransforms?0:1); vbH=vbH0+pad*2; svgOutH=outH+pad*2; FO height=w0+pad*2',
+          defaultOuterTransforms: true,
+          expectedPadOnChromeDefault: 0,
+          bleedOnRoot: 'zero when outerShadows=false (default)',
+        },
+        heightReconciliation: {
+          navOffsetHeight: navLayout?.offsetHeight,
+          rootOffsetHeight: cssH,
+          rootBorderVertical: borderSumV,
+          rootMinusNav: navVsRootH,
+          intrinsicMinusNav: extraSvgH,
+          intrinsicMinusRootOffset: extraSvgHvsRoot,
+          captureMetaH0MinusNav: captureMeta?.h0 != null ? captureMeta.h0 - navLayout.offsetHeight : null,
+          viewBoxHMinusNav: svg.viewBox.h - navLayout.offsetHeight,
+          foHeightMinusContainer: svg.fo.height - svg.containerDiv.heightPx,
+        },
+      }
+    }
+
+    window.__svgHeight5048 = { ready: false, bootError: null, run }
+
+    fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Missing dist (HTTP ${r.status})`)
+        window.__svgHeight5048.ready = true
+        status.textContent = 'Ready'
+      })
+      .catch((err) => {
+        window.__svgHeight5048.bootError = String(err?.message || err)
+        status.textContent = window.__svgHeight5048.bootError
+      })
+  </script>
+</body>
+</html>

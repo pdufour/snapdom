@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <title>FO research round 6 — glyph bounds</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    h2 { font-size: 14px; margin: 16px 0 6px; }
+    .fixture {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav, nav.letter-nav {
+      display: flex; align-items: stretch; min-height: 48px;
+    }
+    nav.mini-nav a, nav.letter-nav a {
+      display: flex; align-items: center; padding: 0 10px;
+      color: #111; text-decoration: none; min-width: 2.5em; justify-content: center;
+    }
+    nav.letter-nav { flex-wrap: wrap; min-height: 56px; }
+    #status { margin-top: 8px; font: 12px ui-monospace, monospace; color: #475569; }
+  </style>
+</head>
+<body>
+  <h1>FO research round 6 — glyph bounds &amp; letter drift</h1>
+  <div id="capture-target" class="fixture">
+    <nav class="mini-nav" aria-label="Mini nav">
+      <a href="#" data-landmark="Home">Home</a>
+      <a href="#" data-landmark="Products">Products</a>
+    </nav>
+  </div>
+  <h2>Letter matrix (same flex 48px box)</h2>
+  <div id="letter-target" class="fixture">
+    <nav class="letter-nav" aria-label="Letter matrix">
+      <a href="#" data-letter="H">H</a>
+      <a href="#" data-letter="h">h</a>
+      <a href="#" data-letter="l">l</a>
+      <a href="#" data-letter="p">p</a>
+      <a href="#" data-letter="g">g</a>
+      <a href="#" data-letter="Hg">Hg</a>
+      <a href="#" data-letter="pg">pg</a>
+      <a href="#" data-letter="HOME">HOME</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+
+    window.snapdom = snapdom
+    import {
+      findLandmarkElement,
+      measureCanvasInkBandRegion,
+      measureCanvasInkForElement,
+      measureCanvasInkForElementDualScan,
+      measureLiveGlyphInkTopFromRange,
+      measureLivePaintedInk,
+      runFoFixProbe,
+    } from './fo-fix-lab-runner.js'
+    import {
+      halfLeadingFromComputed,
+      measureCanvasInkVerticalExtents,
+      measureGlyphLayoutMetrics,
+    } from './chromium-fo-only/chromium-fo-only-shared.js'
+
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+    const section = (params.get('section') || 'all').trim()
+
+    function roundPx(v) {
+      return v == null || !Number.isFinite(v) ? null : Math.round(v * 1000) / 1000
+    }
+
+    function classifyLetter(label) {
+      const t = String(label)
+      if (t.length > 1 && t === t.toUpperCase()) return 'word-caps'
+      if (/[pgqy]/.test(t)) return 'has-descender'
+      if (/[hlkbtf]/.test(t) && !/[pgqy]/.test(t)) return 'has-ascender'
+      if (t === t.toUpperCase()) return 'capital'
+      return 'mixed'
+    }
+
+    /** 1 — Glyph bounds vs 48px stretch box; Range vs canvas scan band */
+    async function probeGlyphVs48(root, el) {
+      const glyph = measureGlyphLayoutMetrics(el, root)
+      const liveRange = measureLivePaintedInk(el, root)
+      const liveGlyph = measureLiveGlyphInkTopFromRange(el, root)
+      const band = measureCanvasInkBandRegion(null, root, el, dpr)
+
+      const recipe = getFoFixRecipe('product-baseline')
+      const row = await runFoFixProbe(recipe, {
+        dpr,
+        scale,
+        landmark,
+        root,
+        labToCanvasOpts: { disableGbcrFracNudge: true, ...(recipe.labToCanvasOpts || {}) },
+      })
+      const canvas = row.canvas
+
+      const canvasTop = measureCanvasInkForElement(canvas, root, el, dpr)
+      const canvasDual = measureCanvasInkForElementDualScan(canvas, root, el, dpr)
+      const canvasExtents = measureCanvasInkVerticalExtents(canvas, root, el, dpr)
+
+      const cs = getComputedStyle(el)
+      const parent = el.parentElement
+      const parentCs = parent ? getComputedStyle(parent) : null
+
+      const rangeBottomInBorder = glyph?.rangeBottomInBorder ?? null
+
+      const canvasBottomDeltaVsRange =
+        canvasExtents && rangeBottomInBorder != null
+          ? roundPx(canvasExtents.bottomInBorder - rangeBottomInBorder)
+          : null
+
+      const previewCutoffRisk =
+        glyph &&
+        canvasExtents &&
+        canvasBottomDeltaVsRange != null &&
+        canvasBottomDeltaVsRange < -1
+
+      return {
+        layout: {
+          anchorHeightPx: glyph?.boxHeightPx ?? null,
+          stretchMinHeightPx: parentCs ? parseFloat(parentCs.minHeight) || null : 48,
+          computedLhPx: glyph?.computedLhPx ?? null,
+          fontSizePx: glyph?.fontSizePx ?? null,
+          halfLeadingLhFsPx: glyph?.halfLeadingLhFsPx ?? halfLeadingFromComputed(el),
+          overflow: cs.overflow,
+          parentAlignItems: parentCs?.alignItems ?? null,
+        },
+        range: {
+          topInBorder: liveRange?.topInBorder ?? glyph?.rangeTopInBorder ?? null,
+          bottomInBorder: rangeBottomInBorder ?? glyph?.rangeBottomInBorder ?? null,
+          heightInBorder: glyph?.rangeHeightInBorder ?? null,
+          slackAbovePx: glyph?.slackAboveRangePx ?? null,
+          slackBelowPx: glyph?.slackBelowRangePx ?? null,
+          rangeFillsStretchBox: glyph?.rangeFillsStretchBox ?? null,
+        },
+        canvasScan: {
+          bandRegionDev: band,
+          topInBorder: canvasTop?.topInBorder ?? null,
+          integerTopInBorder: canvasDual.integer?.topInBorder ?? null,
+          fractionalTopInBorder: canvasDual.fractionalCom?.topInBorder ?? null,
+          bottomInBorder: canvasExtents?.bottomInBorder ?? null,
+          inkHeightInBorder: canvasExtents?.inkHeightInBorder ?? null,
+          bottomDeltaVsRangePx: canvasBottomDeltaVsRange,
+        },
+        threeWay: {
+          liveVsCanvasTopPx: row.liveVsCanvasTopPx,
+          liveVsSvgTopPx: row.liveVsSvgTopPx,
+          livePaintedTopInBorder: row.livePaintedTopInBorder,
+          canvasPaintedTopInBorder: row.canvasPaintedTopInBorder,
+          liveGlyphTopInBorder: liveGlyph?.topInBorder ?? null,
+        },
+        verdict: {
+          stretch48NotSerializedLh:
+            (glyph?.boxHeightPx ?? 0) >= 46 && (glyph?.computedLhPx ?? 0) < 25,
+          scanUsesFullElementHeight: (band?.h ?? 0) >= Math.round((glyph?.boxHeightPx ?? 0) * dpr) - 2,
+          topDriftMatchesHalfLeading:
+            Math.abs((row.liveVsCanvasTopPx ?? 0) - (glyph?.halfLeadingLhFsPx ?? 0)) < 0.35,
+          previewCutoffRisk,
+          implication:           previewCutoffRisk
+            ? 'Canvas ink bottom sits above Range bottom — possible FO clip or preview crop.'
+            : `48px stretch box has ~${roundPx(glyph?.slackBelowRangePx)}px slack below Range; scan uses full ${roundPx(glyph?.boxHeightPx)}px element height — h/p preview cutoff is not ink-band height truncation.`,
+        },
+      }
+    }
+
+    /** 2 — Per-letter canvasΔ under same flex stretch */
+    async function probeLetterDrift(letterRoot) {
+      const recipe = getFoFixRecipe('product-baseline')
+      const rows = []
+      for (const a of letterRoot.querySelectorAll('nav.letter-nav a')) {
+        const label = a.getAttribute('data-letter') || (a.textContent || '').trim()
+        const el = a
+        try {
+          const row = await runFoFixProbe(recipe, {
+            dpr,
+            scale,
+            landmark: label,
+            root: letterRoot,
+            labToCanvasOpts: { disableGbcrFracNudge: true, ...(recipe.labToCanvasOpts || {}) },
+          })
+          const glyph = measureGlyphLayoutMetrics(el, letterRoot)
+          rows.push({
+            label,
+            letterClass: classifyLetter(label),
+            liveVsCanvasTopPx: roundPx(row.liveVsCanvasTopPx),
+            liveVsSvgTopPx: roundPx(row.liveVsSvgTopPx),
+            boxHeightPx: roundPx(glyph?.boxHeightPx),
+            rangeHeightInBorder: roundPx(glyph?.rangeHeightInBorder),
+            halfLeadingLhFsPx: roundPx(glyph?.halfLeadingLhFsPx),
+          })
+        } catch (err) {
+          rows.push({ label, error: String(err?.message || err) })
+        }
+      }
+      const finite = rows.filter((r) => Number.isFinite(r.liveVsCanvasTopPx))
+      const canvasDeltas = finite.map((r) => r.liveVsCanvasTopPx)
+      const spread =
+        canvasDeltas.length > 1
+          ? roundPx(Math.max(...canvasDeltas) - Math.min(...canvasDeltas))
+          : null
+      const byClass = {}
+      for (const r of finite) {
+        const c = r.letterClass
+        if (!byClass[c]) byClass[c] = []
+        byClass[c].push(r.liveVsCanvasTopPx)
+      }
+      const classMeans = Object.fromEntries(
+        Object.entries(byClass).map(([k, vals]) => [
+          k,
+          roundPx(vals.reduce((a, b) => a + b, 0) / vals.length),
+        ]),
+      )
+      return {
+        rows,
+        canvasDeltaSpreadPx: spread,
+        classMeans,
+        verdict:
+          spread != null && spread < 0.15
+            ? 'LETTER_INVARIANT_STRUT'
+            : 'LETTER_SHAPE_AFFECTS_DRIFT',
+        implication:
+          spread != null && spread < 0.15
+            ? 'Capitals vs ascenders vs descenders share same ~2.8px strut offset — not per-glyph paint.'
+            : 'Letter shape changes canvasΔ — check Range vs FO bitmap per class.',
+      }
+    }
+
+    /** 3 — wave-13 spot (recipes on disk; matrix optional) */
+    async function probeWave13Spot(root) {
+      const ids = [
+        'product-baseline',
+        'tc-fix-w7-rfork-fo-y-half-leading-meta',
+        'tc-fix-w13-rfork-viewbox-y-half-leading',
+        'tc-fix-w13-rfork-leaf-translate-y-half-leading',
+        'tc-fix-w13-rfork-y-w7-minus-range-subpixel',
+        'tc-fix-w13-settle100-w7-y',
+      ]
+      const rows = []
+      for (const id of ids) {
+        const recipe = getFoFixRecipe(id)
+        if (!recipe) {
+          rows.push({ recipeId: id, error: 'recipe not found' })
+          continue
+        }
+        try {
+          const row = await runFoFixProbe(recipe, {
+            dpr,
+            scale,
+            landmark,
+            root,
+            labToCanvasOpts: { disableGbcrFracNudge: true, ...(recipe.labToCanvasOpts || {}) },
+          })
+          rows.push({
+            recipeId: id,
+            liveVsCanvasTopPx: roundPx(row.liveVsCanvasTopPx),
+            liveVsSvgTopPx: roundPx(row.liveVsSvgTopPx),
+            passesGate006: Math.abs(row.liveVsCanvasTopPx ?? 99) <= 0.06,
+          })
+        } catch (err) {
+          rows.push({ recipeId: id, error: String(err?.message || err) })
+        }
+      }
+      const best = rows
+        .filter((r) => Number.isFinite(r.liveVsCanvasTopPx))
+        .sort((a, b) => Math.abs(a.liveVsCanvasTopPx) - Math.abs(b.liveVsCanvasTopPx))[0]
+      return {
+        rows,
+        shard: 'recipes-tocanvas-fix-wave13.js',
+        matrixCommitted: false,
+        bestRow: best ?? null,
+        noRowPassesGate: !rows.some((r) => r.passesGate006),
+      }
+    }
+
+    function buildSynthesis(sections, baseline) {
+      const findings = []
+      const refuted = []
+
+      if (sections.glyphVs48?.verdict?.scanUsesFullElementHeight) {
+        refuted.push('Canvas ink scan missing descenders due to 48px band height cap')
+      }
+      if (sections.glyphVs48?.verdict?.topDriftMatchesHalfLeading) {
+        findings.push(
+          `Home stretch box ${sections.glyphVs48.layout.anchorHeightPx}px; canvasΔ≈½(lh−fs) strut (${baseline?.halfLeadingLhFsPx}px)`,
+        )
+      }
+      if (sections.letterDrift?.verdict === 'LETTER_INVARIANT_STRUT') {
+        findings.push(
+          `Letter-class spread ${sections.letterDrift.canvasDeltaSpreadPx}px — capitals/descenders/ascenders tie`,
+        )
+        refuted.push('Per-letter glyph shape as primary canvas drift driver')
+      } else if (sections.letterDrift?.canvasDeltaSpreadPx != null) {
+        findings.push(`Letter drift spread ${sections.letterDrift.canvasDeltaSpreadPx}px by shape class`)
+      }
+      if (sections.wave13Spot?.bestRow) {
+        findings.push(
+          `Wave-13 spot best ${sections.wave13Spot.bestRow.recipeId} |canvasΔ|=${Math.abs(sections.wave13Spot.bestRow.liveVsCanvasTopPx)}px`,
+        )
+      }
+      if (sections.crossBrowser?.chromiumOnlyDrift) {
+        findings.push(sections.crossBrowser.summary)
+      }
+      if (sections.chromiumFoPages?.pages?.length) {
+        const p = sections.chromiumFoPages.pages.find((x) => x.pageId === 'minimal-nav-fo-raster')
+        if (p?.glyphMetrics) {
+          findings.push(
+            `Chromium-only nav: slackBelowRange=${p.glyphMetrics.slackBelowRangePx}px canvasΔ=${p.threeWay?.liveVsCanvasTopPx}`,
+          )
+        }
+      }
+
+      return {
+        winningHypothesis:
+          'Vertical FO strut offset is class-wide (~2.8px); 48px stretch box has Range slack — preview h/p cutoff is not ink-scan height truncation',
+        top5Findings: findings.slice(0, 5),
+        refuted,
+        bestNextFixDirection:
+          'Pursue w13 viewBox/leaf-translate strut paint-origin; verify preview crop separately from parity metric',
+      }
+    }
+
+    async function run() {
+      const status = document.getElementById('status')
+      const root = document.getElementById('capture-target')
+      const letterRoot = document.getElementById('letter-target')
+      await document.fonts.ready
+
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark ${landmark} not found`)
+
+      const halfLeadingLhFsPx = halfLeadingFromComputed(el)
+      const baseline = { halfLeadingLhFsPx, landmark, dpr }
+
+      status.textContent = 'Running round-6 probes…'
+      const sections = {}
+      const runAll = section === 'all'
+
+      if (runAll || section === 'glyphVs48') {
+        sections.glyphVs48 = await probeGlyphVs48(root, el)
+      }
+      if (runAll || section === 'letterDrift') {
+        sections.letterDrift = await probeLetterDrift(letterRoot)
+      }
+      if (runAll || section === 'wave13') {
+        sections.wave13Spot = await probeWave13Spot(root)
+      }
+
+      const synthesis = buildSynthesis(sections, baseline)
+      status.textContent = 'Done.'
+      return {
+        probe: 'fo-glyph-bounds-probe',
+        generatedAt: new Date().toISOString(),
+        dpr,
+        scale,
+        landmark,
+        section,
+        baseline,
+        sections,
+        synthesis,
+      }
+    }
+
+    window.__foGlyphBoundsProbe = { ready: false, bootError: null, result: null }
+    run()
+      .then((result) => {
+        window.__foGlyphBoundsProbe.result = result
+        window.__foGlyphBoundsProbe.ready = true
+      })
+      .catch((err) => {
+        window.__foGlyphBoundsProbe.bootError = String(err?.message || err)
+        window.__foGlyphBoundsProbe.ready = true
+      })
+  </script>
+</body>
+</html>

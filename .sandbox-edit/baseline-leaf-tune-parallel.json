@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-06-03T08:00:00.000Z",
+  "mission": "baseline-leaf parallel tune — 49 recipes (includeInactive), 30/slice headed blackbox metric",
+  "metric": "paint.canvas.vs-border.top",
+  "fixture": "checkout-example.html",
+  "dpr": 2,
+  "navBudget": [-0.06, 0.06],
+  "productBaseline": { "home": -0.91, "products": -0.91 },
+  "parallel": {
+    "script": "__localtests__/fo-drift-batch-home-blackbox-parallel.mjs",
+    "includeInactive": true,
+    "offsets": [0, 30],
+    "limit": 30,
+    "recipeCountScored": 46
+  },
+  "inBudgetNavCount": 0,
+  "inBudgetNav": [],
+  "beatsBaselineNavCount": 3,
+  "bestNav": {
+    "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+    "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+    "homeCanvasVsBorderTop": 0.09,
+    "productsCanvasVsBorderTop": 0.09,
+    "navDeltaTopHomeProducts": 0,
+    "beatsBaseline": true,
+    "navInBudget": false,
+    "note": "+0.03px over 0.06 budget on Home/Products"
+  },
+  "topNavRecipes": [
+    {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=baseline-leaf",
+      "home": 0.09,
+      "products": 0.09
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-lh-normal-va-baseline",
+      "checkoutQuery": "experimentalRasterSvgPatch=combo-lh-normal-va-baseline-leaf",
+      "home": 0.09,
+      "products": 0.09
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-baseline",
+      "checkoutQuery": "experimentalFoTextBaselineFix=1&experimentalRasterSvgPatch=baseline-leaf",
+      "home": 0.09,
+      "products": 0.09
+    }
+  ],
+  "notableNonWinners": {
+    "tc-blh-w2-rfork-chromium-copy-lh-baseline": { "home": -0.91, "products": -0.91 },
+    "tc-fix-drift-chromium-copy-lh-baseline": { "home": -0.91, "products": -0.91 },
+    "tc-blh-w2-rfork-strut-translate-y-meta": { "home": 1.09, "products": 1.09 }
+  },
+  "bounceCheckExperimental": [
+    {
+      "patch": "baseline-leaf",
+      "exitCode": 1,
+      "home": 0.09,
+      "products": 0.09,
+      "checkout": 0.84,
+      "email": -3.43,
+      "promo": -2.93,
+      "navInBudget": false,
+      "pass": false
+    },
+    {
+      "patch": "combo-va-baseline-range-subpixel-meta",
+      "exitCode": 1,
+      "home": 0.09,
+      "products": 0.09,
+      "checkout": 0.84,
+      "email": -3.43,
+      "promo": -2.93,
+      "navInBudget": false,
+      "pass": false,
+      "note": "FO y −Range subpixel unchanged vs baseline-leaf on checkout"
+    },
+    {
+      "patch": "chromium-copy-lh-baseline-leaf",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navInBudget": false,
+      "pass": false
+    },
+    {
+      "patch": "fo-y-range-subpixel-only-meta",
+      "exitCode": 1,
+      "home": -0.91,
+      "products": -0.91,
+      "navInBudget": false,
+      "pass": false
+    }
+  ],
+  "structuralTuneAttempts": [
+    "Remove display:inline → nav reverts to −0.91 (inline is required for +1px correction)",
+    "display:inline on :is(span,a) only → nav −0.91, Email +15.57 regress",
+    "combo-va-baseline-range-subpixel-meta → same +0.09 nav as baseline-leaf; Email/Promo still fail"
+  ],
+  "bestInBudgetQuery": null,
+  "promoteSrc": false,
+  "promoteSrcReason": "No Home/Products in [-0.06,0.06]; baseline-leaf +0.09 overshoots; Email/Promo regress >0.06 vs default on full bounce-check",
+  "npmTestBlackboxPass": false,
+  "npmTestBlackboxNote": "Default product unchanged — still FAIL Home/Products −0.91",
+  "filesChanged": [
+    "src/exporters/rasterOnlySvgPatch.js — added lab patch combo-va-baseline-range-subpixel-meta; VA_BASELINE_LEAF_CSS restored (display:inline kept)"
+  ],
+  "batchArtifacts": [
+    ".sandbox-edit/fo-drift-batch-home-blackbox-o0-l30.json",
+    ".sandbox-edit/fo-drift-batch-home-blackbox-o30-l30.json"
+  ]
+}

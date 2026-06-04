@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ink meta align probe (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Ink meta align — Range fraction vs cap-model raster dy</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      measureLivePaintedInk,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const VARIANTS = [
+      { id: 'baseline', experimentalCaptureInkMeta: false, experimentalRasterInkAlign: false },
+      { id: 'capture-meta-only', experimentalCaptureInkMeta: true, experimentalRasterInkAlign: false },
+      { id: 'raster-align-only', experimentalCaptureInkMeta: false, experimentalRasterInkAlign: true },
+      { id: 'ink-meta-align', experimentalCaptureInkMeta: true, experimentalRasterInkAlign: true },
+    ]
+
+    async function runVariant(row) {
+      const opts = {
+        dpr,
+        scale,
+        experimentalCaptureInkMeta: row.experimentalCaptureInkMeta,
+        experimentalRasterInkAlign: row.experimentalRasterInkAlign,
+      }
+      const snap = await snapdom(root, opts)
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const canvas = await snap.toCanvas()
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      const liveInk = measureLivePaintedInk(el, root)
+      return {
+        id: row.id,
+        flags: {
+          experimentalCaptureInkMeta: opts.experimentalCaptureInkMeta,
+          experimentalRasterInkAlign: opts.experimentalRasterInkAlign,
+        },
+        captureMeta: snap.meta ? { ...snap.meta } : null,
+        threeWay: {
+          livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+          svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+          canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        liveInkTopInBorder: liveInk?.topInBorder ?? null,
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const rows = []
+      for (const v of VARIANTS) {
+        rows.push(await runVariant(v))
+      }
+
+      const baseline = rows.find((r) => r.id === 'baseline')
+      const baselineCanvas = baseline?.threeWay?.liveVsCanvasTopPx ?? null
+      const alignRow = rows.find((r) => r.id === 'ink-meta-align')
+
+      const comparisons = rows.map((row) => ({
+        id: row.id,
+        canvasDeltaPx: row.threeWay?.liveVsCanvasTopPx ?? null,
+        deltaFromBaselinePx:
+          row.threeWay?.liveVsCanvasTopPx != null && baselineCanvas != null
+            ? row.threeWay.liveVsCanvasTopPx - baselineCanvas
+            : null,
+      }))
+
+      return {
+        fixture: 'mini-nav',
+        landmark,
+        dpr,
+        scale,
+        baselineCanvasDeltaPx: baselineCanvas,
+        captureMetaAlign: alignRow?.captureMeta ?? null,
+        variants: rows,
+        comparisons,
+      }
+    }
+
+    window.__foInkMetaAlignProbe = { ready: false, last: null, bootError: null }
+
+    runProbe()
+      .then((payload) => {
+        window.__foInkMetaAlignProbe.last = payload
+        window.__foInkMetaAlignProbe.ready = true
+        status.textContent = 'Done — see console / JSON runner.'
+      })
+      .catch((err) => {
+        window.__foInkMetaAlignProbe.bootError = String(err?.message || err)
+        status.textContent = `Error: ${window.__foInkMetaAlignProbe.bootError}`
+      })
+  </script>
+</body>
+</html>

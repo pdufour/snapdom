@@ -1,0 +1,401 @@
+{
+  "probe": "fo-root-cause",
+  "dpr": 2,
+  "scale": 1,
+  "landmark": "Home",
+  "section": "all",
+  "baseline": {
+    "svgBytes": 31110,
+    "threeWay": {
+      "livePaintedTopInBorder": 14.203,
+      "svgPaintedTopInBorder": 14.195,
+      "canvasPaintedTopInBorder": 17.5,
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.297,
+      "svgVsCanvasTopPx": 3.305
+    },
+    "pathAB": {
+      "pathA": {
+        "method": "inlineSvgMeasure",
+        "topInBorder": 14.195
+      },
+      "pathB": {
+        "method": "decodeDrawCanvas",
+        "topInBorder": 17.5
+      },
+      "svgVsCanvasTopPx": 3.305,
+      "verdict": "BITMAP_SHIFTS_VS_INLINE"
+    },
+    "halfLeadingLhFsPx": 2.8,
+    "residualCanvasMinusHalfLeadingPx": 0.497,
+    "foAttributes": {
+      "foreignObject": {
+        "xmlns": "http://www.w3.org/2000/svg",
+        "x": "0",
+        "y": "0",
+        "width": "500",
+        "height": "50",
+        "style": "overflow: visible;"
+      },
+      "svgRoot": {
+        "xmlns": "http://www.w3.org/2000/svg",
+        "width": "500",
+        "height": "50",
+        "viewBox": "0 0 500 50",
+        "font-size": "16px"
+      },
+      "foRootTag": "style",
+      "foRootStyleLen": 0,
+      "foInnerHtmlBytes": 30700
+    },
+    "serializedLhAudit": {
+      "landmarkText": "Home",
+      "liveLineHeightPx": 21.6,
+      "liveFontSizePx": 16,
+      "liveHalfLeadingLhFsPx": 2.8,
+      "serializedLineHeightPx": 21.6,
+      "serializedMatchesLivePx": true,
+      "landmarkLeaf": {
+        "text": "Home",
+        "tag": "a",
+        "inlineLineHeight": null,
+        "inlineFontSize": null,
+        "matchesLandmark": true
+      },
+      "serializedLhSource": "class.c1",
+      "leafCount": 3,
+      "injectedLineHeightRules": [
+        "normal",
+        "21.6px"
+      ],
+      "svgHash": "471373c7"
+    },
+    "inkRowProfile": "gradual-ramp",
+    "inkRowFirstInkRow": 35
+  },
+  "decodePaths": {
+    "rows": [
+      {
+        "pipelineId": "img-decode-default",
+        "liveVsCanvasTopPx": 3.297,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": 3.305,
+        "pixelIdenticalToDefault": true,
+        "pixelDiffFraction": 0
+      },
+      {
+        "pipelineId": "blob-url",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null,
+        "pixelIdenticalToDefault": null,
+        "pixelDiffFraction": null
+      },
+      {
+        "pipelineId": "create-image-bitmap",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null,
+        "pixelIdenticalToDefault": null,
+        "pixelDiffFraction": null
+      },
+      {
+        "pipelineId": "image-bitmap-decode",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null,
+        "pixelIdenticalToDefault": null,
+        "pixelDiffFraction": null
+      },
+      {
+        "pipelineId": "iframe-decode-retry",
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.008,
+        "svgVsCanvasTopPx": null,
+        "pixelIdenticalToDefault": null,
+        "pixelDiffFraction": null
+      }
+    ],
+    "canvasDeltaSpreadPx": 0,
+    "verdict": "DECODE_PATH_INVARIANT",
+    "implication": "Drift is intrinsic to FO bitmap paint, not img.decode vs createImageBitmap vs blob URL."
+  },
+  "hypotheses": [
+    {
+      "hypothesis": "Half-leading strut in FO bitmap",
+      "falsifyIf": "lh=1 eliminates drift",
+      "recipeId": "hyp-lh-1",
+      "canvasDeltaPx": 4.297,
+      "svgDeltaPx": 0.297,
+      "pixelIdenticalToBaseline": false,
+      "pixelDiffFraction": 0.02,
+      "forkTrace": null,
+      "result": "NOT_FALSIFIED"
+    },
+    {
+      "hypothesis": "Flex stretch 48px FO height",
+      "falsifyIf": "FO height=21.6px eliminates drift",
+      "recipeId": "hyp-fo-h-21.6",
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "pixelIdenticalToBaseline": true,
+      "pixelDiffFraction": 0,
+      "forkTrace": null,
+      "result": "NOT_FALSIFIED"
+    },
+    {
+      "hypothesis": "drawImage fractional GBCR nudge",
+      "falsifyIf": "disable nudge → full 2.797 class only",
+      "recipeId": "hyp-gbcr-nudge-on",
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "pixelIdenticalToBaseline": true,
+      "pixelDiffFraction": 0,
+      "forkTrace": null,
+      "result": "INCONCLUSIVE"
+    },
+    {
+      "hypothesis": "drawImage fractional GBCR nudge (off)",
+      "falsifyIf": "disable nudge reveals ~2.797",
+      "recipeId": "hyp-gbcr-nudge-off",
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "pixelIdenticalToBaseline": true,
+      "pixelDiffFraction": 0,
+      "forkTrace": null,
+      "result": "UNEXPECTED"
+    },
+    {
+      "hypothesis": "Raster fork no-op",
+      "falsifyIf": "visible marker patch changes bitmap",
+      "recipeId": "hyp-fork-marker",
+      "canvasDeltaPx": 3.297,
+      "svgDeltaPx": -0.008,
+      "pixelIdenticalToBaseline": true,
+      "pixelDiffFraction": 0,
+      "forkTrace": {
+        "patchId": "inject-fo-lh-pin",
+        "preHash": "471373c7",
+        "postHash": "46554e18",
+        "decodeHash": null,
+        "svgStringChanged": true,
+        "decodeMatchesPost": null,
+        "bytesDelta": 45,
+        "textLeafAudit": {
+          "preSerializedLhPx": null,
+          "postSerializedLhPx": null,
+          "preInlineLh": null,
+          "postInlineLh": null,
+          "inlineLhChanged": false,
+          "injectedLhRulesAdded": [
+            "21.6px!important"
+          ],
+          "styleInjectChanged": true,
+          "serializedLhChanged": false
+        },
+        "textCssNoOp": false
+      },
+      "result": "LH_PIN_NO_OP (fork runs, lh redundant)"
+    },
+    {
+      "hypothesis": "Serialization lh wrong",
+      "falsifyIf": "serialized lh ≠ computed",
+      "result": "FALSIFIED (lh correct in SVG)",
+      "detail": {
+        "liveLineHeightPx": 21.6,
+        "serializedLineHeightPx": 21.6,
+        "serializedMatchesLivePx": true
+      }
+    },
+    {
+      "hypothesis": "Raster fork wiring (visible marker)",
+      "falsifyIf": "marker CSS changes bitmap pixels",
+      "recipeId": "hyp-fork-red-marker",
+      "canvasDeltaPx": 3.297,
+      "pixelIdenticalToBaseline": true,
+      "pixelDiffFraction": 0,
+      "result": "FORK_NO_VISUAL_CHANGE"
+    }
+  ],
+  "domLadder": {
+    "rows": [
+      {
+        "domVariant": "bare-text",
+        "threeWay": {
+          "livePaintedTopInBorder": 0,
+          "svgPaintedTopInBorder": 0,
+          "canvasPaintedTopInBorder": 3.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 19,
+        "parentDisplay": "block",
+        "parentAlignItems": "normal",
+        "driftAppears": true
+      },
+      {
+        "domVariant": "block-text",
+        "threeWay": {
+          "livePaintedTopInBorder": 13,
+          "svgPaintedTopInBorder": 13,
+          "canvasPaintedTopInBorder": 16.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 45.594,
+        "parentDisplay": "block",
+        "parentAlignItems": "normal",
+        "driftAppears": true
+      },
+      {
+        "domVariant": "flex-start",
+        "threeWay": {
+          "livePaintedTopInBorder": 1,
+          "svgPaintedTopInBorder": 1,
+          "canvasPaintedTopInBorder": 4.5,
+          "liveVsSvgTopPx": 0,
+          "liveVsCanvasTopPx": 3.5,
+          "svgVsCanvasTopPx": 3.5
+        },
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 21.594,
+        "parentDisplay": "flex",
+        "parentAlignItems": "flex-start",
+        "driftAppears": true
+      },
+      {
+        "domVariant": "flex-stretch",
+        "threeWay": {
+          "livePaintedTopInBorder": 14.203,
+          "svgPaintedTopInBorder": 14.195,
+          "canvasPaintedTopInBorder": 17.5,
+          "liveVsSvgTopPx": -0.008,
+          "liveVsCanvasTopPx": 3.297,
+          "svgVsCanvasTopPx": 3.305
+        },
+        "halfLeadingLhFsPx": 2.8,
+        "leafHeightGbcr": 48,
+        "parentDisplay": "flex",
+        "parentAlignItems": "stretch",
+        "driftAppears": true
+      }
+    ],
+    "minimalReproducingVariant": "bare-text",
+    "implication": "Drift present on bare text — flex not required."
+  },
+  "handBuilt": {
+    "method": "hand-built-static-svg-no-snapdom",
+    "svgBytes": 572,
+    "threeWay": {
+      "livePaintedTopInBorder": null,
+      "svgPaintedTopInBorder": 14.203,
+      "canvasPaintedTopInBorder": null,
+      "liveVsSvgTopPx": null,
+      "liveVsCanvasTopPx": null
+    },
+    "verdict": "INCONCLUSIVE"
+  },
+  "rootCause": {
+    "verdict": "CONFIRMED_BITMAP_ONLY_HALF_LEADING_CORRELATE",
+    "confirmed": [
+      "BITMAP_ONLY — serialized FO ink ≈ live; canvas decode bitmap does not.",
+      "Path A/B same SVG: inline FO vs decode+draw Δ=3.305px.",
+      "Decode path invariant — img.decode, blob URL, createImageBitmap all tie.",
+      "120+ recipe tie: lh-pin/fork re-asserts bytes capture already encodes — 0px bitmap change."
+    ],
+    "likely": [
+      "Half-leading partial: canvasΔ=3.296875px vs (lh−fs)/2=2.8000000000000007px (residual 0.497px)."
+    ],
+    "falsified": [
+      "Flex stretch required — bare text still drifts.",
+      "Half-leading strut sole cause — lh=1 did not eliminate drift.",
+      "Flex 48px FO height sole cause — FO h=21.6px did not fix.",
+      "Wrong serialized lh — audit shows live match."
+    ]
+  },
+  "evidenceTable": [
+    {
+      "test": "Path A/B same SVG",
+      "result": "3.305px svg↔canvas",
+      "implication": "Drift enters at FO→bitmap, not serialization"
+    },
+    {
+      "test": "Serialized lh audit",
+      "result": "matches live",
+      "implication": "Capture OK — not wrong lh in SVG"
+    },
+    {
+      "test": "Decode path sweep",
+      "result": "spread 0px — DECODE_PATH_INVARIANT",
+      "implication": "Drift is intrinsic to FO bitmap paint, not img.decode vs createImageBitmap vs blob URL."
+    },
+    {
+      "test": "Ink row profile",
+      "result": "gradual-ramp",
+      "implication": "Profile inconclusive"
+    },
+    {
+      "test": "Half-leading residual",
+      "result": "0.497px @ dpr=2",
+      "implication": "canvasΔ=3.296875px vs (lh−fs)/2=2.8000000000000007px"
+    },
+    {
+      "test": "DOM ladder (flex incremental)",
+      "result": "bare-text",
+      "implication": "Drift present on bare text — flex not required."
+    },
+    {
+      "test": "Hand-built minimal FO SVG",
+      "result": "nullpx canvasΔ",
+      "implication": "INCONCLUSIVE"
+    },
+    {
+      "test": "Hypothesis: Half-leading strut in FO bitmap",
+      "result": "NOT_FALSIFIED (canvasΔ=4.296875)",
+      "implication": "lh=1 eliminates drift"
+    },
+    {
+      "test": "Hypothesis: Flex stretch 48px FO height",
+      "result": "NOT_FALSIFIED (canvasΔ=3.296875)",
+      "implication": "FO height=21.6px eliminates drift"
+    },
+    {
+      "test": "Hypothesis: drawImage fractional GBCR nudge",
+      "result": "INCONCLUSIVE (canvasΔ=3.296875)",
+      "implication": "disable nudge → full 2.797 class only"
+    },
+    {
+      "test": "Hypothesis: drawImage fractional GBCR nudge (off)",
+      "result": "UNEXPECTED (canvasΔ=3.296875)",
+      "implication": "disable nudge reveals ~2.797"
+    },
+    {
+      "test": "Hypothesis: Raster fork no-op",
+      "result": "LH_PIN_NO_OP (fork runs, lh redundant) (canvasΔ=3.296875)",
+      "implication": "visible marker patch changes bitmap"
+    },
+    {
+      "test": "Hypothesis: Serialization lh wrong",
+      "result": "FALSIFIED (lh correct in SVG)",
+      "implication": "serialized lh ≠ computed"
+    },
+    {
+      "test": "Hypothesis: Raster fork wiring (visible marker)",
+      "result": "FORK_NO_VISUAL_CHANGE (canvasΔ=3.296875)",
+      "implication": "marker CSS changes bitmap pixels"
+    }
+  ],
+  "whyRecipesTie2797": [
+    "Serialized SVG already encodes correct lh — svgΔ ≈ 0.008px.",
+    "Raster fork lh-pin re-asserts existing value — 0/100k pixel diff vs baseline.",
+    "Drift lives in Chromium FO bitmap paint origin, before drawImage compensation.",
+    "Only blit nudges (vdrift/gbcrFracY) or text bypass change reported canvasΔ."
+  ],
+  "promisingFixDirection": "Structural FO text strut paint at decode — e.g. leading-trim/text-box-edge at raster, FO viewport clip aligned to line box, or upstream Chromium fix — not capture lh pin or drawImage nudge.",
+  "svgHash": "471373c7",
+  "headed": true
+}

@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapDOM checkout repro (v3)</title>
+  <!-- Prevent noisy favicon.ico 404 in local servers -->
+  <link rel="icon" href="data:," />
+  <style>
+    :root { --guide-color: #ff0000; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; background: #fff;
+      font-family: -apple-system, system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .controls {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+      max-width: calc(100vw - 24px);
+    }
+
+    .workspace {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+      width: min(96vw, 1240px);
+      margin: 72px auto 32px;
+      padding: 0 12px;
+    }
+
+    @media (max-width: 960px) {
+      .workspace { flex-direction: column; align-items: center; }
+    }
+
+    .stage-wrap {
+      flex: 0 0 auto;
+      position: sticky;
+      top: 72px;
+    }
+
+    .stage {
+      position: relative;
+      width: 500px;
+      max-height: calc(100vh - 88px);
+      border: 1px solid #eee;
+      background: #fff;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .stage-inner {
+      position: relative;
+      min-height: 600px;
+    }
+
+    .layer { position: absolute; inset: 0; background: #fff; }
+    #live-layer { z-index: 1; }
+    #cap-layer { z-index: 2; opacity: 0; pointer-events: none; }
+    body[data-show-cap="true"] #cap-layer { opacity: 1; pointer-events: auto; }
+    body[data-flash="live"] #cap-layer { opacity: 0; }
+    body[data-flash="snapdom"] #cap-layer { opacity: 1; }
+    body[data-flash="both"] #cap-layer { opacity: 0.45; }
+
+    .stage-flash-label {
+      position: absolute; left: 0; right: 0; top: 8px; z-index: 200;
+      text-align: center; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: #2563eb; pointer-events: none; opacity: 0;
+      transition: opacity 0.15s;
+    }
+    body[data-flash] .stage-flash-label { opacity: 1; }
+
+    .guide {
+      position: absolute; left: 0; right: 0; height: 0;
+      border-top: 1px solid var(--guide-color);
+      pointer-events: none; z-index: 100; top: 100px;
+    }
+    .ink-guide {
+      position: absolute; left: 0; right: 0; height: 0;
+      pointer-events: none; z-index: 101;
+    }
+    .ink-guide-live { border-top: 2px solid #22c55e; }
+    .ink-guide-cap { border-top: 2px solid #ef4444; opacity: 0; }
+    body[data-show-cap="true"] .ink-guide-cap { opacity: 1; }
+    body[data-show-cap="true"] .ink-guide-live { opacity: 1; }
+    body.pixel-diff-busy #cap-layer { opacity: 0 !important; pointer-events: none !important; }
+    /* Hide debug overlays in any SnapDOM raster (they caused a red line in old tab screenshots). */
+    body.capture-quiet .guide,
+    body.capture-quiet .ink-guide,
+    body.capture-quiet .stage-flash-label,
+    body.capture-quiet .box-ink-overlay {
+      display: none !important;
+    }
+
+    .box-ink-overlay {
+      position: absolute;
+      pointer-events: none;
+      z-index: 102;
+      box-sizing: border-box;
+    }
+    .box-ink-overlay--border { border: 2px solid #3b82f6; }
+    .box-ink-overlay--padding { border: 2px dashed #a855f7; }
+    .box-ink-overlay--ink { outline: 2px solid #22c55e; outline-offset: -1px; }
+    .box-ink-overlay--cap { outline: 2px solid #f59e0b; outline-offset: -1px; }
+    .box-ink-overlay--canvas-ink { outline: 2px solid #ef4444; outline-offset: -1px; }
+
+    #cap-content {
+      position: absolute;
+      left: 0;
+      top: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Checkout Styles */
+    .checkout-page { background: #fff; color: #111; min-height: 100%; display: flex; flex-direction: column; font-size: 24px; }
+    .checkout-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 30px; background: #fff; border-bottom: 2px solid #eee;
+    }
+    .logo { font-weight: 800; color: #2563eb; font-size: 32px; }
+    /*
+     * Layout analysis (nav ink drift debugging — see structure report flex.* rows):
+     * - .checkout-header: row flex, align-items: center (logo + nav centered as items).
+     * - nav: row flex, gap 20px, align-items defaults to stretch → <a> stretch on cross-axis (vertical).
+     * - <a> text leaves: cross-stretched flex items; border-box height ≠ line-height (23px from 20px font).
+     * Canvas ink drift is partial flexbox: nav stretch + normal line-height + FO raster, not header centering.
+     */
+    .checkout-header nav { display: flex; gap: 20px; font-size: 20px; }
+    .checkout-header a { color: #666; text-decoration: none; }
+    .checkout-main { padding: 30px; flex: 1; }
+    .checkout-form { display: flex; flex-direction: column; }
+    .checkout-form label { display: block; font-size: 48px; font-weight: 700; color: #444; margin: 0 0 25px 0; font-family: -apple-system, system-ui, sans-serif; letter-spacing: normal; }
+    .checkout-form label span { display: block; margin-bottom: 10px; }
+    .checkout-form input:not([type="checkbox"]) { padding: 12px 16px; border-radius: 8px; border: 2px solid #ddd; width: 100%; font-size: 50px; margin: 0; font-family: -apple-system, system-ui, sans-serif; letter-spacing: normal; }
+    .checkout-checkbox { display: flex; align-items: center; gap: 12px; font-weight: 600; padding: 10px 0; font-size: 22px; }
+    .checkout-checkbox input { margin: 0; width: 24px; height: 24px; }
+    
+    #cap-content canvas { display: block; }
+
+    .structure-host {
+      flex: 1 1 360px;
+      min-width: min(100%, 360px);
+      max-width: 720px;
+      font-size: 12px;
+    }
+    .structure-host:empty { display: none; }
+    .structure-host:not(:empty) {
+      position: sticky;
+      top: 72px;
+      max-height: calc(100vh - 88px);
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .structure-report > h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+    .structure-summary { margin: 0 0 12px; }
+    .structure-summary.is-ok { color: #2e7d32; font-weight: 600; }
+    .structure-summary.is-warn { color: #b71c1c; font-weight: 600; }
+    .structure-empty { color: #666; margin: 0; }
+    .structure-section {
+      padding: 10px 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      background: #fafafa;
+      margin-bottom: 10px;
+    }
+    .structure-section h3 { margin: 0 0 6px; font-size: 13px; }
+    .structure-table {
+      width: 100%; border-collapse: collapse;
+    }
+    .structure-table th, .structure-table td {
+      border: 1px solid #e5e5e5; padding: 4px 8px; text-align: left;
+    }
+    .structure-table tr.warn td { background: #fff3f3; color: #b71c1c; }
+    .structure-table tr.info td { color: #666; font-style: italic; }
+    .debug-panel {
+      position: fixed; right: 12px; bottom: 12px; z-index: 1100;
+      width: min(420px, calc(100vw - 24px)); max-height: min(50vh, 420px);
+      overflow: auto; font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(255,255,255,0.97); border: 1px solid #ccc; border-radius: 8px;
+      padding: 8px 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      display: none;
+    }
+    body[data-flex-debug="true"] .debug-panel { display: block; }
+    .debug-panel h4 { margin: 0 0 6px; font: 600 12px -apple-system, system-ui, sans-serif; }
+    .debug-panel pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+    .debug-panel .debug-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .debug-panel button { font: 500 11px -apple-system, system-ui, sans-serif; padding: 4px 8px; }
+    .strategy-host {
+      width: min(96vw, 1240px);
+      margin: 0 auto 48px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+    .strategy-host h3 {
+      margin: 0 0 8px;
+      font: 600 14px/1.2 -apple-system, system-ui, sans-serif;
+      color: #222;
+    }
+    .strategy-actions {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center;
+    }
+    .strategy-actions label { font-size: 11px; color: #444; }
+    .strategy-table-wrap { overflow: auto; border: 1px solid #e5e5e5; border-radius: 8px; background: #fafafa; }
+    .strategy-table {
+      width: 100%; border-collapse: collapse; font: 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .strategy-table th, .strategy-table td {
+      border: 1px solid #e5e5e5; padding: 4px 8px; text-align: left; white-space: nowrap;
+    }
+    .strategy-table tr.warn td { background: #fff3f3; color: #b71c1c; }
+    .strategy-status { margin: 8px 0 0; color: #666; font-size: 11px; }
+    .metrics-panel {
+      position: fixed; left: 12px; bottom: 12px; z-index: 1100;
+      width: min(480px, calc(100vw - 24px)); max-height: min(55vh, 480px);
+      overflow: auto; font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(255,255,255,0.98); border: 1px solid #ccc; border-radius: 8px;
+      padding: 8px 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      display: none;
+    }
+    body[data-metrics-debug="true"] .metrics-panel { display: block; }
+    .metrics-panel h4 { margin: 0 0 8px; font: 600 12px -apple-system, system-ui, sans-serif; }
+    .metrics-panel details {
+      margin: 0 0 6px; border: 1px solid #e5e5e5; border-radius: 6px;
+      background: #fafafa; padding: 4px 8px;
+    }
+    .metrics-panel summary {
+      cursor: pointer; font: 600 11px -apple-system, system-ui, sans-serif;
+      color: #333; list-style-position: inside;
+    }
+    .metrics-panel pre {
+      margin: 6px 0 0; white-space: pre-wrap; word-break: break-word;
+      max-height: 160px; overflow: auto; font-size: 10px;
+    }
+    .metrics-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .metrics-actions button { font: 500 11px -apple-system, system-ui, sans-serif; padding: 4px 8px; }
+    .extended-metrics-block {
+      margin: 0 0 12px; padding: 8px 0 0; border-top: 1px solid #e5e5e5;
+    }
+    .extended-metrics-block h5 {
+      margin: 0 0 6px; font: 600 11px -apple-system, system-ui, sans-serif;
+    }
+    .extended-filter { font: 500 11px -apple-system, system-ui, sans-serif; margin-bottom: 6px; }
+    .extended-filter select { font: inherit; max-width: 100%; }
+    #extended-metrics-sections { max-height: 220px; overflow: auto; }
+    #why-failing-panel {
+      display: none;
+      width: min(96vw, 1240px);
+      margin: 0 auto 16px;
+      padding: 12px 16px;
+      background: #fff8f0;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      font: 13px/1.45 -apple-system, system-ui, sans-serif;
+    }
+    body[data-why-failing="true"] #why-failing-panel { display: block; }
+    #why-failing-panel h3 { margin: 0 0 8px; font-size: 14px; }
+    #why-failing-panel ul { margin: 0; padding: 0 0 0 18px; }
+    #why-failing-panel li { margin: 4px 0; font-variant-numeric: tabular-nums; }
+    #why-failing-panel li.warn { color: #b91c1c; font-weight: 600; }
+    #why-failing-panel .why-actions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #why-failing-panel a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  
+  <div class="controls">
+    <span style="font-size:11px;color:#666;max-width:140px;line-height:1.3">
+      repro v3
+    </span>
+    <button id="btn-capture">Capture</button>
+    <button id="btn-capture-all" type="button">Capture all</button>
+    <button id="btn-toggle">Show Canvas</button>
+    <button id="btn-export-svg" type="button">Export SVG</button>
+    <button id="btn-export-html" type="button">Export compare HTML</button>
+    <button id="btn-flex-debug" type="button" title="Toggle flex/layout debug panel">Flex debug</button>
+    <button id="btn-metrics-dump" type="button" title="Full metrics JSON + collapsible breakdown">Metrics dump</button>
+    <button id="btn-extended-metrics" type="button" title="Extended geometry/font/flex/ink metrics">Extended metrics</button>
+    <button id="btn-strategy-compare" type="button" title="Run all raster strategies (slow)">Compare strategies</button>
+    <label>Guide Y: <input type="range" id="guide-slider" min="0" max="1200" value="100"></label>
+  </div>
+
+  <aside id="metrics-panel" class="metrics-panel" aria-live="polite">
+    <h4>Metrics debug</h4>
+    <div class="metrics-actions">
+      <button type="button" id="btn-metrics-table">console.table</button>
+      <button type="button" id="btn-metrics-export">Download JSON</button>
+      <button type="button" id="btn-metrics-home">Home bundle</button>
+    </div>
+    <div class="extended-metrics-block">
+      <h5>Extended metrics</h5>
+      <div class="extended-filter">
+        <label>Category
+          <select id="extended-category-filter">
+            <option value="all">All</option>
+            <option value="geometry">Geometry</option>
+            <option value="text">Text / font</option>
+            <option value="flex">Flex</option>
+            <option value="paint">Paint / ink</option>
+            <option value="raster">Raster</option>
+            <option value="flags">Flags</option>
+            <option value="deltas">Deltas</option>
+          </select>
+        </label>
+        <button type="button" id="btn-extended-copy">Copy JSON</button>
+        <button type="button" id="btn-extended-table">console.table</button>
+      </div>
+      <div id="extended-metrics-sections">Capture first, then Extended metrics.</div>
+    </div>
+    <div id="metrics-sections">Capture first, then Metrics dump.</div>
+  </aside>
+
+  <section id="why-failing-panel" aria-live="polite">
+    <h3>Why failing?</h3>
+    <p style="margin:0 0 8px;color:#666">Capture first — one-line diagnosis per landmark (<code>explainFailure</code>).</p>
+    <ul id="why-failing-list"></ul>
+    <div class="why-actions">
+      <a id="why-failing-repro-link" href="issue-repro-fo-three-way.html?auto=1" target="_blank" rel="noopener">Open FO three-way repro</a>
+      <button type="button" id="btn-sensitivity-check">Run sensitivity (+10px shift)</button>
+      <span id="sensitivity-result" class="meta" style="font-size:12px;color:#666"></span>
+    </div>
+  </section>
+
+  <aside id="flex-debug-panel" class="debug-panel" aria-live="polite">
+    <h4>Flex / layout debug</h4>
+    <div class="debug-actions">
+      <button type="button" id="btn-debug-home">Dump Home</button>
+      <button type="button" id="btn-debug-products">Dump Products</button>
+      <button type="button" id="btn-debug-email">Dump Email</button>
+      <button type="button" id="btn-debug-copy">Copy JSON</button>
+      <button type="button" id="btn-debug-table">console.table</button>
+      <button type="button" id="btn-debug-pipeline">Pipeline diff</button>
+      <button type="button" id="btn-debug-overlay">Box/ink overlay</button>
+      <button type="button" id="btn-debug-crop">Export crop</button>
+    </div>
+    <pre id="flex-debug-out">Capture first, then pick a landmark.</pre>
+  </aside>
+
+  <div class="workspace">
+    <div class="stage-wrap">
+      <div class="stage" id="stage-scroll">
+        <div class="stage-inner" id="stage-inner">
+        <div class="stage-flash-label" id="stage-flash-label" aria-live="polite"></div>
+        <div class="guide" id="guide-line"></div>
+    <div class="ink-guide ink-guide-live" id="ink-guide-live" title="Green: live DOM Range ink top"></div>
+    <div class="ink-guide ink-guide-cap" id="ink-guide-cap" title="Red: SVG clone Range ink top (same ruler as structure table)"></div>
+
+        <div class="layer" id="live-layer">
+          <div id="capture-target" class="checkout-page">
+            <!-- Cache-busting buster to force layout freshness on every capture -->
+            <div id="sd-buster" style="position:absolute;top:0;left:0;width:1px;height:1px;visibility:hidden;pointer-events:none;" data-capture="exclude"></div>
+            
+            <header class="checkout-header">
+              <span class="logo">ShopDemo1</span>
+              <nav><a href="#">Home</a><a href="#">Products</a></nav>
+            </header>
+            <main class="checkout-main">
+              <h2 style="margin: 0 0 20px 0; font-size: 80px; font-weight: 700; line-height: 1.2; letter-spacing: normal;">Checkout</h2>
+              <form class="checkout-form" onsubmit="return false">
+                <label><span>Email Address</span> <input type="email" placeholder="you@example.com"></label>
+                <label class="checkout-checkbox">
+                  <input type="checkbox" id="checkout-remember">
+                  Remember my details
+                </label>
+                <label><span>Promo Code</span> <input type="text" placeholder="SAVE10"></label>
+              </form>
+            </main>
+          </div>
+        </div>
+
+        <div class="layer" id="cap-layer">
+          <div id="cap-content"></div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="structure-host" class="structure-host"></div>
+  </div>
+
+  <div id="multi-host" style="width:min(96vw,1240px);margin:0 auto 48px;padding:0 12px;display:none;">
+    <h3 style="margin:0 0 10px 0;font:600 14px/1.2 -apple-system,system-ui,sans-serif;color:#222;">Multi-capture (same page)</h3>
+    <div id="multi-grid" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <section id="strategy-host" class="strategy-host" hidden>
+    <h3>Raster strategy comparison</h3>
+    <p style="margin:0 0 10px;color:#666;max-width:720px;line-height:1.4">
+      Same SVG capture, multiple <code>toCanvas</code> paths. Δ columns are vs live cap ink in border box
+      (<code>paint.canvas.vs-border.top</code>). Console: <code>__snapdomDebug.compareRasterStrategies()</code>.
+    </p>
+    <div class="strategy-actions">
+      <button type="button" id="btn-strategy-run">Run all strategies</button>
+      <button type="button" id="btn-strategy-copy">Copy JSON report</button>
+      <label><input type="checkbox" id="strategy-console-table" checked> console.table</label>
+    </div>
+    <div class="strategy-table-wrap">
+      <table class="strategy-table" id="strategy-table">
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>Raster path</th>
+            <th>Landmark</th>
+            <th>cap Δ clone</th>
+            <th>canvas Δ top</th>
+            <th>pad Δ top</th>
+            <th>backing W×H</th>
+          </tr>
+        </thead>
+        <tbody id="strategy-tbody"></tbody>
+      </table>
+    </div>
+    <p class="strategy-status" id="strategy-status">Run Compare strategies or Capture first.</p>
+  </section>
+
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs';
+    // Expose snapdom for external harnesses (e.g. scripts/brute-parity.mjs).
+    window.snapdom = snapdom;
+    import {
+      buildCompareHtml,
+      svgFromDataUrl,
+      parseSvgSize,
+      collectPageStyles,
+      downloadText,
+    } from './checkout-export-utils.js';
+    import {
+      buildCheckoutStructureReport,
+      renderCheckoutStructureReport,
+      buildLandmarkMetricsBundle,
+      compactLandmarkRow,
+    } from './structure-compare-report.js';
+    import {
+      RASTER_STRATEGY_PRESETS,
+      CHECKOUT_MATRIX_LANDMARKS,
+      CHECKOUT_DUMP_LANDMARKS,
+      describeRasterPath,
+      readCanvasRasterMeta,
+      formatStrategyCompareMarkdown,
+      buildPipelineStageDiff,
+      buildIntrospectPipelineReport,
+      buildCanvasInkRowScan,
+      buildDebugInkProbeRegion,
+      exportLandmarkCropPng,
+      explainFailure,
+      explainFailureFromBundle,
+      debugInkRowScan,
+      compareThreeWay,
+      findCheckoutTextLeaf,
+      buildComprehensiveMetricsBundle,
+      buildAllLandmarkMetricsBundles,
+      compactMetricsTableRow,
+      buildExtendedMetrics,
+      diffLiveSvgCanvas,
+      compareExtendedTable,
+      formatExtendedSnapshotLines,
+      countExtendedMetricFields,
+      EXTENDED_METRIC_CATEGORIES,
+    } from './raster-debug-metrics.js';
+    import {
+      probeImageDecodeCapTop,
+    } from './fo-image-decode-probe.js';
+    import {
+      measureTextInk,
+      measureSvgCloneTextInk,
+      measureCanvasInkForElement,
+      compareLiveCanvasCapInk,
+      collectFlexLayoutDebug,
+    } from '../__tests__/helpers/svgLiveCompare.js';
+
+    const body = document.body;
+    const target = document.getElementById('capture-target');
+    const capContent = document.getElementById('cap-content');
+    const btnToggle = document.getElementById('btn-toggle');
+    const guideLine = document.getElementById('guide-line');
+    const guideSlider = document.getElementById('guide-slider');
+    function setCaptureQuiet(quiet) {
+      body.classList.toggle('capture-quiet', quiet);
+    }
+
+    let showingCap = false;
+
+    function updateStructureReport(strategyId = lastRasterStrategyId) {
+      const host = document.getElementById('structure-host');
+      const opts = {
+        canvas: lastCapCanvas,
+        dpr: captureDpr(),
+        scale: 1,
+        strategyId: strategyId || null,
+        captureMeta: lastCaptureMeta,
+      };
+      lastStructureReport = lastSvgMarkup
+        ? buildCheckoutStructureReport(target, lastSvgMarkup, opts)
+        : null;
+      renderCheckoutStructureReport(host, target, lastSvgMarkup, opts);
+    }
+
+    /** @type {string|null} */
+    let lastSvgMarkup = null;
+    /** @type {HTMLCanvasElement|null} */
+    let lastCapCanvas = null;
+
+    const captureDpr = () => Math.min(window.devicePixelRatio || 1, 2);
+    const urlDebug = new URLSearchParams(location.search).get('debug') === '1';
+    const urlFlexDebug = new URLSearchParams(location.search).get('flexDebug') === '1';
+    const urlParams = new URLSearchParams(location.search);
+    const rasterStrategy = urlParams.get('rasterStrategy') || '';
+    const debugRasterShiftPx = (() => {
+      const raw = urlParams.get('debugRasterShift');
+      if (raw == null || raw === '') return undefined;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : undefined;
+    })();
+    const enableAlerts = urlParams.get('alert') === '1';
+    const experimentalRasterSvgPatch =
+      (urlParams.get('experimentalRasterSvgPatch') || '').trim() || undefined;
+    const experimentalRasterDisableGbcrNudge =
+      urlParams.get('experimentalRasterDisableGbcrNudge') === '1' ||
+      urlParams.get('experimentalRasterDisableGbcrNudge') === 'true';
+    const experimentalRasterFlagOn = (key) =>
+      urlParams.get(key) === '1' || urlParams.get(key) === 'true';
+    const experimentalRasterDecodeSettle = experimentalRasterFlagOn(
+      'experimentalRasterDecodeSettle',
+    );
+    const experimentalRasterDoubleDecode = experimentalRasterFlagOn(
+      'experimentalRasterDoubleDecode',
+    );
+    const experimentalRasterNaturalDims = experimentalRasterFlagOn(
+      'experimentalRasterNaturalDims',
+    );
+    const experimentalRasterBackingCeil = experimentalRasterFlagOn(
+      'experimentalRasterBackingCeil',
+    );
+    const experimentalRasterPreDecodeRaf = experimentalRasterFlagOn(
+      'experimentalRasterPreDecodeRaf',
+    );
+    const experimentalRasterCtxNoScale = experimentalRasterFlagOn('experimentalRasterCtxNoScale');
+    const experimentalRasterInkAlign = experimentalRasterFlagOn('experimentalRasterInkAlign');
+    const experimentalFoTextLineHeightNormal = experimentalRasterFlagOn(
+      'experimentalFoTextLineHeightNormal',
+    );
+
+    const experimentalFoPinLineHeightOnTextLeaf = experimentalRasterFlagOn(
+      'experimentalFoPinLineHeightOnTextLeaf',
+    );
+    const experimentalFoNonEmptyLineHeightNormal = experimentalRasterFlagOn(
+      'experimentalFoNonEmptyLineHeightNormal',
+    );
+
+    const flexDebugOut = document.getElementById('flex-debug-out');
+    const metricsSections = document.getElementById('metrics-sections');
+    const extendedSections = document.getElementById('extended-metrics-sections');
+    const extendedCategoryFilter = document.getElementById('extended-category-filter');
+    /** @type {object|null} */
+    let lastExtendedPayload = null;
+    function setMetricsDebugVisible(on) {
+      if (on) body.setAttribute('data-metrics-debug', 'true');
+      else body.removeAttribute('data-metrics-debug');
+    }
+    function setFlexDebugVisible(on) {
+      if (on) body.setAttribute('data-flex-debug', 'true');
+      else body.removeAttribute('data-flex-debug');
+    }
+    if (urlFlexDebug) setFlexDebugVisible(true);
+
+    document.getElementById('btn-flex-debug')?.addEventListener('click', () => {
+      const on = !body.hasAttribute('data-flex-debug');
+      setFlexDebugVisible(on);
+    });
+    document.getElementById('btn-metrics-dump')?.addEventListener('click', () => {
+      setMetricsDebugVisible(true);
+      renderMetricsSections(exportAllMetrics());
+    });
+    document.getElementById('btn-extended-metrics')?.addEventListener('click', () => {
+      setMetricsDebugVisible(true);
+      lastExtendedPayload = exportExtendedPayload();
+      renderExtendedMetricsSections({
+        landmarks: lastExtendedPayload.landmarks,
+        flexVariants: lastExtendedPayload.flexVariantsTop5,
+      });
+      console.table(lastExtendedPayload.summaryTable);
+    });
+    document.getElementById('btn-extended-copy')?.addEventListener('click', () => {
+      const payload = lastExtendedPayload ?? exportExtendedPayload();
+      navigator.clipboard?.writeText(JSON.stringify(payload, null, 2));
+    });
+    document.getElementById('btn-extended-table')?.addEventListener('click', () => {
+      const payload = lastExtendedPayload ?? exportExtendedPayload();
+      console.table(payload.summaryTable);
+      if (payload.flexTable?.length) console.table(payload.flexTable);
+    });
+    extendedCategoryFilter?.addEventListener('change', () => {
+      if (lastExtendedPayload) {
+        renderExtendedMetricsSections({
+          landmarks: lastExtendedPayload.landmarks,
+          flexVariants: lastExtendedPayload.flexVariantsTop5,
+        });
+      }
+    });
+
+    /** @type {object|null} */
+    let lastStructureReport = null;
+    /** @type {object|null} */
+    let lastCaptureMeta = null;
+    /** @type {string|null} */
+    let lastRasterStrategyId = null;
+    /** @type {object[]|null} */
+    let lastStrategyCompareReport = null;
+    /** @type {string} */
+    let debugLandmark = 'Home';
+    let boxInkOverlayOn = false;
+
+    function reportError(e) {
+      console.error(e);
+      const msg =
+        (e && (e.stack || e.message)) ? (e.stack || e.message) : String(e);
+      // Avoid blocking alerts during automated blackbox runs.
+      if (enableAlerts) alert(msg);
+    }
+    const captureOpts = () => ({
+      embedFonts: true,
+      debug: urlDebug,
+      dpr: captureDpr(),
+      scale: 1,
+      cache: 'disabled',
+      ...(experimentalRasterSvgPatch
+        ? { experimentalRasterSvgPatch }
+        : {}),
+      ...(experimentalRasterDisableGbcrNudge
+        ? { experimentalRasterDisableGbcrNudge: true }
+        : {}),
+      ...(experimentalRasterDecodeSettle ? { experimentalRasterDecodeSettle: true } : {}),
+      ...(experimentalRasterDoubleDecode ? { experimentalRasterDoubleDecode: true } : {}),
+      ...(experimentalRasterNaturalDims ? { experimentalRasterNaturalDims: true } : {}),
+      ...(experimentalRasterBackingCeil ? { experimentalRasterBackingCeil: true } : {}),
+      ...(experimentalRasterPreDecodeRaf ? { experimentalRasterPreDecodeRaf: true } : {}),
+      ...(experimentalRasterCtxNoScale ? { experimentalRasterCtxNoScale: true } : {}),
+      ...(experimentalRasterInkAlign ? { experimentalRasterInkAlign: true } : {}),
+      ...(experimentalFoTextLineHeightNormal
+        ? { experimentalFoTextLineHeightNormal: true }
+        : {}),
+      ...(experimentalFoPinLineHeightOnTextLeaf
+        ? { experimentalFoPinLineHeightOnTextLeaf: true }
+        : {}),
+      ...(experimentalFoNonEmptyLineHeightNormal
+        ? { experimentalFoNonEmptyLineHeightNormal: true }
+        : {}),
+    });
+
+    /** One DOM capture; SVG string is free, canvas rasterizes the same snapshot. */
+    async function snapdomOnce(opts, toCanvasExtra = null) {
+      const snap = await snapdom(target, opts);
+      const baseRs = rasterStrategy || '';
+      const rs = baseRs ? baseRs : '';
+      const toCanvasOpts = {
+        ...(toCanvasExtra || {}),
+        ...(experimentalRasterSvgPatch
+          ? { experimentalRasterSvgPatch }
+          : {}),
+        ...(experimentalRasterDisableGbcrNudge
+          ? { experimentalRasterDisableGbcrNudge: true }
+          : {}),
+        ...(experimentalRasterDecodeSettle ? { experimentalRasterDecodeSettle: true } : {}),
+        ...(experimentalRasterDoubleDecode ? { experimentalRasterDoubleDecode: true } : {}),
+        ...(experimentalRasterNaturalDims ? { experimentalRasterNaturalDims: true } : {}),
+        ...(experimentalRasterBackingCeil ? { experimentalRasterBackingCeil: true } : {}),
+        ...(experimentalRasterPreDecodeRaf ? { experimentalRasterPreDecodeRaf: true } : {}),
+        ...(experimentalRasterCtxNoScale ? { experimentalRasterCtxNoScale: true } : {}),
+        ...(experimentalRasterInkAlign ? { experimentalRasterInkAlign: true } : {}),
+        rasterStrategy: rs
+          ? `${rs}${rs.includes('debug-timeline') ? '' : ',debug-timeline'}`
+          : 'debug-timeline',
+        ...(toCanvasExtra?.debugRasterShiftPx != null
+          ? { debugRasterShiftPx: toCanvasExtra.debugRasterShiftPx }
+          : debugRasterShiftPx != null
+            ? { debugRasterShiftPx }
+            : {}),
+      };
+      const el = findCheckoutTextLeaf(target, debugLandmark);
+      const dpr = opts?.dpr ?? captureDpr();
+      if (el && !toCanvasExtra?.debugInkProbe) {
+        toCanvasOpts.debugInkProbe = buildDebugInkProbeRegion(target, el, dpr);
+      }
+      const canvas = await snap.toCanvas(toCanvasOpts);
+      return {
+        snap,
+        svgMarkup: svgFromDataUrl(snap.toRaw()),
+        canvas,
+        toCanvasOpts,
+      };
+    }
+
+    function pipelineStageDiff(label = debugLandmark) {
+      return buildPipelineStageDiff(target, lastSvgMarkup, lastCapCanvas, label, {
+        dpr: captureDpr(),
+        rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+      });
+    }
+
+    /** Walk capture→SVG→inline FO→image decode→snapdom canvas; log where cap Δ first appears. */
+    async function introspectPipeline(label = debugLandmark) {
+      if (!lastSvgMarkup || !lastCapCanvas) {
+        const err = { error: 'Capture first', landmark: label };
+        console.warn('introspectPipeline', err);
+        return err;
+      }
+      const el = findCheckoutTextLeaf(target, label);
+      if (!el) {
+        const err = { error: 'landmark missing on live DOM', landmark: label };
+        console.warn('introspectPipeline', err);
+        return err;
+      }
+      const dpr = captureDpr();
+      const tDecode = performance.now();
+      const decode = await probeImageDecodeCapTop(lastSvgMarkup, target, el, dpr);
+      const decodeMs = Math.round((performance.now() - tDecode) * 100) / 100;
+      const report = buildIntrospectPipelineReport(
+        target,
+        lastSvgMarkup,
+        lastCapCanvas,
+        label,
+        {
+          dpr,
+          rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+          imageDecode: { ...decode, ms: decodeMs },
+        },
+      );
+      console.log(`introspectPipeline(${label})`, report);
+      console.log(
+        'firstDeltaStage:',
+        report.firstDeltaStage,
+        '|',
+        report.interpretation?.note,
+      );
+      return report;
+    }
+
+    function scanInkRow(label = debugLandmark) {
+      const el = findCheckoutTextLeaf(target, label);
+      if (!el || !lastCapCanvas) return { error: 'Capture first' };
+      return buildCanvasInkRowScan(lastCapCanvas, target, el, captureDpr());
+    }
+
+    function debugInkRowScanFor(label = debugLandmark) {
+      if (!lastCapCanvas) return { error: 'Capture first', landmark: label };
+      return debugInkRowScan(label, target, lastCapCanvas, { dpr: captureDpr() });
+    }
+
+    function explainFailureFor(label = debugLandmark, opts = {}) {
+      if (!lastCapCanvas || !lastSvgMarkup) {
+        return `${label}: capture first`;
+      }
+      return explainFailure(label, target, lastSvgMarkup, lastCapCanvas, {
+        dpr: captureDpr(),
+        rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+        introspect: opts.introspect ?? null,
+      });
+    }
+
+    async function compareThreeWayFor(label = debugLandmark) {
+      if (!lastSvgMarkup) return { error: 'Capture first', landmark: label };
+      return compareThreeWay(label, target, lastSvgMarkup, undefined, {
+        dpr: captureDpr(),
+      });
+    }
+
+    async function runSensitivityCheck(label = 'Home') {
+      if (!lastCapCanvas) return { error: 'Capture first' };
+      const beforeBundle = metricsBundle(label);
+      const beforeDelta = beforeBundle?.paint?.canvasVsBorderTop ?? null;
+      const savedRs = rasterStrategy;
+      rasterStrategy = [savedRs, 'debug-canvas-shift'].filter(Boolean).join(',');
+      try {
+        const { canvas } = await snapdomOnce(captureOpts(), { debugRasterShiftPx: 10 });
+        const afterBundle = buildLandmarkMetricsBundle(
+          target,
+          lastSvgMarkup,
+          canvas,
+          label,
+          { dpr: captureDpr(), rasterMeta: readCanvasRasterMeta(canvas) },
+        );
+        const afterDelta = afterBundle?.paint?.canvasVsBorderTop ?? null;
+        const change =
+          beforeDelta != null && afterDelta != null
+            ? Math.abs(afterDelta - beforeDelta)
+            : null;
+        const result = {
+          landmark: label,
+          before: { canvasVsBorderTop: beforeDelta, line: explainFailureFromBundle(beforeBundle) },
+          after: { canvasVsBorderTop: afterDelta, line: explainFailureFromBundle(afterBundle) },
+          absChange: change,
+          pass: change != null && change >= 0.15,
+        };
+        const el = document.getElementById('sensitivity-result');
+        if (el) {
+          el.textContent = result.pass
+            ? `PASS |Δchange|=${change?.toFixed(2)}px (before ${beforeDelta?.toFixed(2)} → after ${afterDelta?.toFixed(2)})`
+            : `FAIL |Δchange|=${change?.toFixed(2) ?? '—'}px (need ≥0.15)`;
+        }
+        console.log('runSensitivityCheck', result);
+        return result;
+      } finally {
+        rasterStrategy = savedRs;
+      }
+    }
+
+    function updateWhyFailingPanel() {
+      const list = document.getElementById('why-failing-list');
+      if (!list) return;
+      list.replaceChildren();
+      if (!lastCapCanvas || !lastSvgMarkup) {
+        document.body.removeAttribute('data-why-failing');
+        return;
+      }
+      document.body.setAttribute('data-why-failing', 'true');
+      const reproLink = document.getElementById('why-failing-repro-link');
+      if (reproLink) {
+        reproLink.href = `issue-repro-fo-three-way.html?auto=1&landmark=${encodeURIComponent(debugLandmark)}`;
+      }
+      for (const lm of CHECKOUT_DUMP_LANDMARKS) {
+        const bundle = metricsBundle(lm);
+        const line = explainFailureFromBundle(bundle);
+        const canvasΔ = bundle?.paint?.canvasVsBorderTop ?? bundle?.deltas?.liveToCanvas?.cap?.top;
+        const li = document.createElement('li');
+        if (canvasΔ != null && Math.abs(canvasΔ) > 0.06) li.className = 'warn';
+        li.textContent = line;
+        list.appendChild(li);
+      }
+    }
+
+    function exportCrop(label = debugLandmark) {
+      const el = findCheckoutTextLeaf(target, label);
+      if (!el || !lastCapCanvas) return { error: 'Capture first' };
+      const crop = exportLandmarkCropPng(lastCapCanvas, target, el, label, captureDpr());
+      const a = document.createElement('a');
+      a.download = `snapdom-crop-${label.replace(/\s+/g, '-')}.png`;
+      a.href = crop.dataUrl;
+      a.click();
+      return crop;
+    }
+
+    function clearBoxInkOverlays() {
+      document.querySelectorAll('.box-ink-overlay').forEach((n) => n.remove());
+    }
+
+    function placeOverlay(rect, cls, layer) {
+      const stageInner = document.getElementById('stage-inner');
+      const stageRect = stageInner.getBoundingClientRect();
+      const div = document.createElement('div');
+      div.className = `box-ink-overlay ${cls}`;
+      div.style.left = `${rect.left - stageRect.left}px`;
+      div.style.top = `${rect.top - stageRect.top}px`;
+      div.style.width = `${rect.width}px`;
+      div.style.height = `${rect.height}px`;
+      layer.appendChild(div);
+    }
+
+    function updateBoxInkOverlays(label = debugLandmark) {
+      clearBoxInkOverlays();
+      if (!boxInkOverlayOn) return;
+      const el = findCheckoutTextLeaf(target, label);
+      if (!el) return;
+      const diff = pipelineStageDiff(label);
+      const live = diff.stages?.live;
+      const stageInner = document.getElementById('stage-inner');
+      const rootRect = target.getBoundingClientRect();
+      const er = el.getBoundingClientRect();
+
+      placeOverlay(
+        {
+          left: er.left,
+          top: er.top,
+          width: er.width,
+          height: er.height,
+        },
+        'box-ink-overlay--border',
+        stageInner,
+      );
+
+      if (live?.paddingBox) {
+        placeOverlay(
+          {
+            left: rootRect.left + live.paddingBox.left,
+            top: rootRect.top + live.paddingBox.top,
+            width: live.paddingBox.width,
+            height: live.paddingBox.height,
+          },
+          'box-ink-overlay--padding',
+          stageInner,
+        );
+      }
+
+      if (live?.ink) {
+        const ih = live.ink.height || 4;
+        placeOverlay(
+          {
+            left: rootRect.left + (live.borderBox?.left ?? 0),
+            top: rootRect.top + live.ink.top,
+            width: live.borderBox?.width ?? er.width,
+            height: ih,
+          },
+          'box-ink-overlay--ink',
+          stageInner,
+        );
+      }
+
+      if (live?.cap) {
+        placeOverlay(
+          {
+            left: rootRect.left + (live.borderBox?.left ?? 0),
+            top: rootRect.top + live.cap.top,
+            width: live.borderBox?.width ?? er.width,
+            height: live.cap.height || 4,
+          },
+          'box-ink-overlay--cap',
+          stageInner,
+        );
+      }
+
+      if (showingCap && lastCapCanvas && diff.stages?.canvas?.ink) {
+        const ink = diff.stages.canvas.ink;
+        const dpr = captureDpr();
+        const canvasEl = capContent.querySelector('canvas');
+        if (canvasEl) {
+          const capRect = canvasEl.getBoundingClientRect();
+          const topCss = ink.top;
+          const hCss = (ink.bottom ?? ink.top) - ink.top;
+          placeOverlay(
+            {
+              left: capRect.left,
+              top: capRect.top + topCss,
+              width: capRect.width,
+              height: Math.max(2, hCss),
+            },
+            'box-ink-overlay--canvas-ink',
+            stageInner,
+          );
+        }
+      }
+    }
+
+    function toggleBoxInkOverlay() {
+      boxInkOverlayOn = !boxInkOverlayOn;
+      updateBoxInkOverlays();
+    }
+
+    async function captureSvgMarkup() {
+      const { svgMarkup } = await snapdomOnce(captureOpts());
+      return svgMarkup;
+    }
+
+    function syncStageHeight() {
+      const inner = document.getElementById('stage-inner');
+      if (!inner || !target) return;
+      const h = Math.max(600, target.scrollHeight);
+      inner.style.height = `${h}px`;
+      guideSlider.max = String(h);
+    }
+
+    function syncCapOverlay() {
+      const canvas = capContent.querySelector('canvas');
+      const stageInner = document.getElementById('stage-inner');
+      if (!canvas || !stageInner) {
+        capContent.style.width = '';
+        capContent.style.height = '';
+        capContent.style.left = '';
+        capContent.style.top = '';
+        return;
+      }
+      const stageRect = stageInner.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      capContent.style.left = `${targetRect.left - stageRect.left}px`;
+      capContent.style.top = `${targetRect.top - stageRect.top}px`;
+      capContent.style.width = `${targetRect.width}px`;
+      capContent.style.height = `${targetRect.height}px`;
+      syncStageHeight();
+    }
+
+    function setView(show) {
+      const wantCap = !!show && !!lastCapCanvas;
+      showingCap = wantCap;
+      if (wantCap) body.setAttribute('data-show-cap', 'true');
+      else body.removeAttribute('data-show-cap');
+      btnToggle.disabled = !lastCapCanvas;
+      btnToggle.textContent = wantCap ? 'Show Live' : 'Show Canvas';
+      syncCapOverlay();
+      updateEmailInkGuides();
+    }
+
+    function findTextLeaf(root, text) {
+      const want = text.trim();
+      for (const el of root.querySelectorAll('*')) {
+        if (el.childElementCount > 0) continue;
+        if ((el.textContent || '').trim() === want) return el;
+      }
+      return null;
+    }
+
+    function dumpLandmarkFlex(text) {
+      const el = findTextLeaf(target, text);
+      if (!el) return { error: `No text leaf: ${text}` };
+      const live = collectFlexLayoutDebug(el, target);
+      let clone = null;
+      if (lastSvgMarkup) {
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;border:0';
+        document.body.appendChild(iframe);
+        try {
+          const doc = iframe.contentDocument;
+          doc.open();
+          doc.write('<!DOCTYPE html><html><body style="margin:0"></body></html>');
+          doc.close();
+          const parsed = new DOMParser().parseFromString(lastSvgMarkup, 'image/svg+xml');
+          doc.body.appendChild(doc.importNode(parsed.documentElement, true));
+          const cloneRoot =
+            doc.getElementById('capture-target') || doc.querySelector('.checkout-page');
+          const want = text.trim();
+          for (const node of cloneRoot?.querySelectorAll('*') || []) {
+            if (node.childElementCount > 0) continue;
+            if ((node.textContent || '').trim() === want) {
+              clone = collectFlexLayoutDebug(node, cloneRoot);
+              break;
+            }
+          }
+        } finally {
+          iframe.remove();
+        }
+      }
+      const section = lastStructureReport?.sections?.find((s) =>
+        s.title.includes(text),
+      );
+      return {
+        text,
+        live,
+        clone,
+        structureRows: section?.rows?.filter((r) => String(r.prop).startsWith('flex')),
+      };
+    }
+
+    function showFlexDump(payload) {
+      const json = JSON.stringify(payload, null, 2);
+      if (flexDebugOut) flexDebugOut.textContent = json;
+      return payload;
+    }
+
+    function metricsBundle(label) {
+      return buildComprehensiveMetricsBundle(
+        target,
+        lastSvgMarkup,
+        lastCapCanvas,
+        label,
+        {
+          dpr: captureDpr(),
+          scale: 1,
+          rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+          captureMeta: lastCaptureMeta,
+        },
+      );
+    }
+
+    function metricsForLandmark(label) {
+      return metricsBundle(label);
+    }
+
+    function printMetricsTable(landmarks = CHECKOUT_DUMP_LANDMARKS) {
+      const rows = landmarks.map((lm) => compactMetricsTableRow(metricsBundle(lm)));
+      console.table(rows);
+      return rows;
+    }
+
+    function renderMetricsSections(payload) {
+      if (!metricsSections) return;
+      const parts = [];
+      for (const lm of Object.keys(payload.landmarks || {})) {
+        const b = payload.landmarks[lm];
+        const cats = [
+          ['Layout', b.layout],
+          ['Flex', b.flex],
+          ['Text', b.text],
+          ['Paint / ink', b.paint],
+          ['Raster', b.raster],
+          ['Deltas', b.deltas],
+          ['Extended', b.extended],
+        ];
+        parts.push(`<section style="margin:0 0 10px"><strong>${lm}</strong> · ${b.failureClass || '—'}${b.flags?.svgOkCanvasBad ? ' · svg-ok-canvas-bad' : ''}`);
+        for (const [title, data] of cats) {
+          if (data == null) continue;
+          parts.push(`<details><summary>${title}</summary><pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></details>`);
+        }
+        parts.push('</section>');
+      }
+      metricsSections.innerHTML = parts.join('\n');
+    }
+
+    function pickExtendedCategory(ext, category) {
+      if (!ext || category === 'all') return ext;
+      const slice = ext[category];
+      if (slice !== undefined) return { [category]: slice };
+      if (category === 'flags') return { flags: ext.flags };
+      if (category === 'deltas') return { deltas: ext.deltas };
+      return ext;
+    }
+
+    function renderExtendedMetricsSections(payload) {
+      if (!extendedSections) return;
+      const category = extendedCategoryFilter?.value || 'all';
+      const parts = [];
+      for (const lm of Object.keys(payload.landmarks || {})) {
+        const ext = payload.landmarks[lm];
+        if (!ext) continue;
+        const data = pickExtendedCategory(ext, category);
+        const flagHint = ext.flags?.svgOkCanvasBad ? ' · svg-ok-canvas-bad' : '';
+        parts.push(
+          `<section style="margin:0 0 8px"><strong>${lm}</strong>${flagHint}<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></section>`,
+        );
+      }
+      if (payload.flexVariants?.length) {
+        parts.push('<hr style="border:0;border-top:1px solid #eee;margin:8px 0">');
+        for (const row of payload.flexVariants) {
+          const data = pickExtendedCategory(row.extended, category);
+          parts.push(
+            `<section style="margin:0 0 8px"><strong>${row.variantId}</strong> (${row.matrixLabel})<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre></section>`,
+          );
+        }
+      }
+      extendedSections.innerHTML =
+        parts.length > 0 ? parts.join('\n') : 'No extended metrics — capture first.';
+    }
+
+    function extendedMetrics(label) {
+      const dpr = captureDpr();
+      return buildExtendedMetrics(target, lastSvgMarkup, lastCapCanvas, label, {
+        dpr,
+        rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+        captureMeta: lastCaptureMeta,
+      });
+    }
+
+    function exportExtendedPayload(landmarks = CHECKOUT_DUMP_LANDMARKS) {
+      const dpr = captureDpr();
+      const landmarkBundles = landmarks.map((lm) =>
+        buildExtendedMetrics(target, lastSvgMarkup, lastCapCanvas, lm, {
+          dpr,
+          rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+        }),
+      );
+      const byLandmark = {};
+      for (const b of landmarkBundles) byLandmark[b.label] = b;
+      const sample = landmarkBundles[0];
+      return {
+        dumpedAt: new Date().toISOString(),
+        page: 'checkout-example',
+        dpr,
+        categories: EXTENDED_METRIC_CATEGORIES,
+        approximateFieldCount: sample ? countExtendedMetricFields(sample) : null,
+        landmarks: byLandmark,
+        summaryTable: compareExtendedTable(landmarkBundles),
+      };
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function exportAllMetrics(landmarks = CHECKOUT_DUMP_LANDMARKS) {
+      const dpr = captureDpr();
+      const bundles = buildAllLandmarkMetricsBundles(
+        target,
+        lastSvgMarkup,
+        lastCapCanvas,
+        landmarks,
+        {
+          dpr,
+          scale: 1,
+          rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+          captureMeta: lastCaptureMeta,
+        },
+      );
+      /** @type {Record<string, object>} */
+      const byLandmark = {};
+      for (const b of bundles) byLandmark[b.landmark] = b;
+      const payload = {
+        dumpedAt: new Date().toISOString(),
+        page: 'checkout-example',
+        dpr,
+        rasterStrategy: rasterStrategy || 'default',
+        landmarks: byLandmark,
+        summaryTable: bundles.map(compactMetricsTableRow),
+        structureReport: lastStructureReport,
+        strategyCompare: lastStrategyCompareReport,
+        rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+      };
+      const json = JSON.stringify(payload, null, 2);
+      if (flexDebugOut) flexDebugOut.textContent = json;
+      return payload;
+    }
+
+    function downloadMetricsJson(payload) {
+      const json = JSON.stringify(payload ?? exportAllMetrics(), null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `snapdom-checkout-metrics-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    async function compareRasterStrategies(landmarks = CHECKOUT_MATRIX_LANDMARKS) {
+      const host = document.getElementById('strategy-host');
+      const status = document.getElementById('strategy-status');
+      const tbody = document.getElementById('strategy-tbody');
+      host.hidden = false;
+      status.textContent = 'Running strategies…';
+      tbody.innerHTML = '';
+
+      /** @type {object[]} */
+      const report = [];
+      const presets = [...RASTER_STRATEGY_PRESETS];
+
+      for (const preset of presets) {
+        const measurableOpts = inkMeasurableToCanvasOpts(preset.toCanvas);
+        const run = await runToCanvasStrategy(measurableOpts, preset.id, {
+          skipStructureReport: true,
+        });
+        const meta = readCanvasRasterMeta(lastCapCanvas);
+        const path = describeRasterPath(meta, { dpr: run.dpr, rasterStrategy: preset.toCanvas?.rasterStrategy });
+        /** @type {object[]} */
+        const rows = [];
+        for (const lm of landmarks) {
+          const bundle = buildLandmarkMetricsBundle(target, lastSvgMarkup, lastCapCanvas, lm, {
+            dpr: run.dpr,
+            rasterMeta: meta,
+          });
+          const compact = compactLandmarkRow(bundle);
+          rows.push(compact);
+          const canvasDt = bundle.paint?.canvasVsBorderTop;
+          const warn = canvasDt != null && Math.abs(canvasDt) > 0.06;
+          const tr = document.createElement('tr');
+          if (warn) tr.className = 'warn';
+          const canvasCell = bundle.canvasTainted
+            ? 'tainted'
+            : compact.canvasΔtop;
+          tr.innerHTML = `<td>${preset.label}</td><td>${path}</td><td>${compact.landmark}</td><td>${compact.capΔ}</td><td>${canvasCell}</td><td>${compact.padΔtop}</td><td>${meta?.deviceW ?? '—'}×${meta?.deviceH ?? '—'}</td>`;
+          tbody.appendChild(tr);
+        }
+        report.push({
+          id: preset.id,
+          label: preset.label,
+          path,
+          toCanvas: preset.toCanvas,
+          tainted: run.tainted,
+          rows,
+          bundles: landmarks.map((lm) =>
+            buildLandmarkMetricsBundle(target, lastSvgMarkup, lastCapCanvas, lm, {
+              dpr: run.dpr,
+              rasterMeta: meta,
+            }),
+          ),
+        });
+        status.textContent = `Done: ${preset.label}`;
+      }
+
+      lastStrategyCompareReport = report;
+      status.textContent = `Finished ${report.length} strategies × ${landmarks.length} landmarks at ${new Date().toISOString()}`;
+      if (document.getElementById('strategy-console-table')?.checked) {
+        console.table(
+          report.flatMap((r) =>
+            r.rows.map((row) => ({
+              strategy: r.id,
+              path: r.path,
+              ...row,
+            })),
+          ),
+        );
+      }
+      return report;
+    }
+
+    function copyReport() {
+      const payload = {
+        capturedAt: new Date().toISOString(),
+        dpr: captureDpr(),
+        strategyCompare: lastStrategyCompareReport,
+        structureReport: lastStructureReport,
+        rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+      };
+      const json = JSON.stringify(payload, null, 2);
+      if (flexDebugOut) flexDebugOut.textContent = json;
+      navigator.clipboard?.writeText(json);
+      return payload;
+    }
+
+    function exportJson() {
+      return copyReport();
+    }
+
+    window.__snapdomDebug = {
+      dumpLandmark: (text) => showFlexDump(dumpLandmarkFlex(text)),
+      dumpFlexChain: (text) => dumpLandmarkFlex(text)?.live?.chain ?? null,
+      metricsForLandmark,
+      metricsBundle,
+      extendedMetrics,
+      diffLiveSvgCanvas: (label) =>
+        diffLiveSvgCanvas(target, lastSvgMarkup, lastCapCanvas, label, {
+          dpr: captureDpr(),
+          rasterMeta: readCanvasRasterMeta(lastCapCanvas),
+        }),
+      compareExtendedTable,
+      exportExtendedMetrics: exportExtendedPayload,
+      extendedSnapshotLines: (label) => formatExtendedSnapshotLines(extendedMetrics(label)),
+      printMetricsTable,
+      exportAllMetrics,
+      pipelineStageDiff,
+      introspectPipeline,
+      scanInkRow,
+      debugInkRowScan: debugInkRowScanFor,
+      explainFailure: explainFailureFor,
+      compareThreeWay: compareThreeWayFor,
+      runSensitivityCheck,
+      exportCrop,
+      setDebugLandmark: (t) => {
+        debugLandmark = t;
+        return t;
+      },
+      toggleBoxInkOverlay,
+      updateBoxInkOverlays,
+      compareRasterStrategies,
+      compareStrategies: compareRasterStrategies,
+      exportJson,
+      copyReport,
+      formatStrategyTable: () =>
+        lastStrategyCompareReport
+          ? formatStrategyCompareMarkdown(lastStrategyCompareReport)
+          : '',
+      get lastReport() {
+        return lastStructureReport;
+      },
+      get strategyCompare() {
+        return lastStrategyCompareReport;
+      },
+      copyLast: () => {
+        const t = flexDebugOut?.textContent || '';
+        return navigator.clipboard?.writeText(t);
+      },
+    };
+
+    document.getElementById('btn-debug-home')?.addEventListener('click', () => {
+      showFlexDump(dumpLandmarkFlex('Home'));
+    });
+    document.getElementById('btn-debug-products')?.addEventListener('click', () => {
+      showFlexDump(dumpLandmarkFlex('Products'));
+    });
+    document.getElementById('btn-debug-email')?.addEventListener('click', () => {
+      showFlexDump(dumpLandmarkFlex('Email Address'));
+    });
+    document.getElementById('btn-debug-copy')?.addEventListener('click', () => {
+      window.__snapdomDebug.copyLast?.();
+    });
+    document.getElementById('btn-debug-table')?.addEventListener('click', () => {
+      const p = dumpLandmarkFlex('Home');
+      if (p?.live?.chain) console.table(p.live.chain);
+      if (p?.clone?.chain) console.table(p.clone.chain);
+    });
+    document.getElementById('btn-metrics-table')?.addEventListener('click', () => {
+      printMetricsTable();
+    });
+    document.getElementById('btn-metrics-export')?.addEventListener('click', () => {
+      downloadMetricsJson(exportAllMetrics());
+    });
+    document.getElementById('btn-metrics-home')?.addEventListener('click', () => {
+      const b = metricsBundle('Home');
+      if (flexDebugOut) flexDebugOut.textContent = JSON.stringify(b, null, 2);
+      setMetricsDebugVisible(true);
+      renderMetricsSections({ landmarks: { Home: b } });
+    });
+    document.getElementById('btn-debug-pipeline')?.addEventListener('click', () => {
+      const diff = pipelineStageDiff('Home');
+      showFlexDump(diff);
+      console.log('pipelineStageDiff(Home)', diff);
+      if (diff.deltas?.canvas?.canvasOnlyFailure) {
+        console.warn('canvas-only failure', diff.sideBySide?.capTopInBorder);
+      }
+    });
+    document.getElementById('btn-debug-overlay')?.addEventListener('click', () => {
+      toggleBoxInkOverlay();
+    });
+    document.getElementById('btn-debug-crop')?.addEventListener('click', () => {
+      try {
+        exportCrop('Home');
+      } catch (e) {
+        reportError(e);
+      }
+    });
+    document.getElementById('btn-strategy-compare')?.addEventListener('click', () => {
+      compareRasterStrategies().catch(reportError);
+    });
+    document.getElementById('btn-strategy-run')?.addEventListener('click', () => {
+      compareRasterStrategies().catch(reportError);
+    });
+    document.getElementById('btn-strategy-copy')?.addEventListener('click', () => {
+      copyReport();
+    });
+    document.getElementById('btn-sensitivity-check')?.addEventListener('click', () => {
+      runSensitivityCheck('Home').catch(reportError);
+    });
+
+    function updateEmailInkGuides() {
+      const emailEl = findTextLeaf(target, 'Email Address');
+      const liveGuide = document.getElementById('ink-guide-live');
+      const capGuide = document.getElementById('ink-guide-cap');
+      if (!emailEl || !liveGuide || !capGuide) return;
+
+      const liveInk = measureTextInk(emailEl, target);
+      if (liveInk) liveGuide.style.top = `${liveInk.top}px`;
+
+      if (!lastSvgMarkup) {
+        capGuide.style.display = 'none';
+        return;
+      }
+      capGuide.style.display = '';
+      const canvas = capContent.querySelector('canvas');
+      const capInk = canvas
+        ? measureCanvasInkForElement(canvas, target, emailEl, captureDpr())
+        : measureSvgCloneTextInk(target, lastSvgMarkup, emailEl);
+      capGuide.style.top = capInk
+        ? `${capInk.top}px`
+        : liveGuide.style.top;
+    }
+
+    btnToggle.onclick = () => setView(!showingCap);
+
+    window.addEventListener('resize', () => {
+      syncStageHeight();
+      syncCapOverlay();
+      if (showingCap) updateEmailInkGuides();
+    });
+
+    syncStageHeight();
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); setView(!showingCap); }
+    });
+
+    guideSlider.oninput = () => { guideLine.style.top = guideSlider.value + 'px'; };
+
+    function cloneCanvas(source) {
+      const copy = document.createElement('canvas');
+      copy.width = source.width;
+      copy.height = source.height;
+      copy.getContext('2d').drawImage(source, 0, 0);
+      if (source.__snapdomRasterMeta) {
+        copy.__snapdomRasterMeta = { ...source.__snapdomRasterMeta };
+      }
+      return copy;
+    }
+
+    document.getElementById('btn-capture').onclick = async () => {
+      const btn = document.getElementById('btn-capture');
+      const btnLabel = btn.textContent;
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Capturing…';
+        setCaptureQuiet(true);
+        const opts = captureOpts();
+        
+        // Cache-busting: update the invisible buster element to force layout/paint freshness
+        const buster = document.getElementById('sd-buster');
+        if (buster) {
+          buster.textContent = Math.random();
+          document.body.offsetHeight; // force reflow
+        }
+        
+        const { svgMarkup, canvas, snap } = await snapdomOnce(opts);
+        lastCaptureMeta = readCanvasRasterMeta(canvas) || parseSvgSize(svgMarkup);
+        lastRasterStrategyId = rasterStrategy || 'default';
+        
+        lastSvgMarkup = svgMarkup;
+        lastCapCanvas = cloneCanvas(canvas);
+        capContent.innerHTML = '';
+        const dpr = opts.dpr || 1;
+        canvas.style.width = `${canvas.width / dpr}px`;
+        canvas.style.height = `${canvas.height / dpr}px`;
+        capContent.appendChild(canvas);
+        syncCapOverlay();
+        updateEmailInkGuides();
+        updateStructureReport();
+        updateBoxInkOverlays();
+        updateWhyFailingPanel();
+        setView(true);
+      } catch (e) { reportError(e); }
+      finally {
+        setCaptureQuiet(false);
+        btn.disabled = false;
+        btn.textContent = btnLabel;
+      }
+    };
+
+    document.getElementById('btn-export-svg').onclick = async () => {
+      try {
+        const svg = lastSvgMarkup || await captureSvgMarkup();
+        lastSvgMarkup = svg;
+        downloadText(svg, 'checkout-capture.svg', 'image/svg+xml;charset=utf-8');
+      } catch (e) { reportError(e); }
+    };
+
+    setView(false);
+
+    document.getElementById('btn-export-html').onclick = async () => {
+      try {
+        const svg = lastSvgMarkup || await captureSvgMarkup();
+        lastSvgMarkup = svg;
+        const size = parseSvgSize(svg);
+        const html = buildCompareHtml({
+          svgMarkup: svg,
+          target,
+          pageStyles: collectPageStyles(),
+          meta: {
+            width: size.width,
+            height: size.height,
+            capturedAt: new Date().toISOString(),
+          },
+        });
+        downloadText(html, 'checkout-compare.html', 'text/html;charset=utf-8');
+      } catch (e) { reportError(e); }
+    };
+
+    document.getElementById('btn-capture-all').onclick = async () => {
+      const btn = document.getElementById('btn-capture-all');
+      const btnLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Capturing…';
+      setCaptureQuiet(true);
+      try {
+        const labels = ['ShopDemo1', 'Home', 'Products', 'Checkout', 'Email Address', 'Remember my details', 'Promo Code'];
+        const host = document.getElementById('multi-host');
+        const grid = document.getElementById('multi-grid');
+        grid.innerHTML = '';
+        host.style.display = 'block';
+
+        for (const text of labels) {
+          const node = findTextLeaf(target, text);
+          if (!node) continue;
+          const snap = await snapdom(node, captureOpts());
+          const canvas = await snap.toCanvas();
+
+          const liveInk = measureTextInk(node, target);
+          const capInk = measureCanvasInkForElement(canvas, target, node, captureDpr());
+          const dTop = (liveInk && capInk) ? (capInk.top - liveInk.top) : null;
+
+          const card = document.createElement('div');
+          card.style.cssText = 'border:1px solid #e5e5e5;border-radius:10px;background:#fff;padding:10px;overflow:hidden;';
+          const h = document.createElement('div');
+          h.style.cssText = 'display:flex;gap:10px;align-items:baseline;justify-content:space-between;margin:0 0 8px 0;';
+          const title = document.createElement('div');
+          title.textContent = text;
+          title.style.cssText = 'font:600 12px/1.2 -apple-system,system-ui,sans-serif;color:#111;';
+          const delta = document.createElement('div');
+          delta.textContent = dTop == null ? 'Δtop: —' : `Δtop: ${dTop.toFixed(2)}px`;
+          delta.style.cssText = 'font:500 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;color:#444;';
+          h.appendChild(title);
+          h.appendChild(delta);
+          const dpr = captureDpr() || 1;
+          canvas.style.display = 'block';
+          canvas.style.width = `${canvas.width / dpr}px`;
+          canvas.style.height = `${canvas.height / dpr}px`;
+          card.appendChild(h);
+          card.appendChild(canvas);
+          grid.appendChild(card);
+
+          const divider = document.createElement('div');
+          divider.style.cssText = 'height:1px;background:linear-gradient(to right, transparent, #e5e5e5, transparent);';
+          grid.appendChild(divider);
+        }
+      } catch (e) { reportError(e); }
+      finally {
+        setCaptureQuiet(false);
+        btn.disabled = false;
+        btn.textContent = btnLabel;
+      }
+    };
+
+    const MATRIX_LABELS = ['Home', 'Products', 'Checkout', 'Email Address', 'Promo Code'];
+
+    function strategyUsesBlob(toCanvasOpts) {
+      const s = toCanvasOpts?.rasterStrategy;
+      return typeof s === 'string' && /\bblob\b/.test(s);
+    }
+
+    /** Compositor blob URLs taint canvas for getImageData ink scans — append `data` for A/B tables. */
+    function inkMeasurableToCanvasOpts(toCanvasOpts) {
+      if (strategyUsesBlob(toCanvasOpts)) return toCanvasOpts;
+      const base = (toCanvasOpts?.rasterStrategy || '').trim();
+      if (/\b(data|data-url|no-blob)\b/.test(base)) return toCanvasOpts;
+      const merged = base ? `${base},data` : 'data';
+      return { ...(toCanvasOpts || {}), rasterStrategy: merged };
+    }
+
+    /** One capture + product toCanvas(); used by matrix UI and Node harnesses. */
+    async function runToCanvasStrategy(toCanvasOpts, strategyId = null, { skipStructureReport = false } = {}) {
+      setCaptureQuiet(true);
+      try {
+        const snap = await snapdom(target, captureOpts());
+        const svgMarkup = svgFromDataUrl(snap.toRaw());
+        const canvas = await snap.toCanvas(toCanvasOpts || undefined);
+        lastSvgMarkup = svgMarkup;
+        lastCapCanvas = cloneCanvas(canvas);
+        lastCaptureMeta = readCanvasRasterMeta(canvas) || parseSvgSize(svgMarkup);
+        lastRasterStrategyId = strategyId || toCanvasOpts?.rasterStrategy || 'default';
+        if (!skipStructureReport && !strategyUsesBlob(toCanvasOpts)) {
+          try {
+            updateStructureReport(lastRasterStrategyId);
+          } catch (e) {
+            if (e?.name !== 'SecurityError') throw e;
+          }
+        }
+        const dpr = captureDpr();
+        const meta = readCanvasRasterMeta(canvas);
+        const deltas = {};
+        const landmarks = {};
+        for (const t of MATRIX_LABELS) {
+          const el = findTextLeaf(target, t);
+          let cmp = null;
+          try {
+            cmp = el ? compareLiveCanvasCapInk(target, canvas, el, dpr) : null;
+          } catch (e) {
+            if (strategyUsesBlob(toCanvasOpts) && e?.name === 'SecurityError') {
+              deltas[t] = null;
+              landmarks[t] = { tainted: true };
+              continue;
+            }
+            throw e;
+          }
+          deltas[t] = cmp ? cmp.deltaTopInBorder : null;
+          landmarks[t] = buildLandmarkMetricsBundle(target, svgMarkup, canvas, t, {
+            dpr,
+            rasterMeta: meta,
+          });
+        }
+        return {
+          toCanvas: toCanvasOpts || null,
+          strategyId: lastRasterStrategyId,
+          rasterPath: describeRasterPath(meta, { dpr, rasterStrategy: toCanvasOpts?.rasterStrategy }),
+          dpr,
+          deltas,
+          landmarks,
+          rasterMeta: meta,
+          tainted: strategyUsesBlob(toCanvasOpts) || undefined,
+        };
+      } finally {
+        setCaptureQuiet(false);
+      }
+    }
+
+    // Matrix harness: sequential runs via postMessage or window.__snapdomRunToCanvasStrategy.
+    if (new URLSearchParams(location.search).get('matrix') === '1') {
+      window.__snapdomRunToCanvasStrategy = runToCanvasStrategy;
+      window.addEventListener('message', async (ev) => {
+        const data = ev.data || {};
+        if (data.type !== 'SNAPDOM_MATRIX_RUN') return;
+        try {
+          const toCanvasOpts = (data.payload && data.payload.toCanvas) || null;
+          const payload = await runToCanvasStrategy(toCanvasOpts);
+          ev.source?.postMessage({ type: 'SNAPDOM_MATRIX_RESULT', payload }, '*');
+        } catch (e) {
+          ev.source?.postMessage(
+            { type: 'SNAPDOM_MATRIX_RESULT', payload: { error: String(e?.message || e) } },
+            '*',
+          );
+        }
+      });
+    }
+
+    // FO fix lab calibrate matrix (Home + Products on full checkout capture).
+    const calibrateParams = new URLSearchParams(location.search);
+    if (calibrateParams.get('calibrate') === '1' && calibrateParams.get('auto') === '1') {
+      window.__foFixLab = { done: false, error: null, progress: null };
+      (async () => {
+        try {
+          const [runnerMod, recipesMod] = await Promise.all([
+            import('./fo-fix-lab-runner.js'),
+            import('./fo-fix-recipes.js'),
+          ]);
+          const landmarks = (calibrateParams.get('landmarks') || 'Home,Products')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const idsRaw = calibrateParams.get('ids');
+          const ids = idsRaw
+            ? idsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+            : undefined;
+          const limitRaw = calibrateParams.get('limit');
+          const limit = limitRaw != null ? Number(limitRaw) : undefined;
+          const offsetRaw = calibrateParams.get('offset');
+          const offset = offsetRaw != null ? Number(offsetRaw) : undefined;
+          const category = calibrateParams.get('category') || undefined;
+          const includeInactive = calibrateParams.get('includeInactive') === '1';
+          const includeTextBypass = calibrateParams.get('includeTextBypass') === '1';
+          const excludeTextBypass =
+            calibrateParams.get('excludeTextBypass') === '1' ||
+            calibrateParams.get('noTextBypass') === '1';
+          const shardCountRaw = calibrateParams.get('shardCount');
+          const shardIndexRaw = calibrateParams.get('shardIndex');
+          const shardCount = shardCountRaw != null ? Number(shardCountRaw) : undefined;
+          const shardIndex = shardIndexRaw != null ? Number(shardIndexRaw) : undefined;
+          const rows = await runnerMod.runFoFixCalibrateMatrix({
+            landmarks,
+            ids,
+            limit: Number.isFinite(limit) ? limit : undefined,
+            offset: Number.isFinite(offset) ? offset : undefined,
+            category,
+            includeInactive: includeInactive || undefined,
+            includeTextBypass: includeTextBypass || undefined,
+            excludeTextBypass: excludeTextBypass || undefined,
+            shardCount: Number.isFinite(shardCount) ? shardCount : undefined,
+            shardIndex: Number.isFinite(shardIndex) ? shardIndex : undefined,
+            onProgress({ index, total, recipeId, phase, error }) {
+              if (phase === 'start') {
+                window.__foFixLab.progress = `Calibrate ${index + 1}/${total}: ${recipeId}…`;
+              } else if (phase === 'error') {
+                window.__foFixLab.progress = `Calibrate ${index + 1}/${total}: ${recipeId} failed — ${error}`;
+              }
+            },
+          });
+          window.__foFixCalibrateMatrix = rows;
+          window.__foFixLab.done = true;
+          window.__foFixLab.progress = null;
+          console.info('[checkout calibrate] complete', rows.length, 'recipes');
+        } catch (err) {
+          window.__foFixLab.error = String(err?.stack || err);
+          window.__foFixLab.done = true;
+          window.__foFixLab.progress = null;
+          console.error('[checkout calibrate] failed', err);
+        }
+      })();
+    }
+  </script>
+</body>
+</html>

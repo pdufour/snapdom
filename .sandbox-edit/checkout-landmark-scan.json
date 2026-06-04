@@ -1,0 +1,76 @@
+{
+  "probe": "checkout-landmark-scan",
+  "source": "headed",
+  "fixture": "checkout",
+  "recipe": {
+    "id": "product-baseline",
+    "path": "snapdom",
+    "textBypass": false
+  },
+  "generatedAt": "2026-06-02T16:24:12.408Z",
+  "port": 8765,
+  "parityStageTolPx": 0.15,
+  "landmarkDiscovery": {
+    "nav": [
+      "Home",
+      "Products"
+    ],
+    "formLabels": [],
+    "all": [
+      "Home",
+      "Products"
+    ]
+  },
+  "threeWay": {
+    "dpr": 1,
+    "scale": 1,
+    "landmarks": [
+      {
+        "landmark": "Home",
+        "livePaintedTopInBorder": 19.203,
+        "svgPaintedTopInBorder": 19.203,
+        "canvasPaintedTopInBorder": 22,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "landmark": "Products",
+        "livePaintedTopInBorder": 19.203,
+        "svgPaintedTopInBorder": 19.203,
+        "canvasPaintedTopInBorder": 22,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "svgVsCanvasTopPx": 2.797,
+        "stage": "raster",
+        "pass": false
+      }
+    ],
+    "worstAbsCanvasDeltaPx": 2.797,
+    "meanAbsCanvasDeltaPx": 2.797
+  },
+  "classification": {
+    "canvasOffset": {
+      "pattern": "constant_offset",
+      "spreadPx": 0,
+      "tolPx": 0.15,
+      "canvasDeltasPx": [
+        2.797,
+        2.797
+      ]
+    },
+    "summary": "All landmarks share the same canvasΔ within 0.15px (spread 0px).",
+    "stages": [
+      {
+        "landmark": "Home",
+        "stage": "raster"
+      },
+      {
+        "landmark": "Products",
+        "stage": "raster"
+      }
+    ]
+  }
+}

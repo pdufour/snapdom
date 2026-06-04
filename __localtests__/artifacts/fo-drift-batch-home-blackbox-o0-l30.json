@@ -1,0 +1,60 @@
+{
+  "metric": "paint.canvas.vs-border.top",
+  "fixture": "checkout-example.html",
+  "dpr": 2,
+  "offset": 0,
+  "limit": 30,
+  "matrixIds": [
+    "product-baseline",
+    "tc-fix-drift-039*",
+    "tc-fix-w7-capture-parent-lh*",
+    "tc-fix-w16-rfork-leaf-subpx*",
+    "tc-blh-w1*",
+    "fix321-decode-interval"
+  ],
+  "recipeIds": [
+    "product-baseline",
+    "fix321-decode-interval"
+  ],
+  "baseline": {
+    "home": -0.91,
+    "products": -0.91
+  },
+  "blackboxGate": {
+    "baselineHome": -0.91,
+    "baselineProducts": -0.91,
+    "note": "Rank toward 0 from −0.91; do not promote fo-y-strut-range-meta / fo-y-half-leading-meta as product default."
+  },
+  "ranked": [
+    {
+      "recipeId": "product-baseline",
+      "checkoutQuery": null,
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    },
+    {
+      "recipeId": "fix321-decode-interval",
+      "checkoutQuery": "experimentalRasterSvgPatch=decode-interval",
+      "homeCanvasVsBorderTop": -0.91,
+      "productsCanvasVsBorderTop": -0.91,
+      "navDeltaTopHomeProducts": 0,
+      "rankScore": 200009.1,
+      "beatsBaseline": false
+    }
+  ],
+  "skipped": [],
+  "errors": [],
+  "best": {
+    "recipeId": "product-baseline",
+    "checkoutQuery": null,
+    "homeCanvasVsBorderTop": -0.91,
+    "productsCanvasVsBorderTop": -0.91,
+    "navDeltaTopHomeProducts": 0,
+    "rankScore": 200009.1,
+    "beatsBaseline": false
+  },
+  "beatsBaseline": []
+}

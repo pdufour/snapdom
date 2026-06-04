@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snapdom local debug index</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #f4f4f5;
+      color: #111;
+      line-height: 1.5;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 16px 20px;
+    }
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+    header p {
+      margin: 0;
+      font-size: 14px;
+      color: #444;
+    }
+    header code {
+      font: 13px/1.4 ui-monospace, Menlo, monospace;
+      background: #f4f4f5;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    main {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    section {
+      margin-bottom: 28px;
+    }
+    section h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    ul.links {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    ul.links li {
+      border-top: 1px solid #eee;
+      padding: 12px 14px;
+    }
+    ul.links li:first-child { border-top: none; }
+    ul.links a {
+      font-weight: 600;
+      color: #2563eb;
+      text-decoration: none;
+    }
+    ul.links a:hover { text-decoration: underline; }
+    ul.links .desc {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      color: #52525b;
+    }
+    ul.links .url {
+      display: block;
+      margin-top: 4px;
+      font: 12px/1.4 ui-monospace, Menlo, monospace;
+      color: #71717a;
+      word-break: break-all;
+    }
+    ul.plain {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 14px;
+    }
+    ul.plain li { margin: 6px 0; }
+    ul.plain code {
+      font: 12px/1.4 ui-monospace, Menlo, monospace;
+      background: #fff;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #e4e4e7;
+    }
+    .note {
+      font-size: 13px;
+      color: #52525b;
+      margin: 0 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Snapdom local debug index</h1>
+    <p>
+      Static server: <code>http://127.0.0.1:8765</code>
+      (default port <strong>8765</strong>; override with
+      <code>SNAPDOM_LOCAL_PORT</code> — then use that port in the URLs below).
+      Run <code>npm run compile</code> before pages that load <code>/dist/snapdom.mjs</code>.
+    </p>
+  </header>
+  <main>
+    <section>
+      <h2>Harness pages (<code>__localtests__/*.html</code>)</h2>
+      <p class="note">
+        No <code>checkout-repro.html</code>, <code>flex-variant-matrix.html</code>, or other repro HTML
+        in this repo — only the pages below. Some experimental links are hidden unless enabled via
+        a query param (see link labels).
+      </p>
+      <ul class="links">
+        <li>
+          <a href="/__localtests__/fo-fix-lab.html">FO fix recipe lab</a>
+          <span class="desc">Mini flex+text-leaf fixture; recipe picker, matrix table, live/SVG/canvas/diff views. Headed Chrome only for ink probes.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fo-fix-lab.html</span>
+        </li>
+        <li>
+          <a href="/__localtests__/fo-fix-lab.html?view=canvas">FO fix lab — canvas view</a>
+          <span class="desc">Open with canvas comparison selected (<code>?view=live|svg|canvas|diff</code>).</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fo-fix-lab.html?view=canvas</span>
+        </li>
+        <li>
+          <a href="/__localtests__/fo-fix-lab.html?matrix=1&amp;auto=1&amp;view=canvas">FO fix lab — auto matrix (browser)</a>
+          <span class="desc">Runs FO-raster matrix in the page (~770+; text-bypass excluded by default). Add <code>&amp;includeTextBypass=1</code> for svg-text/fillText diagnostics. Use <code>&amp;limit=50</code> for smoke. CLI: <code>--matrix --open-browser</code>.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fo-fix-lab.html?matrix=1&amp;auto=1&amp;view=canvas</span>
+        </li>
+        <li>
+          <a href="/__localtests__/fo-fix-lab.html?recipe=product-baseline&amp;auto=1&amp;view=canvas">FO fix lab — single recipe (product-baseline)</a>
+          <span class="desc">Auto-run one recipe with canvas view.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fo-fix-lab.html?recipe=product-baseline&amp;auto=1&amp;view=canvas</span>
+        </li>
+        <li>
+          <a href="/__localtests__/fo-svg-sandbox.html">FO SVG sandbox</a>
+          <span class="desc">Capture SVG to <code>__localtests__/.sandbox-edit/capture.svg</code>; edit on disk; auto-reload canvas raster. <code>npm run debug:fo-svg-sandbox</code> opens headed Chrome.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fo-svg-sandbox.html</span>
+        </li>
+        <li>
+          <a href="/__localtests__/checkout-example.html">Checkout nav fixture</a>
+          <span class="desc">Full-checkout <code>#capture-target</code> with flex-stretch nav (Home, Products). Calibrate and ink metrics.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/checkout-example.html</span>
+        </li>
+        <li>
+          <a href="/__localtests__/checkout-example.html?matrix=1&amp;auto=1">Checkout — Home matrix (browser)</a>
+          <span class="desc">Auto matrix on checkout fixture (single landmark).</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/checkout-example.html?matrix=1&amp;auto=1</span>
+        </li>
+        <li>
+          <a href="/__localtests__/checkout-example.html?matrix=1&amp;auto=1&amp;calibrate=1">Checkout — multi-landmark calibrate</a>
+          <span class="desc">Home + Products calibrate matrix in the browser. CLI: <code>fo-fix-lab.mjs --calibrate --open-browser</code>.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/checkout-example.html?matrix=1&amp;auto=1&amp;calibrate=1</span>
+        </li>
+        <li id="fontface-test-link">
+          <a href="/__localtests__/fontface-api-dynamic.html">FontFace API — dynamic load/unload</a>
+          <span class="desc">Experimental. Exercises <code>FontFace</code> + <code>document.fonts</code> behavior.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/fontface-api-dynamic.html</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Sandbox API</h2>
+      <ul class="links">
+        <li>
+          <a href="/__localtests__/api/sandbox-svg">Sandbox SVG watch API (GET/POST)</a>
+          <span class="desc">JSON API for fo-svg-sandbox: read/write <code>__localtests__/.sandbox-edit/capture.svg</code>.</span>
+          <span class="url">http://127.0.0.1:8765/__localtests__/api/sandbox-svg</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>npm scripts</h2>
+      <ul class="plain">
+        <li><code>npm run debug:fo-fix-lab</code> — compile + <code>fo-fix-lab.mjs --serve</code> (static server; does not open Chrome)</li>
+        <li><code>npm run debug:fo-svg-sandbox</code> — compile + headed Chrome on FO SVG sandbox</li>
+        <li><code>npm run debug:fo-svg-sandbox:probe-translate-z</code> — sandbox with <code>--probe-translate-z</code></li>
+        <li><code>npm run compile</code> — build <code>dist/</code> (required for harness boot)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>CLI (headed Chrome / matrix)</h2>
+      <p class="note">
+        Playwright matrix and calibrate runs need <code>--open-browser</code> (or
+        <code>SNAPDOM_FO_LAB_OPEN_BROWSER=1</code>).
+      </p>
+      <ul class="plain">
+        <li><code>node __localtests__/local-http-server.mjs</code> — static server only (prints this index first)</li>
+        <li><code>node __localtests__/fo-fix-lab.mjs --serve</code> — same (via fo-fix-lab entry)</li>
+        <li><code>node __localtests__/fo-fix-lab.mjs --matrix --open-browser</code> — mini fixture matrix</li>
+        <li><code>node __localtests__/fo-fix-lab.mjs --matrix --open-browser --limit 50</code> — smoke</li>
+        <li><code>node __localtests__/fo-fix-lab.mjs --calibrate --open-browser --limit 15</code> — checkout landmarks</li>
+        <li><code>node __localtests__/fo-fix-lab.mjs --recipe product-baseline --open-browser</code> — single recipe</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

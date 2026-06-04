@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FO SVG sandbox</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #f4f4f5;
+      color: #111;
+      overflow: hidden;
+    }
+    header {
+      flex: 0 0 auto;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+    }
+    header label { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+    header select, header button, header input[type="number"] {
+      font: inherit;
+      padding: 4px 8px;
+    }
+    header button { cursor: pointer; }
+    header .toolbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    header details {
+      font-size: 13px;
+      margin-left: auto;
+    }
+    header details summary { cursor: pointer; }
+    #header-status {
+      font-size: 12px;
+      color: #2563eb;
+    }
+    #boot-error {
+      display: none;
+      margin: 0;
+      padding: 10px 14px;
+      background: #fef2f2;
+      border-bottom: 1px solid #fecaca;
+      color: #991b1b;
+      font: 13px/1.5 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    #boot-error.visible { display: block; }
+    #metrics-strip {
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+    #metrics-strip .warn { color: #b45309; }
+    #metrics-strip .bad { color: #b91c1c; }
+    .split {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
+      min-height: 0;
+    }
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    }
+    .pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-right: 1px solid #ddd;
+    }
+    .pane:last-child { border-right: none; }
+    .pane-label {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #52525b;
+      background: #ececef;
+      border-bottom: 1px solid #d4d4d8;
+    }
+    .file-pane-body {
+      flex: 1 1 auto;
+      padding: 14px 12px;
+      overflow: auto;
+      min-height: 0;
+    }
+    .edit-path {
+      margin: 0 0 8px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .edit-path code {
+      font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace;
+      background: #e0e7ff;
+      color: #1e3a8a;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .edit-hint {
+      margin: 0 0 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #475569;
+    }
+    #file-status {
+      margin: 0 0 12px;
+      font: 12px/1.5 ui-monospace, Menlo, monospace;
+      color: #475569;
+    }
+    #file-status.ok { color: #15803d; }
+    #file-status.error { color: #b91c1c; }
+    #file-contents-details {
+      font-size: 12px;
+    }
+    #file-contents-details summary {
+      cursor: pointer;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    #file-contents-preview {
+      margin: 0;
+      padding: 10px 12px;
+      max-height: 320px;
+      overflow: auto;
+      font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace;
+      color-scheme: dark;
+      background: #1e1e1e;
+      color: #e6e6e6;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    #file-contents-preview:empty::before {
+      content: 'No SVG captured yet.';
+      color: #858585;
+    }
+    .preview-pane {
+      overflow: auto;
+      padding: 12px;
+      gap: 12px;
+    }
+    .preview-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .preview-card + .preview-card { margin-top: 12px; }
+    .preview-card .pane-label {
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .preview-card-body {
+      padding: 12px;
+    }
+    #live-fixture-root {
+      min-height: 48px;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #fixture-checkout,
+    #fixture-mini {
+      display: none;
+    }
+    #fixture-checkout.active,
+    #fixture-mini.active {
+      display: block;
+    }
+    .fixture-checkout iframe {
+      display: block;
+      width: 100%;
+      max-width: 500px;
+      height: 220px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+    }
+    #canvas-wrap {
+      display: inline-block;
+      max-width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      line-height: 0;
+      background-color: #f9fafb;
+      background-image:
+        linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+        linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+        linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+    #canvas-wrap:empty::before {
+      content: 'Raster appears here after capture or file save.';
+      display: block;
+      width: 500px;
+      max-width: 100%;
+      min-height: 48px;
+      padding: 16px 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+    #preview-canvas {
+      display: block;
+      max-width: 100%;
+    }
+    #preview-canvas.crisp {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+    }
+    #raster-status {
+      font: 12px/1.5 ui-monospace, Menlo, monospace;
+      color: #475569;
+      margin: 8px 0 0;
+    }
+    #raster-status.error { color: #b91c1c; }
+
+    .view-controls {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .view-controls label {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      cursor: pointer;
+    }
+    .view-stack {
+      position: relative;
+      max-width: 500px;
+      display: inline-block;
+    }
+    #stack-live-layer {
+      position: relative;
+    }
+    #stack-canvas-layer {
+      position: absolute;
+      inset: 0;
+    }
+    .view-stack #stack-canvas-layer,
+    .view-stack #stack-canvas-layer * {
+      pointer-events: none;
+    }
+    .view-stack.view-split #stack-canvas-layer {
+      position: static;
+      inset: auto;
+    }
+    .view-stack.view-overlay #stack-canvas-layer {
+      mix-blend-mode: difference;
+      opacity: 0.92;
+    }
+    /* Keep layout geometry stable for measurements; don't display:none the live layer. */
+    .view-stack.view-live-only #stack-canvas-layer { visibility: hidden; }
+    .view-stack.view-canvas-only #stack-live-layer { visibility: hidden; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="toolbar-title">FO SVG sandbox</span>
+    <button type="button" id="btn-capture">Capture</button>
+    <label>Fixture
+      <select id="fixture-select">
+        <option value="mini">mini nav</option>
+        <option value="checkout">checkout</option>
+      </select>
+    </label>
+    <label>Recipe
+      <select id="recipe-select">
+        <option value="product-baseline" selected>product-baseline</option>
+      </select>
+    </label>
+    <label>Engine
+      <select id="tocanvas-engine">
+        <option value="none">Native (<img>)</option>
+        <option value="product" selected>Product (src/)</option>
+        <option value="lab">Lab (fork)</option>
+      </select>
+    </label>
+    <label>dpr <input type="number" id="dpr-input" min="0.5" max="4" step="0.25" value="2" style="width:4rem" /></label>
+    <label>scale <input type="number" id="scale-input" min="0.25" max="4" step="0.25" value="1" style="width:4rem" /></label>
+    <span class="view-controls" role="group" aria-label="View">
+      <label><input type="radio" name="view-mode" value="split" checked />split</label>
+      <label><input type="radio" name="view-mode" value="overlay" />overlay</label>
+      <label><input type="radio" name="view-mode" value="live" />live</label>
+      <label><input type="radio" name="view-mode" value="canvas" />canvas</label>
+    </span>
+    <span id="header-status"></span>
+  </header>
+  <pre id="boot-error"></pre>
+  <p id="metrics-strip">Live top: — · SVG vs live: — · Canvas vs live: —</p>
+  <div class="split">
+    <section class="pane" aria-label="Capture file">
+      <div class="pane-label">Capture file</div>
+      <div class="file-pane-body">
+        <p class="edit-path">Editing: <code id="capture-file-path">__localtests__/.sandbox-edit/capture.svg</code></p>
+        <p class="edit-hint">Capture writes the file to disk. Edit in Cursor or VS Code and save — the canvas auto-reloads.</p>
+        <p id="file-status">No capture yet — click Capture.</p>
+        <details id="file-contents-details">
+          <summary>View file contents</summary>
+          <pre id="file-contents-preview"></pre>
+        </details>
+      </div>
+    </section>
+    <section class="pane preview-pane" aria-label="Live and canvas preview">
+      <div class="preview-card">
+        <div class="pane-label">Live</div>
+        <div class="preview-card-body">
+          <div id="view-stack" class="view-stack view-split" data-mode="split">
+            <div id="stack-live-layer" class="stack-layer">
+              <div id="live-fixture-root">
+                <div id="fixture-checkout" class="fixture-checkout">
+                  <iframe id="checkout-frame" title="Checkout fixture" src="about:blank"></iframe>
+                </div>
+                <div id="fixture-mini" class="active">
+                  <div id="capture-target">
+                    <nav class="mini-nav" aria-label="Block row nav">
+                      <a href="#" data-landmark="Blocks">██████</a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="stack-canvas-layer" class="stack-layer">
+              <div id="canvas-wrap">
+                <canvas id="preview-canvas" hidden></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="preview-card">
+        <div class="pane-label">Canvas</div>
+        <div class="preview-card-body">
+          <div style="font:12px/1.45 system-ui, -apple-system, sans-serif; color:#475569;">
+            Use the <b>View</b> toggle to overlay canvas on live.
+          </div>
+          <p id="raster-status">Waiting for capture…</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script type="module">
+    const params = new URLSearchParams(location.search)
+    const CAPTURE_FILE_PATH = params.get('capturePath') || '__localtests__/.sandbox-edit/capture.svg'
+    const CAPTURE_ABS_PATH = params.get('captureAbsPath') || CAPTURE_FILE_PATH
+    const SVG_API = params.get('svgApi') || '/__localtests__/api/sandbox-svg'
+    const POLL_MS = 300
+    const LS_KEY_ENGINE = 'snapdom.foSvgSandbox.engine'
+
+    const fileStatus = document.getElementById('file-status')
+    const fileContentsPreview = document.getElementById('file-contents-preview')
+    const captureFilePathEl = document.getElementById('capture-file-path')
+    const metricsStrip = document.getElementById('metrics-strip')
+    const rasterStatus = document.getElementById('raster-status')
+    const headerStatus = document.getElementById('header-status')
+    const bootError = document.getElementById('boot-error')
+    const previewCanvas = document.getElementById('preview-canvas')
+    const viewStack = document.getElementById('view-stack')
+    const viewRadios = /** @type {NodeListOf<HTMLInputElement>} */ (
+      document.querySelectorAll('input[name="view-mode"]')
+    )
+    const fixtureSelect = document.getElementById('fixture-select')
+    const recipeSelect = document.getElementById('recipe-select')
+    const toCanvasEngine = document.getElementById('tocanvas-engine')
+    const dprInput = document.getElementById('dpr-input')
+    const scaleInput = document.getElementById('scale-input')
+    const fixtureCheckout = document.getElementById('fixture-checkout')
+    const fixtureMini = document.getElementById('fixture-mini')
+    const checkoutFrame = document.getElementById('checkout-frame')
+    const btnCapture = document.getElementById('btn-capture')
+
+    const LANDMARK = 'H'
+
+    /** @type {typeof import('./fo-fix-lab-runner.js')} */
+    let runner
+    /** @type {typeof import('/dist/snapdom.mjs').snapdom} */
+    let snapdom
+
+    let rasterGen = 0
+    let pollTimer = null
+    let pollInFlight = false
+    /** @type {string} */
+    let loadedSvgText = ''
+    /** @type {number | null} */
+    let lastKnownMtime = null
+    /** @type {HTMLCanvasElement | null} */
+    let lastGoodCanvas = null
+
+    // Surface otherwise-silent failures (esp. async import / promise rejections).
+    window.addEventListener('error', (e) => {
+      try {
+        const msg = e?.error?.stack || e?.message || String(e)
+        showBootError(String(msg))
+      } catch {
+        /* ignore */
+      }
+    })
+    window.addEventListener('unhandledrejection', (e) => {
+      try {
+        const msg = e?.reason?.stack || e?.reason?.message || String(e?.reason || e)
+        showBootError(String(msg))
+      } catch {
+        /* ignore */
+      }
+    })
+
+    captureFilePathEl.textContent = CAPTURE_FILE_PATH
+
+    function applyViewMode(mode) {
+      const m = mode || 'split'
+      viewStack.dataset.mode = m
+      viewStack.classList.remove('view-split', 'view-overlay', 'view-live-only', 'view-canvas-only')
+      if (m === 'overlay') viewStack.classList.add('view-overlay')
+      else if (m === 'live') viewStack.classList.add('view-live-only')
+      else if (m === 'canvas') viewStack.classList.add('view-canvas-only')
+      else viewStack.classList.add('view-split')
+      const u = new URL(location.href)
+      u.searchParams.set('view', m)
+      history.replaceState(null, '', u)
+    }
+
+    window.__foSvgSandbox = {
+      ready: false,
+      bootError: null,
+      lastRasterMs: null,
+      lastDiagnosis: null,
+      captureFilePath: CAPTURE_FILE_PATH,
+      captureAbsPath: CAPTURE_ABS_PATH,
+      svgApi: SVG_API,
+      lastMtime: null,
+      loadedSvgLength: 0,
+    }
+
+    function showBootError(message) {
+      bootError.textContent = message
+      bootError.classList.add('visible')
+      window.__foSvgSandbox.bootError = message
+    }
+
+    function currentSvgText() {
+      return loadedSvgText.trim()
+    }
+
+    function updateFilePreview() {
+      const text = currentSvgText()
+      fileContentsPreview.textContent = text || ''
+      window.__foSvgSandbox.loadedSvgLength = text.length
+    }
+
+    function setFileStatus(message, kind = '') {
+      fileStatus.textContent = message
+      fileStatus.className = kind
+    }
+
+    async function formatWriteFailure(res) {
+      const abs = CAPTURE_ABS_PATH
+      let detail = ''
+      const ct = res.headers.get('content-type') || ''
+      if (ct.includes('application/json')) {
+        try {
+          const body = await res.json()
+          if (body.absolutePath) detail = ` → ${body.absolutePath}`
+          else if (body.path) detail = ` → ${body.path}`
+        } catch {
+          /* ignore */
+        }
+      }
+      if (res.status === 404) {
+        return (
+          `Write failed (HTTP 404) — sandbox API not found at ${SVG_API}. ` +
+          `Start npm run debug:fo-svg-sandbox (local-http-server with watch API). ` +
+          `Target file: ${abs}${detail}`
+        )
+      }
+      return `Write failed (HTTP ${res.status}) — ${abs}${detail}`
+    }
+
+    async function writeCaptureFile(svgText) {
+      const res = await fetch(SVG_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' },
+        body: svgText,
+      })
+      if (!res.ok) {
+        throw new Error(await formatWriteFailure(res))
+      }
+      const data = await res.json()
+      lastKnownMtime = data.mtime ?? null
+      window.__foSvgSandbox.lastMtime = lastKnownMtime
+      loadedSvgText = svgText
+      updateFilePreview()
+      setFileStatus(`Captured — ${data.bytes ?? svgText.length} bytes written`, 'ok')
+      return data
+    }
+
+    async function pollCaptureFile() {
+      if (pollInFlight) return
+      pollInFlight = true
+      try {
+        const res = await fetch(SVG_API)
+        if (res.status === 404) return
+        if (!res.ok) return
+        const data = await res.json()
+        const mtime = data.mtime
+        const svg = data.svg || ''
+        if (lastKnownMtime != null && mtime !== lastKnownMtime) {
+          lastKnownMtime = mtime
+          window.__foSvgSandbox.lastMtime = mtime
+          loadedSvgText = svg
+          updateFilePreview()
+          await rasterEditorSvg()
+          rasterStatus.textContent = 'Reloaded from disk'
+          rasterStatus.className = ''
+          setFileStatus(`Reloaded from disk (${svg.length} bytes)`, 'ok')
+        } else if (lastKnownMtime == null && svg) {
+          lastKnownMtime = mtime
+          window.__foSvgSandbox.lastMtime = mtime
+          loadedSvgText = svg
+          updateFilePreview()
+          await rasterEditorSvg()
+        }
+      } catch (err) {
+        console.warn('[fo-svg-sandbox] poll failed:', err)
+      } finally {
+        pollInFlight = false
+      }
+    }
+
+    function startFilePolling() {
+      if (pollTimer) return
+      pollTimer = setInterval(() => {
+        pollCaptureFile().catch((err) => console.error(err))
+      }, POLL_MS)
+    }
+
+    function captureRoot() {
+      if (fixtureSelect.value === 'checkout') {
+        const doc = checkoutFrame.contentDocument
+        return doc?.getElementById('capture-target') ?? null
+      }
+      return document.getElementById('capture-target')
+    }
+
+    function fixtureCssSize() {
+      const root = captureRoot()
+      if (!root) return { cssW: 500, cssH: 48 }
+      const r = root.getBoundingClientRect()
+      return {
+        cssW: Math.max(1, Math.round(r.width || root.offsetWidth || 500)),
+        cssH: Math.max(1, Math.round(r.height || root.offsetHeight || 48)),
+      }
+    }
+
+    function liveLandmarkElement() {
+      const root = captureRoot()
+      if (!root) return null
+      const el = runner.findLandmarkElement(root, LANDMARK)
+      if (!el || !root.contains(el)) return null
+      return el
+    }
+
+    function prepareSvgForFixture(svgText) {
+      const { cssW, cssH } = fixtureCssSize()
+      return runner.applySandboxFixtureSvgDims(svgText, { cssW, cssH })
+    }
+
+    function readControls() {
+      const dpr = Math.max(0.5, Number(dprInput.value) || window.devicePixelRatio || 1)
+      const scale = Math.max(0.25, Number(scaleInput.value) || 1)
+      const engine = toCanvasEngine.value || 'none'
+      // Default to blob-url to avoid data: opaque-origin taint in Chrome ink scans.
+      // Override via `?patch=...` when experimenting.
+      const rasterPatch = params.get('patch') || 'blob-url'
+      return { dpr, scale, engine, rasterPatch }
+    }
+
+    function recipeForInject() {
+      const id = recipeSelect.value || 'product-baseline'
+      return runner.getFoFixRecipe(id) ?? {
+        id,
+        label: id,
+        idea: '',
+        css: '',
+        inject: 'none',
+      }
+    }
+
+    function fmtSignedPx(v) {
+      if (v == null) return '—'
+      const n = v.toFixed(3)
+      return v > 0 ? `+${n}px` : `${n}px`
+    }
+
+    function summarizeExternalRefs(svgText) {
+      if (!svgText) return ''
+      /** @type {Set<string>} */
+      const refs = new Set()
+      const push = (u) => {
+        if (!u) return
+        const s = String(u).trim()
+        if (!s) return
+        refs.add(s)
+      }
+      // url(...) refs in CSS
+      for (const m of svgText.matchAll(/url\(\s*(['"]?)([^'")\s]+)\1\s*\)/gi)) {
+        push(m[2])
+      }
+      // href/src attributes
+      for (const m of svgText.matchAll(/\b(?:href|xlink:href|src)\s*=\s*(['"])(.*?)\1/gi)) {
+        push(m[2])
+      }
+      const list = [...refs].filter((u) => /^https?:\/\//i.test(u)).slice(0, 6)
+      if (!list.length) return ''
+      return ` refs=${list.join(', ')}`
+    }
+
+    function showCanvasPreview(sourceCanvas, cssW, cssH) {
+      if (!sourceCanvas) {
+        previewCanvas.hidden = true
+        previewCanvas.width = 0
+        previewCanvas.height = 0
+        return
+      }
+      previewCanvas.width = sourceCanvas.width
+      previewCanvas.height = sourceCanvas.height
+      previewCanvas.classList.add('crisp')
+      previewCanvas.style.width = `${cssW}px`
+      previewCanvas.style.height = `${cssH}px`
+      const ctx = previewCanvas.getContext('2d', { willReadFrequently: true })
+      ctx?.drawImage(sourceCanvas, 0, 0)
+      previewCanvas.hidden = false
+    }
+
+    function setHeader(msg) {
+      headerStatus.textContent = msg
+    }
+
+    function updateMetrics(canvas, { dpr, inkDiag, rasterDiag }) {
+      const root = captureRoot()
+      if (!root) {
+        metricsStrip.textContent = 'Live top: — · SVG vs live: — · Canvas vs live: — (no fixture)'
+        metricsStrip.className = ''
+        return
+      }
+      const el = liveLandmarkElement()
+      if (!el) {
+        metricsStrip.textContent = `Live top: — · SVG vs live: — · Canvas vs live: — (${LANDMARK} not found)`
+        metricsStrip.className = ''
+        return
+      }
+      const { cssW, cssH } = fixtureCssSize()
+      const svgText = currentSvgText()
+      const livePainted = runner.measureLivePaintedInk(el, root)
+      const liveTop = livePainted?.topInBorder
+
+      let svgVs = null
+      if (svgText.includes('<svg')) {
+        const sizedSvg = prepareSvgForFixture(svgText)
+        const cmp = runner.compareThreeWayInk(root, canvas, sizedSvg, el, dpr, { cssW, cssH })
+        svgVs = cmp?.liveVsSvgTopPx ?? cmp?.deltaSvgInBorder
+      }
+
+      let canvasVs = null
+      if (canvas && inkDiag && !inkDiag.miss && inkDiag.ink) {
+        canvasVs = liveTop != null ? inkDiag.ink.topInBorder - liveTop : null
+      }
+
+      const missNote =
+        canvas && inkDiag?.miss
+          ? ` (ink miss${inkDiag?.reason ? `: ${inkDiag.reason}` : ''})`
+          : canvas && rasterDiag?.blank
+            ? ` (blank${rasterDiag?.reason ? `: ${rasterDiag.reason}` : ''})`
+            : ''
+      const taintRefs =
+        canvas && inkDiag?.reason?.includes('tainted')
+          ? summarizeExternalRefs(svgText)
+          : ''
+
+      metricsStrip.textContent = [
+        `Live top: ${liveTop != null ? `${liveTop.toFixed(3)} px` : '—'}`,
+        `SVG vs live: ${svgText.includes('<svg') ? fmtSignedPx(svgVs) : '—'}`,
+        `Canvas vs live: ${fmtSignedPx(canvasVs)}${missNote}${taintRefs}`,
+      ].join(' · ')
+
+      metricsStrip.className =
+        canvas && (!inkDiag || inkDiag.miss || rasterDiag?.blank)
+          ? 'bad'
+          : runner.SANDBOX_FO_BLANK_RECIPES?.has(recipeSelect.value)
+            ? 'warn'
+            : ''
+    }
+
+    async function rasterEditorSvg() {
+      const raw = currentSvgText()
+      if (!raw || !raw.includes('<svg')) {
+        rasterStatus.textContent = 'Waiting for capture…'
+        rasterStatus.className = ''
+        updateMetrics(null, { dpr: 1 })
+        return
+      }
+
+      const validation = runner.validateSandboxSvg(raw)
+      if (!validation.ok) {
+        const detail = validation.parseDetail ? ` — ${validation.parseDetail}` : ''
+        rasterStatus.textContent = `Raster error: ${validation.error}${detail}`
+        rasterStatus.className = 'error'
+        if (lastGoodCanvas) {
+          const { cssW, cssH } = fixtureCssSize()
+          showCanvasPreview(lastGoodCanvas, cssW, cssH)
+        }
+        return
+      }
+
+      const gen = ++rasterGen
+      const { dpr, scale, engine, rasterPatch } = readControls()
+      const root = captureRoot()
+      const { cssW, cssH } = fixtureCssSize()
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const recipe = { ...recipeForInject(), rasterPatch }
+      const rawSized = prepareSvgForFixture(raw)
+
+      setHeader('Rasterizing…')
+      const t0 = performance.now()
+
+      try {
+        const applied = runner.applyRecipeToSvgForSandbox(rawSized, recipe, dims)
+        let svgText = applied.svgText
+        const meta = runner.parseCaptureMeta(svgText, root ?? document.body)
+
+        let canvas
+        if (engine === 'product') {
+          console.log('[fo-svg-sandbox] Using product engine (snapdom.toCanvas)')
+          canvas = await runner.rasterProductToCanvas(svgText, dims, scale, meta, null, snapdom)
+        } else if (engine === 'lab') {
+          console.log('[fo-svg-sandbox] Using lab engine (fo-fix-toCanvas.js fork)')
+          canvas = await runner.rasterLabToCanvas(svgText, dims, scale, meta, recipe)
+        } else {
+          const { url, revoke } = runner.buildRasterUrl(svgText, recipe)
+          try {
+            canvas = await runner.rasterSvgUrl(url, {
+              scale,
+              dpr,
+              meta,
+              width: dims.cssW,
+              height: dims.cssH,
+              rasterPatch,
+            })
+          } finally {
+            revoke?.()
+          }
+        }
+
+        if (gen !== rasterGen) return
+
+        const ms = Math.round(performance.now() - t0)
+        const rasterDiag = runner.diagnoseCanvasRaster(canvas)
+        const metricsRoot = captureRoot()
+        const landmarkEl = metricsRoot ? liveLandmarkElement() : null
+        const inkDiag =
+          metricsRoot && landmarkEl
+            ? runner.diagnoseCanvasInkMiss(canvas, metricsRoot, landmarkEl, dpr)
+            : null
+
+        window.__foSvgSandbox.lastRasterMs = ms
+        window.__foSvgSandbox.lastDiagnosis = { rasterDiag, inkDiag, recipe: recipe.id, rasterPatch }
+
+        const rasterEmpty = rasterDiag.blank === true
+        const patchInfo = ` [${engine}]`
+        if (!rasterEmpty) {
+          lastGoodCanvas = canvas
+          showCanvasPreview(canvas, cssW, cssH)
+          if (!rasterStatus.textContent.startsWith('Reloaded from disk')) {
+            rasterStatus.textContent = `Raster OK (${ms}ms)${patchInfo}`
+          }
+          rasterStatus.className = ''
+        } else {
+          if (lastGoodCanvas) showCanvasPreview(lastGoodCanvas, cssW, cssH)
+          else showCanvasPreview(canvas, cssW, cssH)
+          rasterStatus.textContent = `Raster empty (${ms}ms)${patchInfo} — ${rasterDiag.reason || 'no dark pixels'}`
+          rasterStatus.className = 'error'
+        }
+
+        if (inkDiag?.miss && (inkDiag.reason || '').includes('tainted')) {
+          rasterStatus.textContent =
+            `Raster OK (${ms}ms)${patchInfo} — ink scan blocked: tainted canvas.` +
+            summarizeExternalRefs(rawSized)
+          rasterStatus.className = 'error'
+        }
+
+        updateMetrics(canvas, { dpr, inkDiag, rasterDiag })
+        setHeader('')
+      } catch (err) {
+        if (gen !== rasterGen) return
+        const message = String(err?.message || err)
+        rasterStatus.textContent = `Raster error: ${message}`
+        rasterStatus.className = 'error'
+        if (lastGoodCanvas) {
+          const { cssW, cssH } = fixtureCssSize()
+          showCanvasPreview(lastGoodCanvas, cssW, cssH)
+        }
+        setHeader('')
+        console.error('[fo-svg-sandbox] raster failed:', err)
+      }
+    }
+
+    async function captureFromPage() {
+      setHeader('Capturing…')
+      const root = captureRoot()
+      if (!root) {
+        rasterStatus.textContent = 'No #capture-target (wait for checkout iframe?)'
+        rasterStatus.className = 'error'
+        setHeader('')
+        return
+      }
+      if (!snapdom) {
+        rasterStatus.textContent = 'snapdom not loaded — run npm run compile'
+        rasterStatus.className = 'error'
+        setHeader('')
+        return
+      }
+      try {
+        const { dpr, scale } = readControls()
+        const snap = await snapdom(root, { dpr, scale })
+        const svg = runner.svgFromDataUrl(snap.toRaw())
+        await writeCaptureFile(svg)
+        startFilePolling()
+        await rasterEditorSvg()
+        // If rasterEditorSvg() already reported an error/blank state, don't overwrite it.
+        if (rasterStatus.className !== 'error') {
+          const diag = window.__foSvgSandbox.lastDiagnosis
+          const suffix =
+            diag?.rasterDiag?.blank === true
+              ? ` (blank: ${diag?.rasterDiag?.reason || 'no dark pixels'})`
+              : ''
+          rasterStatus.textContent = `Captured — edit ${CAPTURE_FILE_PATH} in IDE${suffix}`
+          rasterStatus.className = ''
+        }
+      } catch (err) {
+        const message = String(err?.message || err)
+        rasterStatus.textContent = `Capture failed: ${message}`
+        rasterStatus.className = 'error'
+        setFileStatus(`Capture failed: ${message}`, 'error')
+      } finally {
+        setHeader('')
+      }
+    }
+
+    function setFixture(mode) {
+      const checkout = mode === 'checkout'
+      fixtureCheckout.classList.toggle('active', checkout)
+      fixtureMini.classList.toggle('active', !checkout)
+      if (checkout) {
+        checkoutFrame.src = '/__localtests__/checkout-example.html'
+      }
+      const u = new URL(location.href)
+      u.searchParams.set('fixture', mode)
+      history.replaceState(null, '', u)
+      if (currentSvgText()) rasterEditorSvg().catch((err) => console.error(err))
+    }
+
+    async function ensureSnapdomBundle() {
+      const res = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+      if (!res.ok) {
+        throw new Error(
+          `Missing /dist/snapdom.mjs (HTTP ${res.status}). Run: npm run compile`,
+        )
+      }
+    }
+
+    async function boot() {
+      try {
+        await ensureSnapdomBundle()
+        ;[{ snapdom }, runner] = await Promise.all([
+          import('/dist/snapdom.mjs'),
+          import('./fo-fix-lab-runner.js'),
+        ])
+        window.snapdom = snapdom
+
+        const required = [
+          ['file-status', fileStatus],
+          ['file-contents-preview', fileContentsPreview],
+          ['capture-file-path', captureFilePathEl],
+          ['metrics-strip', metricsStrip],
+          ['raster-status', rasterStatus],
+          ['header-status', headerStatus],
+          ['boot-error', bootError],
+          ['preview-canvas', previewCanvas],
+          ['view-stack', viewStack],
+          ['fixture-select', fixtureSelect],
+          ['recipe-select', recipeSelect],
+          ['tocanvas-engine', toCanvasEngine],
+          ['dpr-input', dprInput],
+          ['scale-input', scaleInput],
+          ['fixture-checkout', fixtureCheckout],
+          ['fixture-mini', fixtureMini],
+          ['checkout-frame', checkoutFrame],
+          ['btn-capture', btnCapture],
+        ]
+        const missing = required.filter(([, el]) => !el).map(([id]) => id)
+        if (missing.length) {
+          throw new Error(
+            `fo-svg-sandbox boot: missing DOM nodes: ${missing.join(', ')}. ` +
+              'Hard-refresh the page, and ensure it is served by local-http-server (not file://).',
+          )
+        }
+
+        const includeInactive = params.get('includeInactive') === '1'
+        for (const r of runner.FO_FIX_RECIPES) {
+          if (r.id === 'product-baseline') continue
+          if (!includeInactive && !runner.isFoFixRecipeActive(r)) continue
+          if (r.inject === 'capture' || r.inject === 'both') {
+            const opt = document.createElement('option')
+            opt.value = r.id
+            opt.textContent = r.id
+            recipeSelect.appendChild(opt)
+          }
+        }
+
+        const recipeParam = params.get('recipe')
+        if (recipeParam && runner.getFoFixRecipe(recipeParam)) {
+          recipeSelect.value = recipeParam
+        }
+
+        const fixtureParam = params.get('fixture')
+        if (fixtureParam === 'checkout' || fixtureParam === 'mini') {
+          fixtureSelect.value = fixtureParam
+        }
+        setFixture(fixtureSelect.value)
+
+        const engineParam = params.get('engine')
+        if (engineParam) {
+          toCanvasEngine.value = engineParam
+        } else {
+          try {
+            const saved = localStorage.getItem(LS_KEY_ENGINE)
+            if (saved) toCanvasEngine.value = saved
+          } catch { /* ignore */ }
+        }
+
+        dprInput.value = String(window.devicePixelRatio || 2)
+
+        setHeader('Ready.')
+        const initialView = params.get('view') || 'split'
+        for (const r of viewRadios) r.checked = r.value === initialView
+        applyViewMode(initialView)
+        for (const r of viewRadios) {
+          r.addEventListener('change', () => {
+            if (r.checked) applyViewMode(r.value)
+          })
+        }
+        btnCapture.addEventListener('click', () => {
+          setHeader('Capture clicked…')
+          rasterStatus.textContent = 'Capturing…'
+          rasterStatus.className = ''
+          captureFromPage().catch((err) => {
+            const message = String(err?.message || err)
+            rasterStatus.textContent = `Capture failed: ${message}`
+            rasterStatus.className = 'error'
+            console.error('[fo-svg-sandbox] captureFromPage failed:', err)
+          })
+        })
+        fixtureSelect.addEventListener('change', () => setFixture(fixtureSelect.value))
+        recipeSelect.addEventListener('change', () => rasterEditorSvg().catch(console.error))
+        toCanvasEngine.addEventListener('change', () => {
+          try { localStorage.setItem(LS_KEY_ENGINE, toCanvasEngine.value) } catch { /* ignore */ }
+          rasterEditorSvg().catch(console.error)
+        })
+        dprInput.addEventListener('change', () => rasterEditorSvg().catch(console.error))
+        scaleInput.addEventListener('change', () => rasterEditorSvg().catch(console.error))
+
+        startFilePolling()
+        window.__foSvgSandbox.ready = true
+
+        if (params.get('autoCapture') === '1') {
+          if (fixtureSelect.value === 'checkout') {
+            checkoutFrame.addEventListener('load', () => captureFromPage(), { once: true })
+          } else {
+            await captureFromPage()
+          }
+        }
+      } catch (err) {
+        showBootError(String(err?.stack || err))
+      }
+    }
+
+    boot()
+  </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hand-built FO SVG vs captureDOM</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p.hint { font-size: 13px; color: #475569; margin: 0 0 12px; max-width: 78ch; }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status {
+      margin-top: 12px;
+      font: 12px/1.45 ui-monospace, Menlo, monospace;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini nav — hand-built FO SVG vs captureDOM</h1>
+  <p class="hint">
+    Same visual mini nav: minimal static <code>foreignObject</code>+flex+text string vs
+    <code>captureDOM</code> output. Three-way ink (live / inline FO / canvas) for Home and Products.
+    Does hand-built reproduce ~2.8px canvas drift without full snapdom serialization?
+  </p>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { createContext } from '/src/core/context.js'
+    import { captureDOM } from '/src/core/capture.js'
+    import {
+      applyRecipeToSvgForSandbox,
+      buildRasterUrl,
+      compareThreeWayInk,
+      findLandmarkElement,
+      getFoFixRecipe,
+      parseCaptureMeta,
+      rasterSvgUrl,
+      resolveRecipeRasterPatch,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmarks = (params.get('landmarks') || 'Home,Products')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    /** @param {CSSStyleDeclaration} cs */
+    function fontShorthand(cs) {
+      return `${cs.fontWeight} ${cs.fontSize}/${cs.lineHeight} ${cs.fontFamily}`
+    }
+
+    /** @param {Element} el */
+    function inlineStyleFromComputed(el) {
+      const cs = getComputedStyle(el)
+      /** @type {string[]} */
+      const parts = []
+      if (cs.display) parts.push(`display:${cs.display}`)
+      if (cs.alignItems && cs.display.includes('flex')) parts.push(`align-items:${cs.alignItems}`)
+      if (cs.minHeight && cs.minHeight !== '0px') parts.push(`min-height:${cs.minHeight}`)
+      if (cs.padding && cs.padding !== '0px') parts.push(`padding:${cs.padding}`)
+      if (cs.textDecorationLine && cs.textDecorationLine !== 'none') {
+        parts.push(`text-decoration:${cs.textDecorationLine}`)
+      } else if (cs.textDecoration && cs.textDecoration !== 'none') {
+        parts.push(`text-decoration:${cs.textDecoration}`)
+      }
+      if (cs.color) parts.push(`color:${cs.color}`)
+      parts.push(`font:${fontShorthand(cs)}`)
+      if (cs.boxSizing) parts.push(`box-sizing:${cs.boxSizing}`)
+      if (cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+        parts.push(`background-color:${cs.backgroundColor}`)
+      }
+      if (cs.borderWidth && cs.borderWidth !== '0px') {
+        parts.push(`border:${cs.borderWidth} ${cs.borderStyle} ${cs.borderColor}`)
+      }
+      parts.push('margin:0')
+      return parts.join(';')
+    }
+
+    /** Minimal FO+flex+text SVG from live layout — no snapdom capture. */
+    function buildHandbuiltMiniNavSvg(coordRoot) {
+      const nav = coordRoot.querySelector('nav')
+      const cssW = coordRoot.offsetWidth || coordRoot.getBoundingClientRect().width
+      const cssH = coordRoot.offsetHeight || coordRoot.getBoundingClientRect().height
+      const wrapperStyle = [
+        `width:${cssW}px`,
+        `height:${cssH}px`,
+        inlineStyleFromComputed(coordRoot),
+        'margin:0;padding:0',
+      ].join(';')
+      const navStyle = nav ? inlineStyleFromComputed(nav) : 'display:flex;align-items:stretch;min-height:48px'
+      const anchors = nav ? [...nav.querySelectorAll('a')] : []
+      const anchorHtml = anchors
+        .map((a) => `<a href="#" style="${inlineStyleFromComputed(a)}">${(a.textContent || '').trim()}</a>`)
+        .join('')
+      return (
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${cssW}" height="${cssH}" viewBox="0 0 ${cssW} ${cssH}">` +
+        `<foreignObject x="0" y="0" width="${cssW}" height="${cssH}">` +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="${wrapperStyle}">` +
+        `<nav aria-label="Mini checkout nav" style="${navStyle}">${anchorHtml}</nav>` +
+        `</div></foreignObject></svg>`
+      )
+    }
+
+    /**
+     * Three-way ink for an arbitrary SVG source through product-baseline raster path.
+     * @param {string} svgText
+     * @param {'handbuilt' | 'captureDOM'} source
+     * @param {string} landmark
+     */
+    async function probeSvgSource(svgText, source, landmark) {
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const recipe = { ...getFoFixRecipe('product-baseline'), rasterPatch: 'none' }
+      const meta = parseCaptureMeta(svgText, root)
+      const patched = applyRecipeToSvgForSandbox(svgText, recipe, dims)
+      const rp = resolveRecipeRasterPatch(recipe)
+      const { url, revoke } = buildRasterUrl(patched.svgText, recipe)
+
+      try {
+        const canvas = await rasterSvgUrl(url, {
+          scale,
+          dpr,
+          meta,
+          width: dims.cssW,
+          height: dims.cssH,
+          rasterPatch: rp,
+        })
+        const cmp = compareThreeWayInk(root, canvas, patched.svgText, el, dpr, dims)
+        return {
+          source,
+          landmark,
+          recipeId: recipe.id,
+          dpr,
+          scale,
+          svgBytes: patched.svgText.length,
+          skippedRecipe: patched.skippedRecipe,
+          threeWay: {
+            livePaintedTopInBorder: cmp.live?.topInBorder ?? null,
+            svgPaintedTopInBorder: cmp.svg?.topInBorder ?? null,
+            canvasPaintedTopInBorder: cmp.canvas?.topInBorder ?? null,
+            liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+            liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          },
+        }
+      } finally {
+        revoke?.()
+      }
+    }
+
+    async function runProbe() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      status.textContent = 'Building hand-built SVG…'
+      const handbuiltSvg = buildHandbuiltMiniNavSvg(root)
+
+      status.textContent = 'captureDOM…'
+      const ctx = createContext({ dpr, scale })
+      const dataUrl = await captureDOM(root, ctx)
+      const captureSvg = svgFromDataUrl(dataUrl)
+
+      /** @type {Record<string, unknown>[]} */
+      const rows = []
+      for (const landmark of landmarks) {
+        status.textContent = `Probing ${landmark} (handbuilt)…`
+        const handbuiltRow = await probeSvgSource(handbuiltSvg, 'handbuilt', landmark)
+        status.textContent = `Probing ${landmark} (captureDOM)…`
+        const captureRow = await probeSvgSource(captureSvg, 'captureDOM', landmark)
+        rows.push({ landmark, handbuilt: handbuiltRow, captureDOM: captureRow })
+      }
+
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+
+      return {
+        fixture: 'mini-nav',
+        probe: 'three-way',
+        recipeId: 'product-baseline',
+        dpr,
+        scale,
+        fixtureDims: { cssW, cssH },
+        landmarks,
+        handbuiltSvgPreview: handbuiltSvg.slice(0, 280) + (handbuiltSvg.length > 280 ? '…' : ''),
+        captureSvgPreview: captureSvg.slice(0, 280) + (captureSvg.length > 280 ? '…' : ''),
+        rows,
+      }
+    }
+
+    async function boot() {
+      window.__handbuiltVsCaptureProbe = {
+        ready: false,
+        bootError: null,
+        run: runProbe,
+        landmarks,
+      }
+      try {
+        const head = await fetch('/dist/snapdom.mjs', { method: 'HEAD' })
+        if (!head.ok) {
+          throw new Error(`Missing /dist/snapdom.mjs (HTTP ${head.status}). Run npm run compile.`)
+        }
+        window.__handbuiltVsCaptureProbe.ready = true
+        status.textContent = 'Ready — CLI runner will invoke run().'
+      } catch (err) {
+        window.__handbuiltVsCaptureProbe.bootError = String(err?.message || err)
+        status.textContent = window.__handbuiltVsCaptureProbe.bootError
+      }
+    }
+
+    boot().catch((err) => {
+      window.__handbuiltVsCaptureProbe = window.__handbuiltVsCaptureProbe || {}
+      window.__handbuiltVsCaptureProbe.bootError = String(err?.message || err)
+      status.textContent = window.__handbuiltVsCaptureProbe.bootError
+    })
+  </script>
+</body>
+</html>

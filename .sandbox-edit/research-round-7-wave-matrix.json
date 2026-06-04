@@ -1,0 +1,80 @@
+{
+  "probe": "fo-research-round-7",
+  "section": "research-round-7-wave-matrix.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "baseline": {
+    "threeWay": {
+      "liveVsSvgTopPx": -0.0078125,
+      "liveVsCanvasTopPx": 2.796875,
+      "svgVsCanvasTopPx": 2.8046875,
+      "deltaTopCapModel": null,
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.1953125,
+      "canvasPaintedTopInBorder": 17,
+      "liveCapTopInBorder": null,
+      "inkScanMode": "integer",
+      "fractionalCanvasDelta": null
+    },
+    "halfLeadingLhFsPx": 2.8000000000000007,
+    "residualCanvasMinusHalfLeadingPx": -0.003,
+    "svgBytes": 31110
+  },
+  "data": {
+    "wave14OnDisk": false,
+    "spotWave": 13,
+    "rows": [
+      {
+        "recipeId": "product-baseline",
+        "wave": 0,
+        "liveVsCanvasTopPx": 2.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "wave": 7,
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-y-w7-minus-range-subpixel",
+        "wave": 13,
+        "liveVsCanvasTopPx": 0.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-viewbox-y-half-leading",
+        "wave": 13,
+        "liveVsCanvasTopPx": 5.797,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-rfork-leaf-translate-y-half-leading",
+        "wave": 13,
+        "liveVsCanvasTopPx": -0.203,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      },
+      {
+        "recipeId": "tc-fix-w13-bitmap-w7-y",
+        "wave": 13,
+        "liveVsCanvasTopPx": null,
+        "liveVsSvgTopPx": -0.008,
+        "passesGate006": false
+      }
+    ],
+    "bestRow": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "wave": 7,
+      "liveVsCanvasTopPx": -0.203,
+      "liveVsSvgTopPx": -0.008,
+      "passesGate006": false
+    },
+    "noRowPassesGate": true,
+    "note": "wave-14 matrix JSON not on disk — spot-check wave-13 + w7; run full --ids tc-fix-w13-* calibrate separately."
+  }
+}

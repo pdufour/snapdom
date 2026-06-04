@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raster vs inline SVG FO ink (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px; font-family: system-ui, sans-serif; }
+    #capture-target {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav { display: flex; align-items: stretch; min-height: 48px; }
+    nav.mini-nav a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="capture-target">
+    <nav class="mini-nav"><a href="#">Home</a><a href="#">Products</a></nav>
+  </div>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { getFoFixRecipe } from './fo-fix-recipes.js'
+    import { runFoFixProbe } from './fo-fix-lab-runner.js'
+    import { fmtInkPx } from './fo-ink-metric-format.mjs'
+
+    window.snapdom = snapdom
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 2)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    window.__foRasterVsSvgInkProbe = {
+      ready: false,
+      bootError: null,
+      async run() {
+        const root = document.getElementById('capture-target')
+        const recipe = getFoFixRecipe('product-baseline')
+        const row = await runFoFixProbe(recipe, { dpr, scale, landmark, root })
+        const cssW = root.offsetWidth
+        const cssH = root.offsetHeight
+        const ink = {
+          liveTopInBorder: row.livePaintedTopInBorder,
+          svgFoTopInBorder: row.svgPaintedTopInBorder,
+          canvasTopInBorder: row.canvasPaintedTopInBorder,
+          liveVsSvgTopPx: row.liveVsSvgTopPx,
+          liveVsSvgLayoutTopPx: row.liveVsSvgLayoutTopPx ?? row.deltaSvgLayoutInBorder ?? null,
+          liveVsCanvasTopPx: row.liveVsCanvasTopPx,
+          svgVsCanvasTopPx:
+            row.svgPaintedTopInBorder != null && row.canvasPaintedTopInBorder != null
+              ? row.canvasPaintedTopInBorder - row.svgPaintedTopInBorder
+              : null,
+        }
+        const interpretation = []
+        let verdict = 'INCONCLUSIVE'
+        const svgLayoutDelta = row.liveVsSvgLayoutTopPx ?? row.deltaSvgLayoutInBorder ?? null
+        const svgBitmapDelta = ink.liveVsSvgTopPx
+        if (
+          Math.abs(svgLayoutDelta ?? 99) < 0.35 &&
+          Math.abs(ink.liveVsCanvasTopPx ?? 0) > 1.5
+        ) {
+          verdict = 'BITMAP_ONLY'
+          interpretation.push(
+            `SVG FO layout ≈ live (layout Δ ${fmtInkPx(svgLayoutDelta)}px) but bitmap stages Δ svg=${fmtInkPx(svgBitmapDelta)}px canvas=${fmtInkPx(ink.liveVsCanvasTopPx)}px → drift is FO→bitmap raster, not serialized FO layout.`,
+          )
+        }
+        return {
+          fixture: 'mini-nav',
+          landmark,
+          recipeId: 'product-baseline',
+          dpr,
+          scale,
+          fixtureDims: { cssW, cssH },
+          ink,
+          probeRow: {
+            livePaintedTopInBorder: row.livePaintedTopInBorder,
+            svgPaintedTopInBorder: row.svgPaintedTopInBorder,
+            canvasPaintedTopInBorder: row.canvasPaintedTopInBorder,
+            liveVsSvgTopPx: row.liveVsSvgTopPx,
+            liveVsCanvasTopPx: row.liveVsCanvasTopPx,
+          },
+          verdict,
+          interpretation,
+          headed: true,
+        }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foRasterVsSvgInkProbe.ready = true
+    } catch (e) {
+      window.__foRasterVsSvgInkProbe.bootError = String(e?.message || e)
+      window.__foRasterVsSvgInkProbe.ready = true
+    }
+  </script>
+</body>
+</html>

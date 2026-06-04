@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experimental flags matrix (mini Home)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px 14px 24px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #111;
+    }
+    #capture-target {
+      width: 500px;
+      max-width: 100%;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      min-height: 48px;
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #status { margin-top: 12px; font: 12px/1.45 ui-monospace, Menlo, monospace; color: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Experimental flags matrix — product path, Home landmark</h1>
+  <div id="capture-target">
+    <nav class="mini-nav" aria-label="Mini checkout nav">
+      <a href="#">Home</a>
+      <a href="#">Products</a>
+    </nav>
+  </div>
+  <p id="status">Booting…</p>
+  <script type="module">
+    import { snapdom } from '/dist/snapdom.mjs'
+    import { FO_FIX_RECIPES } from './fo-fix-recipes.js'
+    import {
+      compareThreeWayInk,
+      findLandmarkElement,
+      parseCaptureMeta,
+      runFoFixProbe,
+      svgFromDataUrl,
+    } from './fo-fix-lab-runner.js'
+
+    window.snapdom = snapdom
+
+    const root = document.getElementById('capture-target')
+    const status = document.getElementById('status')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+    const scale = Math.max(0.25, Number(params.get('scale')) || 1)
+    const landmark = (params.get('landmark') || 'Home').trim()
+
+    const FLAG_DEFAULTS = {
+      experimentalFoTextLayout: false,
+      experimentalFoLeadingTrim: false,
+      experimentalFoTextBoxEdgeAuto: false,
+      experimentalRasterDecodeSettle: false,
+      experimentalRasterBackingCeil: false,
+      experimentalRasterDoubleDecode: false,
+    }
+
+    const SRC_FLAG_KEYS = /** @type {(keyof typeof FLAG_DEFAULTS)[]} */ ([
+      'experimentalFoTextLayout',
+      'experimentalFoLeadingTrim',
+      'experimentalFoTextBoxEdgeAuto',
+      'experimentalRasterDecodeSettle',
+      'experimentalRasterBackingCeil',
+      'experimentalRasterDoubleDecode',
+    ])
+
+    const CAPTURE_KEYS = SRC_FLAG_KEYS.filter((k) => k.startsWith('experimentalFo'))
+    const RASTER_KEYS = SRC_FLAG_KEYS.filter((k) => k.startsWith('experimentalRaster'))
+
+    /** Lab tc-flags-w1 when a mechanism is not on product snapdom yet. */
+    const LAB_FALLBACK_RECIPE = {
+      'tc-flags-w1-pin-content-lh': 'tc-flags-w1-pin-content-lh',
+      'tc-flags-w1-draw-from-backing': 'tc-flags-w1-draw-from-backing',
+    }
+
+    const SRC_TO_LAB_RECIPE = {
+      experimentalFoTextLayout: 'tc-flags-w1-flex-baseline',
+      experimentalFoLeadingTrim: 'tc-flags-w1-leading-trim',
+      experimentalFoTextBoxEdgeAuto: 'tc-flags-w1-pin-content-lh',
+      experimentalRasterDecodeSettle: 'tc-flags-w1-decode-fonts-bundle',
+      experimentalRasterBackingCeil: 'tc-flags-w1-backing-ceil-grid',
+      experimentalRasterDoubleDecode: 'tc-flags-w1-draw-from-backing',
+    }
+
+  /** @typedef {{ id: string, path: 'snapdom' | 'lab', flags?: typeof FLAG_DEFAULTS, recipeId?: string }} MatrixVariant */
+
+    /** @type {MatrixVariant[]} */
+    const VARIANTS = [
+      { id: 'product-baseline', path: 'snapdom', flags: { ...FLAG_DEFAULTS } },
+      ...SRC_FLAG_KEYS.map((key) => ({
+        id: key,
+        path: 'snapdom',
+        flags: { ...FLAG_DEFAULTS, [key]: true },
+      })),
+      {
+        id: 'capture-flags',
+        path: 'snapdom',
+        flags: {
+          ...FLAG_DEFAULTS,
+          ...Object.fromEntries(CAPTURE_KEYS.map((k) => [k, true])),
+        },
+      },
+      {
+        id: 'raster-flags',
+        path: 'snapdom',
+        flags: {
+          ...FLAG_DEFAULTS,
+          ...Object.fromEntries(RASTER_KEYS.map((k) => [k, true])),
+        },
+      },
+      {
+        id: 'all-flags',
+        path: 'snapdom',
+        flags: Object.fromEntries(SRC_FLAG_KEYS.map((k) => [k, true])),
+      },
+    ]
+
+    function recipeById(id) {
+      const r = FO_FIX_RECIPES.find((x) => x.id === id)
+      if (!r) throw new Error(`recipe not found: ${id}`)
+      return r
+    }
+
+    async function snapdomSupportsExperimentalFlags() {
+      const snap = await snapdom(root, { dpr: 1, scale: 1, experimentalFoLeadingTrim: true })
+      const svg = svgFromDataUrl(await snap.toRaw())
+      return /leading-trim:\s*both/i.test(svg)
+    }
+
+    async function runSnapdomVariant(variant) {
+      const flags = variant.flags ?? FLAG_DEFAULTS
+      const opts = { dpr, scale, ...flags }
+      const snap = await snapdom(root, opts)
+      const rawUrl = await snap.toRaw()
+      const svgText = svgFromDataUrl(rawUrl)
+      const cssW = root.offsetWidth || root.getBoundingClientRect().width
+      const cssH = root.offsetHeight || root.getBoundingClientRect().height
+      const dims = { cssW: cssW * scale, cssH: cssH * scale, dpr }
+      const meta = parseCaptureMeta(svgText, root)
+      const canvas = await snap.toCanvas()
+      const el = findLandmarkElement(root, landmark)
+      if (!el) throw new Error(`landmark "${landmark}" not found`)
+      const cmp = compareThreeWayInk(root, canvas, svgText, el, dpr, { cssW, cssH })
+      return {
+        id: variant.id,
+        path: 'snapdom',
+        flags: { ...flags },
+        canvasDelta: cmp.liveVsCanvasTopPx ?? null,
+        svgDelta: cmp.liveVsSvgTopPx ?? null,
+        absCanvasDelta:
+          cmp.liveVsCanvasTopPx != null ? Math.abs(cmp.liveVsCanvasTopPx) : null,
+        threeWay: {
+          liveVsSvgTopPx: cmp.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: cmp.liveVsCanvasTopPx ?? null,
+          svgVsCanvasTopPx:
+            cmp.svg?.topInBorder != null && cmp.canvas?.topInBorder != null
+              ? cmp.canvas.topInBorder - cmp.svg.topInBorder
+              : null,
+        },
+        captureMeta: meta,
+      }
+    }
+
+    async function runLabVariant(variant) {
+      const recipeId = variant.recipeId
+      if (!recipeId) throw new Error(`lab variant missing recipeId: ${variant.id}`)
+      const row = await runFoFixProbe(recipeById(recipeId), { dpr, scale, landmark })
+      const canvasDelta = row.deltaTopInBorder ?? null
+      return {
+        id: variant.id,
+        path: 'lab',
+        recipeId,
+        flags: null,
+        canvasDelta,
+        svgDelta: row.liveVsSvgTopPx ?? null,
+        absCanvasDelta: canvasDelta != null ? Math.abs(canvasDelta) : null,
+        threeWay: {
+          liveVsSvgTopPx: row.liveVsSvgTopPx ?? null,
+          liveVsCanvasTopPx: canvasDelta,
+          svgVsCanvasTopPx: row.svgVsCanvasTopPx ?? null,
+        },
+      }
+    }
+
+    async function runVariant(variant, srcWired) {
+      if (variant.path === 'lab') return runLabVariant(variant)
+      if (!srcWired && SRC_TO_LAB_RECIPE[variant.id]) {
+        return runLabVariant({
+          id: variant.id,
+          path: 'lab',
+          recipeId: SRC_TO_LAB_RECIPE[variant.id],
+        })
+      }
+      return runSnapdomVariant(variant)
+    }
+
+    async function runMatrix() {
+      await document.fonts.ready
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+      const srcWired = await snapdomSupportsExperimentalFlags()
+      const rows = []
+      for (const variant of VARIANTS) {
+        rows.push(await runVariant(variant, srcWired))
+      }
+
+      const baseline = rows.find((r) => r.id === 'product-baseline')
+      const baselineCanvas = baseline?.canvasDelta ?? null
+
+      return {
+        fixture: 'mini-nav-product-path',
+        landmark,
+        dpr,
+        scale,
+        srcExperimentalFlagsWired: srcWired,
+        plateauReferencePx: 2.797,
+        baselineCanvasDeltaPx: baselineCanvas,
+        rows: rows.map((row) => ({
+          id: row.id,
+          path: row.path,
+          recipeId: row.recipeId ?? null,
+          flags: row.flags,
+          canvasDelta: row.canvasDelta,
+          svgDelta: row.svgDelta,
+          absCanvasDelta: row.absCanvasDelta,
+          deltaFromBaselinePx:
+            baselineCanvas != null && row.canvasDelta != null
+              ? row.canvasDelta - baselineCanvas
+              : null,
+          beatsPlateau:
+            row.absCanvasDelta != null ? row.absCanvasDelta < 2.797 - 0.001 : false,
+        })),
+      }
+    }
+
+    window.__foExperimentalFlagsMatrix = {
+      ready: false,
+      bootError: null,
+      run: runMatrix,
+    }
+
+    runMatrix()
+      .then((payload) => {
+        window.__foExperimentalFlagsMatrix.last = payload
+        const b = payload.baselineCanvasDeltaPx
+        const beaters = payload.rows.filter((r) => r.beatsPlateau)
+        status.textContent =
+          b != null
+            ? `Ready — baseline canvasΔ=${b.toFixed(3)}px; ${beaters.length} row(s) beat 2.797.`
+            : 'Ready — matrix complete.'
+      })
+      .catch((err) => {
+        window.__foExperimentalFlagsMatrix.bootError = String(err?.message || err)
+        status.textContent = `Boot failed: ${window.__foExperimentalFlagsMatrix.bootError}`
+      })
+      .finally(() => {
+        window.__foExperimentalFlagsMatrix.ready = true
+      })
+  </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{
+  "fixture": "fo-text-vs-block-probe",
+  "purpose": "Colored block + text in same FO; three-way ink on both; distinguish text-only vs whole-FO raster shift.",
+  "probe": "three-way",
+  "recipeId": "product-baseline",
+  "landmark": "Home",
+  "blockSelector": "[data-ink-block]",
+  "blockRgb": {
+    "r": 37,
+    "g": 99,
+    "b": 235
+  },
+  "dpr": 2,
+  "scale": 1,
+  "fixtureDims": {
+    "cssW": 492,
+    "cssH": 50
+  },
+  "layout": {
+    "blockBox": {
+      "top": 1,
+      "left": 1,
+      "width": 14,
+      "height": 48
+    },
+    "textBox": {
+      "top": 1,
+      "left": 15,
+      "width": 68.859375,
+      "height": 48
+    },
+    "blockAboveText": true
+  },
+  "text": {
+    "element": "text-leaf",
+    "threeWay": {
+      "livePaintedTopInBorder": 14.203125,
+      "svgPaintedTopInBorder": 14.203125,
+      "canvasPaintedTopInBorder": 5.5,
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": -8.703125,
+      "svgVsCanvasTopPx": -8.703125
+    },
+    "scanMethod": "measureCanvasInkForElement (dark pixel band)"
+  },
+  "block": {
+    "element": "data-ink-block",
+    "threeWay": {
+      "livePaintedTopInBorder": 0,
+      "svgPaintedTopInBorder": 0,
+      "canvasPaintedTopInBorder": null,
+      "liveVsSvgTopPx": 0,
+      "liveVsCanvasTopPx": null,
+      "svgVsCanvasTopPx": null
+    },
+    "scanMethod": "canvas color scan rgb(37,99,235) tol=52"
+  },
+  "verdict": "TEXT_ONLY_RASTER",
+  "interpretation": [
+    "Text canvasΔ=-8.703px, block canvasΔ=0.000px (Δ between=8.703px).",
+    "Text svgΔ=0.000px, block svgΔ=0.000px (Δ between=0.000px).",
+    "SVG stage matches live for both targets; canvas shifts text only — drift is text raster/strut, not whole FO translate."
+  ],
+  "summary": {
+    "textCanvasDeltaPx": -8.703125,
+    "blockCanvasDeltaPx": 0,
+    "canvasDeltaGapPx": 8.703125,
+    "svgDeltaGapPx": 0
+  },
+  "sanity": {
+    "textCanvasViaExport": 5.5,
+    "blockCanvasViaColorScan": null
+  },
+  "generatedAt": "2026-06-02T16:23:53.479Z",
+  "port": 8765,
+  "headless": false,
+  "commands": [
+    "npm run compile",
+    "node __localtests__/fo-text-vs-block-probe.mjs"
+  ]
+}

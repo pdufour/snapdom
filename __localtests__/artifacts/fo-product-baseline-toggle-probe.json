@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-06-03T20:35:15.375Z",
+  "url": "http://127.0.0.1:9392/__localtests__/fo-fix-lab-ink-v2.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=Home&includeInactive=1&_cb=1780518912672",
+  "inkMetricsRev": "canvas-svg-viewport-v6",
+  "tableMetrics": {
+    "liveTop": 14.5,
+    "svgTop": 14,
+    "canvasTop": 13,
+    "canvasBitmap": 14,
+    "svgBitmap": 16,
+    "liveRange": 14.5,
+    "liveBitmap": 14,
+    "verdict": "SVG ink 0.50 px higher on screen than live (Y -0.50)Canvas ink 1.50 px higher on screen than live (Y -1.50)Canvas 1.00 px higher on screen than SVG (Y -1.00)On-screen offset (live−stage): svg +0.50 · canvas +1.50 · layout aligned (ε 0.06px): no",
+    "metricsPanel": "Landmark: Home · #capture-target root px · bitmap ink (preview band)\n↑ on screen = smaller Y · ΔY = stage − live (+ = ink further down)\nLive ink Y:   14.500 px\nSVG ink Y:    14.000 px\nCanvas ink Y: 13.000 px\nSVG ink 0.50 px higher on screen than live (Y -0.50)\nCanvas ink 1.50 px higher on screen than live (Y -1.50)\nCanvas 1.00 px higher on screen than SVG (Y -1.00)\nLayout (GBCR) live/svg/canvas: 14.500 / 14.000 / 14.500 px\nInk aligned (ε 0.5px): no\nLayout aligned (ε 0.06px): no",
+    "inkMetricsRev": "canvas-svg-viewport-v6"
+  },
+  "viewTops": {
+    "live": {
+      "markerViewportTop": null,
+      "markerRootY": null,
+      "markerDataTop": null,
+      "scanTop": 14.5,
+      "scanBitmap": null
+    },
+    "svg": {
+      "markerViewportTop": null,
+      "markerRootY": null,
+      "markerDataTop": null,
+      "scanTop": 13,
+      "scanBitmap": 16
+    },
+    "canvas": {
+      "markerViewportTop": null,
+      "markerRootY": null,
+      "markerDataTop": null,
+      "scanTop": 14,
+      "scanBitmap": 14
+    }
+  },
+  "orderCheck": {
+    "canvasLtSvgLtLive": true,
+    "canvasTop": 13,
+    "svgTop": 14,
+    "liveTop": 14.5
+  }
+}

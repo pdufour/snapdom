@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-canvas-block-measure e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  { "imports": { "image-trim": "https://esm.sh/image-trim@1.0.0" } }
+  </script>
+  <style>
+    body {
+      margin: 24px;
+      font: 14px/1.4 system-ui, sans-serif;
+      background: #f4f4f5;
+      color: #111;
+    }
+    #readout {
+      margin-bottom: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    #stage {
+      position: relative;
+      width: 100px;
+      height: 80px;
+      background: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    #band-canvas {
+      display: block;
+      width: 100px;
+      height: 80px;
+    }
+    .marker {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      pointer-events: none;
+    }
+    .marker.pixel {
+      background: #16a34a;
+      z-index: 2;
+    }
+    .marker.lib {
+      background: #dc2626;
+      z-index: 3;
+    }
+    .marker::after {
+      position: absolute;
+      right: -4px;
+      top: -7px;
+      font: 10px/1 system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .marker.pixel::after {
+      content: 'pixel';
+      color: #16a34a;
+    }
+    .marker.lib::after {
+      content: 'lib';
+      color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <div id="readout">pixel border — lib — delta</div>
+  <div id="stage">
+    <canvas id="band-canvas"></canvas>
+    <div id="pixel-top" class="marker pixel" aria-hidden="true"></div>
+    <div id="lib-top" class="marker lib" aria-hidden="true"></div>
+  </div>
+  <script type="module">
+    import {
+      INK_SCAN_CAP_CORE_DEFAULTS,
+      ensureInkScanBackend,
+      inkTopRowFromCanvasRegion,
+      registerImageTrimGetBorders,
+      solidBandCssTopRow,
+      syntheticInkBandRgba,
+    } from './fo-ink-bounds-scan.mjs'
+
+    const params = new URLSearchParams(location.search)
+    /** Setup-only: where to paint the block (not exposed as test ground truth). */
+    const paintOffset = Number(params.get('offset') ?? params.get('blockTop') ?? 0)
+    const BAND_W = 100
+    const BAND_H = 80
+    const BAR_H = 12
+    const SCAN_OPTS = {
+      mode: 'css-top',
+      ...INK_SCAN_CAP_CORE_DEFAULTS,
+    }
+
+    const canvas = document.getElementById('band-canvas')
+    const pixelMarker = document.getElementById('pixel-top')
+    const libMarker = document.getElementById('lib-top')
+    const readout = document.getElementById('readout')
+
+    function paintBlockCanvas(topPx) {
+      canvas.width = BAND_W
+      canvas.height = BAND_H
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      const rgba = syntheticInkBandRgba(BAND_W, BAND_H, topPx, BAR_H)
+      ctx.putImageData(new ImageData(rgba, BAND_W, BAND_H), 0, 0)
+    }
+
+    /** Pixel border from raw bitmap (canonical css-top row read — not the lib scan pipeline). */
+    function measureReferencePixelBorder() {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      const { data } = ctx.getImageData(0, 0, BAND_W, BAND_H)
+      const pixelBorderTopPx = solidBandCssTopRow(data, BAND_W, BAND_H, INK_SCAN_CAP_CORE_DEFAULTS)
+      return { pixelBorderTopPx }
+    }
+
+    function measureLibInkTop() {
+      const hit = inkTopRowFromCanvasRegion(
+        canvas.getContext('2d', { willReadFrequently: true }),
+        0,
+        0,
+        BAND_W,
+        BAND_H,
+        SCAN_OPTS,
+      )
+      return {
+        measuredTopPx: hit?.regionRow ?? hit?.row ?? null,
+        backend: hit?.backend ?? null,
+      }
+    }
+
+    /** On-screen marker Y for a canvas-row coordinate (1:1 display). */
+    function visualTopFromMarker(markerEl) {
+      const canvasRect = canvas.getBoundingClientRect()
+      const markerRect = markerEl.getBoundingClientRect()
+      return markerRect.top - canvasRect.top
+    }
+
+    function layoutMarker(markerEl, rowPx) {
+      if (!Number.isFinite(rowPx)) {
+        markerEl.style.display = 'none'
+        return
+      }
+      markerEl.style.display = 'block'
+      markerEl.style.top = `${rowPx}px`
+    }
+
+    function updateReadout(payload) {
+      readout.textContent =
+        `pixel=${payload.pixelBorderTopPx}px · lib=${payload.measuredTopPx}px · visualΔ=${payload.deltaVisualPx}px · libΔ=${payload.deltaLibVsPixelPx}px (${payload.backend})`
+    }
+
+    window.__foCanvasBlockMeasure = {
+      ready: false,
+      bootError: null,
+      async measure() {
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        await ensureInkScanBackend('auto')
+
+        paintBlockCanvas(paintOffset)
+        canvas.getBoundingClientRect()
+
+        const ref = measureReferencePixelBorder()
+        const lib = measureLibInkTop()
+
+        layoutMarker(pixelMarker, ref.pixelBorderTopPx)
+        layoutMarker(libMarker, lib.measuredTopPx)
+        canvas.getBoundingClientRect()
+
+        const visualPixelTopPx = visualTopFromMarker(pixelMarker)
+        const visualLibTopPx = visualTopFromMarker(libMarker)
+        const deltaVisualPx =
+          Number.isFinite(visualLibTopPx) && Number.isFinite(visualPixelTopPx)
+            ? visualLibTopPx - visualPixelTopPx
+            : null
+        const deltaLibVsPixelPx =
+          Number.isFinite(lib.measuredTopPx) && Number.isFinite(ref.pixelBorderTopPx)
+            ? lib.measuredTopPx - ref.pixelBorderTopPx
+            : null
+
+        const payload = {
+          pixelBorderTopPx: ref.pixelBorderTopPx,
+          measuredTopPx: lib.measuredTopPx,
+          visualPixelTopPx,
+          visualLibTopPx,
+          deltaVisualPx,
+          deltaLibVsPixelPx,
+          backend: lib.backend,
+        }
+        updateReadout(payload)
+        return payload
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foCanvasBlockMeasure.ready = true
+    } catch (e) {
+      window.__foCanvasBlockMeasure.bootError = String(e?.message || e)
+      window.__foCanvasBlockMeasure.ready = true
+    }
+  </script>
+</body>
+</html>

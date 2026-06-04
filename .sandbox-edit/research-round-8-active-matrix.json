@@ -1,0 +1,92 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-active-matrix.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "found": true,
+    "path": "__localtests__/.matrix-active-full-run.log",
+    "rowCount": 56,
+    "passCount": 0,
+    "bestRow": {
+      "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+      "svgDelta": 0,
+      "canvasDelta": -0.203,
+      "stage": "raster",
+      "pass": false
+    },
+    "w7Best": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "svgDelta": 0,
+      "canvasDelta": -0.203,
+      "stage": "raster",
+      "pass": false
+    },
+    "baselineRow": {
+      "recipeId": "product-baseline",
+      "svgDelta": 0,
+      "canvasDelta": 2.797,
+      "stage": "raster",
+      "pass": false
+    },
+    "top8": [
+      {
+        "recipeId": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "loop-ai-b10-w01-025",
+        "svgDelta": 9.797,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "loop-ai-b10-w01-035",
+        "svgDelta": 9.797,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-reg-lock-w7-half-leading-meta",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "tc-reg-lock-src-mirror-w7",
+        "svgDelta": 0,
+        "canvasDelta": -0.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "src-mirror-experimentalRasterMetaInkAlign",
+        "svgDelta": 0,
+        "canvasDelta": -2.203,
+        "stage": "raster",
+        "pass": false
+      },
+      {
+        "recipeId": "product-baseline",
+        "svgDelta": 0,
+        "canvasDelta": 2.797,
+        "stage": "raster",
+        "pass": false
+      }
+    ],
+    "note": "Ingested 56 matrix rows from log"
+  }
+}

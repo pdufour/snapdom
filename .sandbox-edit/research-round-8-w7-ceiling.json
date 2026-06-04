@@ -1,0 +1,29 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-w7-ceiling.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "rangeSubpixelPx": 0.203,
+    "halfLeadingFsPx": 2.8,
+    "baseline": {
+      "snapdomCanvasDelta": 2.797,
+      "chromiumCanvasDelta": 2.797
+    },
+    "w7": {
+      "snapdomCanvasDelta": -0.203,
+      "chromiumCanvasDelta": -0.203,
+      "snapdomVsChromiumPx": 0,
+      "liveRangeTop": 14.203,
+      "canvasIntegerTop": 14,
+      "canvasIntegerDeviceRow": 14,
+      "mathCheck": {
+        "rangeMinusIntegerCanvasTop": 0.203,
+        "reportedCanvasDelta": -0.203,
+        "matchesRangeSubpixel": true
+      }
+    },
+    "verdict": "W7_CEILING_IS_INTEGER_SCAN_NOT_DECODE",
+    "implication": "w7 FO y −2.8px lands integer ink row floor(live Range); residual |Δ| = Range subpixel fraction — same on Chromium-only and snapdom lab path."
+  }
+}

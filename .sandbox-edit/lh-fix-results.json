@@ -1,0 +1,161 @@
+{
+  "generatedAt": "2026-06-02T17:45:00.000Z",
+  "port": 8765,
+  "landmark": "Home",
+  "dpr": 1,
+  "mechanism": "tc-blh-w1-line-height-fixes-wave",
+  "referencePlateauAbsCanvasDeltaPx": 2.797,
+  "svgMaxAbsPx": 0.15,
+  "recipeIds": [
+    "product-baseline",
+    "tc-fork-w1-inject-fo-lh-pin",
+    "tc-blh-w1-pin-lh-used-value",
+    "tc-blh-w1-rfork-lh-used",
+    "tc-blh-w1-rfork-flex-start-fo",
+    "tc-blh-w1-combo-capture-rfork-pin-lh",
+    "tc-blh-w1-rfork-lh-normal-leaf",
+    "tc-blh-w1-rfork-lh-1-leaf",
+    "tc-blh-w1-rfork-lh-1em-leaf",
+    "tc-blh-w1-rfork-vertical-align-baseline",
+    "tc-blh-w1-rfork-combo-lh-baseline",
+    "tc-blh-w1-combo-capture-baseline-fix",
+    "tc-blh-w1-combo-capture-rfork-combo-lh-baseline"
+  ],
+  "rows": [
+    {
+      "recipeId": "product-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-fork-w1-inject-fo-lh-pin",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-pin-lh-used-value",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-used",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-flex-start-fo",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-pin-lh",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 2.797,
+      "absCanvasDeltaPx": 2.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-normal-leaf",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "absCanvasDeltaPx": 3.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-1-leaf",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "absCanvasDeltaPx": 3.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-lh-1em-leaf",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": 3.797,
+      "absCanvasDeltaPx": 3.797,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-vertical-align-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": -10.203,
+      "absCanvasDeltaPx": 10.203,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-rfork-combo-lh-baseline",
+      "liveVsSvgTopPx": -0.008,
+      "liveVsCanvasTopPx": -12.203,
+      "absCanvasDeltaPx": 12.203,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": true
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-baseline-fix",
+      "liveVsSvgTopPx": 0.297,
+      "liveVsCanvasTopPx": -11.203,
+      "absCanvasDeltaPx": 11.203,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": false
+    },
+    {
+      "recipeId": "tc-blh-w1-combo-capture-rfork-combo-lh-baseline",
+      "liveVsSvgTopPx": 0.297,
+      "liveVsCanvasTopPx": -12.203,
+      "absCanvasDeltaPx": 12.203,
+      "parityStage": "raster",
+      "pass": false,
+      "svgWithin015": false
+    }
+  ],
+  "summary": {
+    "baselineCanvasDeltaPx": 2.797,
+    "baselineAbsCanvasDeltaPx": 2.797,
+    "bestPromotableRecipeId": "product-baseline",
+    "bestCanvasDeltaPx": 2.797,
+    "bestAbsCanvasDeltaPx": 2.797,
+    "beatsBaselineAbsCanvasDelta": false,
+    "beatsReferencePlateau2797": false,
+    "deltaFromPlateauPx": 0,
+    "allSvgWithin015": false,
+    "verdict": "NOT_FIXED",
+    "notes": [
+      "All lh-pin / dual-pin / flex-start rfork recipes tie 2.797 px plateau @ dpr=1 Home.",
+      "Strut neutralize (lh:1, lh:1em) and lh:normal rfork worsen canvas to 3.797 px.",
+      "baseline-leaf (va:baseline + display:inline) overshoots canvas ink upward (~−10 to −12 px).",
+      "Products nav expected identical per drift-per-landmark.json (same fs/lh)."
+    ]
+  }
+}

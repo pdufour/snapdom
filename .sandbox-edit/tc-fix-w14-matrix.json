@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-06-03T00:15:00.000Z",
+  "headed": true,
+  "gatePx": 0.06,
+  "verdict": "NOT_FIXED",
+  "note": "No w14 row passes ≤0.06 px integer ink gate. Best w14 rows tie w7 at |canvasΔ|=0.203 px (Range subpixel residual). Baseline plateau 2.797 px unchanged class.",
+  "command": "SNAPDOM_LOCAL_PORT=9334 node __localtests__/fo-fix-lab.mjs --calibrate --landmarks Home,Products --ids 'product-baseline,tc-fix-w7-rfork-fo-y-half-leading-meta,tc-fix-w13-*,tc-fix-w14-*' --open-browser",
+  "reference": {
+    "baseline": {
+      "recipeId": "product-baseline",
+      "worstAbsDeltaTop": 2.797,
+      "canvasDeltaHome": 2.797,
+      "canvasDeltaProducts": 2.797,
+      "svgDelta": 0.0
+    },
+    "w7": {
+      "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "worstAbsDeltaTop": 0.203,
+      "canvasDeltaHome": -0.203,
+      "canvasDeltaProducts": -0.203,
+      "svgDelta": 0.0
+    }
+  },
+  "matrixBestOverall": {
+    "recipeId": "tc-fix-w13-rfork-y-half-leading-each-fo",
+    "worstAbsDeltaTop": 0.203,
+    "meanAbsDeltaTop": 0.203
+  },
+  "bestW14": {
+    "recipeId": "tc-fix-w14-rfork-glyph-padding-w7-y",
+    "worstAbsDeltaTop": 0.203,
+    "meanAbsDeltaTop": 0.203,
+    "note": "Tied with w7 and 10 other w14 w7-combo rows at −0.203 px; no w14 improvement over w7."
+  },
+  "w14Leaders": [
+    { "recipeId": "tc-fix-w14-rfork-glyph-padding-w7-y", "worstAbsDeltaTop": 0.203, "canvasDeltaHome": -0.203, "canvasDeltaProducts": -0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-y-linepx-height-only", "worstAbsDeltaTop": 0.203, "canvasDeltaHome": -0.203, "canvasDeltaProducts": -0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-anchor-parent-lh1-translate-y", "worstAbsDeltaTop": 0.203, "canvasDeltaHome": -0.203, "canvasDeltaProducts": -0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-svg-root-overflow-w7-y", "worstAbsDeltaTop": 0.203, "canvasDeltaHome": -0.203, "canvasDeltaProducts": -0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-nested-fo-y-w7-y", "worstAbsDeltaTop": 0.203, "canvasDeltaHome": -0.203, "canvasDeltaProducts": -0.203, "pass": false }
+  ],
+  "w14All": [
+    { "recipeId": "tc-fix-w14-rfork-glyph-padding-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-y-linepx-height-only", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-anchor-parent-lh1-translate-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-svg-root-overflow-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-nested-fo-y-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-smooth-off-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-clip-inset-zero-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-capture-ink-align-w7-fork", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-display-probe-w7-y", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-w7-y-overflow-visible", "worstAbsDeltaTop": 0.203, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-y-range-subpixel-only", "worstAbsDeltaTop": 2.797, "pass": false },
+    { "recipeId": "tc-fix-w14-rfork-viewbox-y-half-leading", "worstAbsDeltaTop": 5.797, "pass": false },
+    { "recipeId": "tc-fix-w14-bitmap-w7-y", "worstAbsDeltaTop": null, "pass": false, "note": "canvas Δ unavailable (bitmap decode path)" }
+  ],
+  "forceActiveSkipped": true,
+  "forceActiveReason": "No w14 recipe in matrix top 3 (w13 each-fo / leaf-translate / settle100 lead at 0.203)."
+}

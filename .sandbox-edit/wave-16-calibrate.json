@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-06-03T00:20:00.000Z",
+  "probe": "fo-fix-lab.mjs --calibrate --landmarks Home,Products --ids 'product-baseline,tc-fix-w7-rfork-fo-y-half-leading-meta,tc-fix-w16-*'",
+  "headed": true,
+  "gatePx": 0.06,
+  "priorBest": {
+    "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+    "worstAbsCanvasDeltaPx": 0.203
+  },
+  "bestWorstCase": {
+    "recipeId": "tc-fix-w16-rfork-w7-leaf-subpx-positive",
+    "worstAbsCanvasDeltaPx": 0.203,
+    "meanAbsCanvasDeltaPx": 0.203,
+    "beatsBaseline": true,
+    "improvesPriorBest": false
+  },
+  "baselineWorstAbsCanvasDeltaPx": 2.797,
+  "chromiumFoOnlyCanvasDeltaPx": 2.797,
+  "rows": [
+    { "recipeId": "tc-fix-w16-rfork-w7-leaf-subpx-positive", "landmark": "Home", "canvasDeltaPx": -0.203, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w16-rfork-w7-leaf-subpx-positive", "landmark": "Products", "canvasDeltaPx": -0.203, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta", "landmark": "Home", "canvasDeltaPx": -0.203, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w7-rfork-fo-y-half-leading-meta", "landmark": "Products", "canvasDeltaPx": -0.203, "svgDeltaPx": 0.0 },
+    { "recipeId": "product-baseline", "landmark": "Home", "canvasDeltaPx": 2.797, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w16-rfork-leaf-subpx-positive-only", "landmark": "Home", "canvasDeltaPx": 2.797, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w16-rfork-viewbox-fo-adjust-trim", "landmark": "Home", "canvasDeltaPx": 5.797, "svgDeltaPx": 0.0 },
+    { "recipeId": "tc-fix-w16-rfork-viewbox-fo-adjust-inline-block", "landmark": "Home", "canvasDeltaPx": -8.203, "svgDeltaPx": 0.0 }
+  ],
+  "verdict": "NOT_FIXED @ 0.06 gate — w16 ties w7 at 0.203px (Range subpixel vs integer ink scan)"
+}

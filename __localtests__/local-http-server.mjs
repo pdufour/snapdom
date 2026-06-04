@@ -1,0 +1,336 @@
+import http from 'node:http'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { LOCAL_HOST, resolveLocalPort } from './local-server-config.mjs'
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+/** Relative path shown in sandbox UI and returned by the write API. */
+export const SANDBOX_CAPTURE_SVG_REL = '__localtests__/.sandbox-edit/capture.svg'
+
+/** POST/GET watch+write API for fo-svg-sandbox (must be served by {@link startLocalServer}). */
+export const SANDBOX_SVG_API = '/__localtests__/api/sandbox-svg'
+
+/** GET JSON list of fo-recipes-shards/*.js for browser dynamic import. */
+export const FO_RECIPE_SHARD_FILES_API = '/__localtests__/api/fo-recipe-shard-files'
+
+function sandboxCaptureSvgPath(root) {
+  return path.join(root, SANDBOX_CAPTURE_SVG_REL)
+}
+
+function sandboxApiPayload(root, extra = {}) {
+  return {
+    path: SANDBOX_CAPTURE_SVG_REL,
+    absolutePath: sandboxCaptureSvgPath(root),
+    ...extra,
+  }
+}
+
+function isSandboxSvgApiPath(pathname) {
+  const p = pathname.replace(/\/+$/, '') || '/'
+  return p === SANDBOX_SVG_API
+}
+
+function isFoRecipeShardFilesApiPath(pathname) {
+  const p = pathname.replace(/\/+$/, '') || '/'
+  return p === FO_RECIPE_SHARD_FILES_API
+}
+
+/** @param {import('http').ServerResponse} res */
+async function handleFoRecipeShardFilesApi(res) {
+  const { listRecipeShardFiles } = await import('./fo-fix-recipes-shards.mjs')
+  const files = await listRecipeShardFiles()
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+  res.end(JSON.stringify({ files }))
+}
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    req.on('data', (chunk) => chunks.push(chunk))
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
+
+async function handleSandboxSvgApi(req, res, root) {
+  const capturePath = sandboxCaptureSvgPath(root)
+
+  if (req.method === 'POST') {
+    const body = await readRequestBody(req)
+    await fs.mkdir(path.dirname(capturePath), { recursive: true })
+    await fs.writeFile(capturePath, body)
+    const stat = await fs.stat(capturePath)
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+    res.end(
+      JSON.stringify(
+        sandboxApiPayload(root, { ok: true, mtime: stat.mtimeMs, bytes: stat.size }),
+      ),
+    )
+    return true
+  }
+
+  if (req.method === 'GET') {
+    try {
+      const [svg, stat] = await Promise.all([
+        fs.readFile(capturePath, 'utf8'),
+        fs.stat(capturePath),
+      ])
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+      res.end(JSON.stringify(sandboxApiPayload(root, { mtime: stat.mtimeMs, svg })))
+    } catch (err) {
+      if (err?.code === 'ENOENT') {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' })
+        res.end(JSON.stringify(sandboxApiPayload(root, { error: 'no capture yet' })))
+      } else {
+        throw err
+      }
+    }
+    return true
+  }
+
+  res.writeHead(405)
+  res.end('Method not allowed')
+  return true
+}
+
+function contentType(filePath) {
+  const ext = path.extname(filePath).toLowerCase()
+  if (ext === '.html') return 'text/html; charset=utf-8'
+  if (ext === '.js' || ext === '.mjs') return 'text/javascript; charset=utf-8'
+  if (ext === '.css') return 'text/css; charset=utf-8'
+  if (ext === '.ico') return 'image/x-icon'
+  return 'application/octet-stream'
+}
+
+/** Shorthand `/__localtests` URLs → on-disk `__localtests__` folder. */
+function normalizeLocaltestsPathname(pathname) {
+  if (pathname === '/__localtests' || pathname.startsWith('/__localtests/')) {
+    return `/__localtests__${pathname.slice('/__localtests'.length)}`
+  }
+  return pathname
+}
+
+function resolveStaticAbs(root, pathname) {
+  const rel = decodeURIComponent(pathname.replace(/^\//, ''))
+  const abs = path.resolve(root, rel)
+  const rootWithSep = root + path.sep
+  if (abs !== root && !abs.startsWith(rootWithSep)) {
+    return { kind: 'forbidden' }
+  }
+  return { kind: 'path', abs, trailingSlash: pathname.endsWith('/') }
+}
+
+/** Map URL path to a file; directories serve `index.html`; bare dirs redirect with `/`. */
+async function resolveStaticFile(root, pathname) {
+  const normalized = normalizeLocaltestsPathname(pathname)
+  const resolved = resolveStaticAbs(root, normalized)
+  if (resolved.kind === 'forbidden') return resolved
+
+  async function tryStat(abs) {
+    try {
+      return await fs.stat(abs)
+    } catch {
+      return null
+    }
+  }
+
+  async function tryFiles(fileCandidates) {
+    for (const abs of fileCandidates) {
+      const s = await tryStat(abs)
+      if (s?.isFile()) return { kind: 'file', abs }
+    }
+    return null
+  }
+
+  const stat = await tryStat(resolved.abs)
+  if (!stat) {
+    // Browser ESM imports often omit extensions (Node-style). Also resolve npm packages that
+    // use partial suffixes (e.g. transformation-matrix `./fromTransformAttribute.autogenerated`
+    // → `fromTransformAttribute.autogenerated.js`).
+    if (!resolved.trailingSlash) {
+      const guessed = await tryFiles([`${resolved.abs}.js`, `${resolved.abs}.mjs`])
+      if (guessed) return guessed
+    }
+    return { kind: 'notfound' }
+  }
+
+  if (stat.isDirectory()) {
+    if (!resolved.trailingSlash && normalized !== '/') {
+      const location = pathname.endsWith('/') ? pathname : `${pathname}/`
+      return { kind: 'redirect', location }
+    }
+    const htmlIndex = path.join(resolved.abs, 'index.html')
+    const htmlStat = await tryStat(htmlIndex)
+    if (htmlStat?.isFile()) return { kind: 'file', abs: htmlIndex }
+
+    // Same extensionless ESM convenience, but for `import "../src/utils"` which becomes
+    // a directory request (`/src/utils/`). Prefer `index.js|index.mjs` if present.
+    const jsIndex = await tryFiles([
+      path.join(resolved.abs, 'index.js'),
+      path.join(resolved.abs, 'index.mjs'),
+    ])
+    if (jsIndex) return jsIndex
+
+    return { kind: 'notfound' }
+  }
+
+  if (stat.isFile()) {
+    return { kind: 'file', abs: resolved.abs }
+  }
+
+  return { kind: 'notfound' }
+}
+
+function portInUseMessage(port) {
+  return (
+    `Cannot bind ${LOCAL_HOST}:${port} — port already in use.\n` +
+    `  Free it: lsof -ti :${port} | xargs kill -9\n` +
+    `  Or pick another port: SNAPDOM_LOCAL_PORT=9333 npm run debug:fo-fix-lab`
+  )
+}
+
+/** Static file server for __localtests__ / dist debugging. Binds fixed port (see local-server-config.mjs). */
+export async function startLocalServer(root = repoRoot, port = resolveLocalPort()) {
+  await fs.mkdir(path.dirname(sandboxCaptureSvgPath(root)), { recursive: true })
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url || '/', 'http://127.0.0.1')
+
+      if (req.method === 'GET' && url.pathname === '/favicon.ico') {
+        // Avoid noisy 404s when a harness page forgets <link rel="icon" href="data:,">.
+        res.writeHead(204)
+        res.end()
+        return
+      }
+
+      if (isSandboxSvgApiPath(url.pathname)) {
+        await handleSandboxSvgApi(req, res, root)
+        return
+      }
+
+      if (req.method === 'GET' && isFoRecipeShardFilesApiPath(url.pathname)) {
+        await handleFoRecipeShardFilesApi(res)
+        return
+      }
+
+      const target = await resolveStaticFile(root, url.pathname)
+      if (target.kind === 'forbidden') {
+        res.writeHead(403)
+        res.end('Forbidden')
+        return
+      }
+      if (target.kind === 'redirect') {
+        res.writeHead(301, { Location: target.location })
+        res.end()
+        return
+      }
+      if (target.kind === 'notfound') {
+        res.writeHead(404)
+        res.end('Not found')
+        return
+      }
+      const data = await fs.readFile(target.abs)
+      const ext = path.extname(target.abs).toLowerCase()
+      const isLabDev =
+        ext === '.html' ||
+        ext === '.js' ||
+        ext === '.mjs' ||
+        ext === '.css'
+      const headers = { 'Content-Type': contentType(target.abs) }
+      if (isLabDev) {
+        headers['Cache-Control'] = 'no-store, must-revalidate'
+      }
+      res.writeHead(200, headers)
+      res.end(data)
+    } catch {
+      res.writeHead(404)
+      res.end('Not found')
+    }
+  })
+
+  await new Promise((resolve, reject) => {
+    const onError = (err) => {
+      server.off('listening', onListening)
+      if (err?.code === 'EADDRINUSE') {
+        reject(new Error(portInUseMessage(port)))
+      } else {
+        reject(err)
+      }
+    }
+    const onListening = () => {
+      server.off('error', onError)
+      resolve()
+    }
+    server.once('error', onError)
+    server.once('listening', onListening)
+    server.listen(port, LOCAL_HOST)
+  })
+
+  return { server, port, root }
+}
+
+/** Await TCP release so back-to-back probes (e.g. `--verify`) do not hit EADDRINUSE. */
+export function closeLocalServer(server) {
+  if (!server?.close) return Promise.resolve()
+  if (typeof server.closeAllConnections === 'function') server.closeAllConnections()
+  return new Promise((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()))
+  })
+}
+
+/**
+ * Launch Chrome for local parity/debug scripts (bounce-check, fo-fix-lab, etc.).
+ * Default is **headed** (`headless: false`). FO→canvas ink probes are unreliable
+ * headless — use headed unless you explicitly opt in with `HEADLESS=1`.
+ */
+/**
+ * @param {string[]} [extraArgs]
+ * @param {{ channel?: 'chrome' | 'chromium' }} [options] Playwright channel; `chromium` = bundled browser, `chrome` = branded install.
+ */
+export async function launchHeadedChrome(extraArgs = [], options = {}) {
+  const { chromium } = await import('playwright')
+  const envArgs = process.env.SNAPDOM_CHROME_ARGS
+    ? process.env.SNAPDOM_CHROME_ARGS.split(/\s+/).filter(Boolean)
+    : []
+  const args = [...envArgs, ...extraArgs]
+  const headless = process.env.HEADLESS === '1'
+  const launchOpts = { headless, ...(args.length ? { args } : {}) }
+  const channel = options.channel ?? (process.env.BOUNCE_USE_CHROMIUM === '1' ? 'chromium' : undefined)
+  if (channel === 'chromium') {
+    return chromium.launch(launchOpts)
+  }
+  if (channel === 'chrome') {
+    try {
+      return await chromium.launch({ ...launchOpts, channel: 'chrome' })
+    } catch {
+      return chromium.launch(launchOpts)
+    }
+  }
+  try {
+    return await chromium.launch({ ...launchOpts, channel: 'chrome' })
+  } catch {
+    return chromium.launch(launchOpts)
+  }
+}
+
+const isMain =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isMain) {
+  const { server, port } = await startLocalServer()
+  console.log(`Debug index: http://${LOCAL_HOST}:${port}/__localtests/`)
+  console.log(`Local server: http://${LOCAL_HOST}:${port}/`)
+  console.log(`  FO fix lab: http://${LOCAL_HOST}:${port}/__localtests__/fo-fix-lab-ink-v2.html`)
+  console.log(`  FO SVG sandbox: http://${LOCAL_HOST}:${port}/__localtests__/fo-svg-sandbox.html`)
+  console.log(`  Sandbox SVG API: http://${LOCAL_HOST}:${port}${SANDBOX_SVG_API}`)
+  console.log('Ctrl+C to stop.')
+  await new Promise((resolve) => {
+    process.once('SIGINT', resolve)
+    process.once('SIGTERM', resolve)
+  })
+  server.close()
+}

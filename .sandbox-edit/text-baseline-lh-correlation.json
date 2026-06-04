@@ -1,0 +1,310 @@
+{
+  "title": "text-baseline-lh-correlation",
+  "generatedAt": "2026-06-02T16:25:33.729Z",
+  "purpose": "Baseline / line-height vs canvas ink drift — mini-nav probe + typography matrix (read existing matrix; no re-run).",
+  "runs": {
+    "debug:half-leading-mini-probe": {
+      "attempted": true,
+      "exitCode": 1,
+      "error": "Missing npm script debug:half-leading-mini-probe (runner fo-half-leading-mini-probe.mjs not in repo)",
+      "note": "Used existing __localtests__/.sandbox-edit/half-leading-mini-probe*.json from prior headed runs."
+    },
+    "debug:half-leading-matrix": {
+      "attempted": false,
+      "mode": "read_existing",
+      "path": "/Users/pauldufour/Repos/snapdom/__localtests__/.sandbox-edit/half-leading-matrix.json",
+      "note": "half-leading-matrix.mjs absent; matrix JSON present (80-row sample)."
+    }
+  },
+  "miniProbe": {
+    "dpr2": {
+      "label": "dpr2",
+      "source": "/Users/pauldufour/Repos/snapdom/__localtests__/.sandbox-edit/half-leading-mini-probe.json",
+      "generatedAt": "2026-06-02T16:06:08.033Z",
+      "dpr": 2,
+      "scale": 1,
+      "hypothesisVerdict": "UNLIKELY — ~3px canvas drift is not explained by per-leaf halfLeading%1 or summed box fractions alone.",
+      "hypothesisSummary": "Fractional half-leading alone is unlikely (~3px drift with sub-1px trunc); check raster/FO box.",
+      "rows": [
+        {
+          "landmark": "Home",
+          "lineHeightPx": 48,
+          "fontSizePx": 16,
+          "halfLeadingFontBox": 15,
+          "halfLeadingFontSize": 16,
+          "halfLeadingLhFs": 16,
+          "truncationErrorFontBox": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "liveVsSvgTopPx": -0.0078125,
+          "residualCanvasMinusHalfLeadingFontBox": -11.703
+        },
+        {
+          "landmark": "Products",
+          "lineHeightPx": 48,
+          "fontSizePx": 16,
+          "halfLeadingFontBox": 15,
+          "halfLeadingFontSize": 16,
+          "halfLeadingLhFs": 16,
+          "truncationErrorFontBox": 0,
+          "liveVsCanvasTopPx": 3.296875,
+          "liveVsSvgTopPx": -0.0078125,
+          "residualCanvasMinusHalfLeadingFontBox": -11.703
+        }
+      ]
+    },
+    "dpr1": {
+      "label": "dpr1",
+      "source": "/Users/pauldufour/Repos/snapdom/__localtests__/.sandbox-edit/half-leading-mini-probe-dpr1.json",
+      "generatedAt": "2026-06-02T15:47:14.148Z",
+      "dpr": 1,
+      "scale": 1,
+      "hypothesisVerdict": "UNLIKELY — ~3px canvas drift is not explained by per-leaf halfLeading%1 or summed box fractions alone.",
+      "hypothesisSummary": "Fractional half-leading alone is unlikely (~3px drift with sub-1px trunc); check raster/FO box.",
+      "rows": [
+        {
+          "landmark": "Home",
+          "lineHeightPx": 48,
+          "fontSizePx": 16,
+          "halfLeadingFontBox": 15,
+          "halfLeadingFontSize": 16,
+          "halfLeadingLhFs": 16,
+          "truncationErrorFontBox": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125,
+          "residualCanvasMinusHalfLeadingFontBox": -12.203
+        },
+        {
+          "landmark": "Products",
+          "lineHeightPx": 48,
+          "fontSizePx": 16,
+          "halfLeadingFontBox": 15,
+          "halfLeadingFontSize": 16,
+          "halfLeadingLhFs": 16,
+          "truncationErrorFontBox": 0,
+          "liveVsCanvasTopPx": 2.796875,
+          "liveVsSvgTopPx": -0.0078125,
+          "residualCanvasMinusHalfLeadingFontBox": -12.203
+        }
+      ]
+    }
+  },
+  "typographyMatrix": {
+    "source": "/Users/pauldufour/Repos/snapdom/__localtests__/.sandbox-edit/half-leading-matrix.json",
+    "generatedAt": "2026-06-02T15:33:16.688Z",
+    "rowCount": 80,
+    "summaryFromArtifact": {
+      "totalRows": 80,
+      "measurableRows": 80,
+      "canvasDrift": {
+        "mean": 3.6875,
+        "stddev": 1.9990108313357056,
+        "min": 1.5,
+        "max": 10
+      },
+      "svgDrift": {
+        "mean": 0,
+        "stddev": 0
+      },
+      "correlation": {
+        "truncationError_vs_canvasDrift": 0.007681200455280011,
+        "halfLeading_vs_canvasDrift": 0.007681200455280011
+      },
+      "hypotheses": {
+        "constantRasterOffset_px": null,
+        "layoutTruncationCoupling": null
+      },
+      "neutralizeTranslateY_truncationError": {
+        "rowsImprovedVsCap": 18,
+        "rateImproved": 0.225
+      },
+      "truncationBuckets": {
+        "<0.05": {
+          "n": 58,
+          "meanCanvasDrift": 3.6206896551724137,
+          "meanTrunc": 0
+        },
+        "0.4–0.6": {
+          "n": 6,
+          "meanCanvasDrift": 3.1666666666666665,
+          "meanTrunc": 0.5
+        },
+        "0.2–0.4": {
+          "n": 16,
+          "meanCanvasDrift": 4.125,
+          "meanTrunc": 0.25
+        }
+      },
+      "worstCanvasDrift": [
+        {
+          "id": "system-ui|32|16px|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 10,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "16px",
+          "fontFamily": "system-ui"
+        },
+        {
+          "id": "Times|32|16px|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 9.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "16px",
+          "fontFamily": "Times"
+        },
+        {
+          "id": "Georgia|32|16px|400",
+          "truncationError": 0.25,
+          "liveVsCanvasTopPx": 9.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0.25,
+          "fontSize": 32,
+          "lineHeight": "16px",
+          "fontFamily": "Georgia"
+        },
+        {
+          "id": "monospace|32|16px|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 9.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "16px",
+          "fontFamily": "monospace"
+        },
+        {
+          "id": "Arial|32|16px|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 9,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "16px",
+          "fontFamily": "Arial"
+        },
+        {
+          "id": "system-ui|32|1|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 8,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "1",
+          "fontFamily": "system-ui"
+        },
+        {
+          "id": "Times|32|1|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 6.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "1",
+          "fontFamily": "Times"
+        },
+        {
+          "id": "Georgia|32|1|400",
+          "truncationError": 0.25,
+          "liveVsCanvasTopPx": 6.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0.25,
+          "fontSize": 32,
+          "lineHeight": "1",
+          "fontFamily": "Georgia"
+        },
+        {
+          "id": "system-ui|24|1.2|600",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 6,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 24,
+          "lineHeight": "1.2",
+          "fontFamily": "system-ui"
+        },
+        {
+          "id": "system-ui|24|18px|600",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 6,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 24,
+          "lineHeight": "18px",
+          "fontFamily": "system-ui"
+        },
+        {
+          "id": "Arial|32|1|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 6,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "1",
+          "fontFamily": "Arial"
+        },
+        {
+          "id": "monospace|32|1|400",
+          "truncationError": 0,
+          "liveVsCanvasTopPx": 5.5,
+          "liveVsSvgTopPx": 0,
+          "halfLeading": 0,
+          "fontSize": 32,
+          "lineHeight": "1",
+          "fontFamily": "monospace"
+        }
+      ]
+    },
+    "pearsonR": {
+      "canvasDrift_vs_halfLeading": {
+        "r": 0.008,
+        "n": 80
+      },
+      "canvasDrift_vs_halfLeadingLhFs": {
+        "r": 0.891,
+        "n": 80
+      },
+      "canvasDrift_vs_truncationError": {
+        "r": 0.008,
+        "n": 80
+      },
+      "canvasDrift_vs_lineHeightPx": {
+        "r": 0.912,
+        "n": 80
+      },
+      "canvasDrift_vs_fontSizePx": {
+        "r": 0.901,
+        "n": 80
+      },
+      "canvasDrift_vs_capHalfLeading": {
+        "r": 0.008,
+        "n": 80
+      },
+      "capVsLive_vs_halfLeading": {
+        "r": -0.013,
+        "n": 80
+      }
+    },
+    "olsSlope": {
+      "canvasDrift_on_halfLeading": 0.099,
+      "canvasDrift_on_halfLeadingLhFs": 3.406,
+      "canvasDrift_on_truncationError": 0.099
+    },
+    "canvasDrift": {
+      "mean": 3.688,
+      "min": 1.5,
+      "max": 10
+    }
+  },
+  "synthesis": {
+    "verdict": "HALF_LEADING_WEAK_FOR_FLAT_RASTER_OFFSET",
+    "notes": [
+      "Mini flex nav (lh=48px, fs=16px): canvasΔ≈2.8–3.3px while halfLeadingFontBox≈15px — offset is not 1:1 with strut half-leading.",
+      "Matrix (80 combos): Pearson r(canvasΔ, halfLeading)≈0.008; r(canvasΔ, truncationError)≈0.008.",
+      "SVG drift ~0 across matrix → serialization OK; canvas drift ~+3–4px median is raster-stage.",
+      "Artifact summary.correlation: {\"truncationError_vs_canvasDrift\":0.007681200455280011,\"halfLeading_vs_canvasDrift\":0.007681200455280011}"
+    ]
+  }
+}

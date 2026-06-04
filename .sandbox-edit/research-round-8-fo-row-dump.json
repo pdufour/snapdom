@@ -1,0 +1,67 @@
+{
+  "probe": "fo-research-round-8",
+  "section": "research-round-8-fo-row-dump.json",
+  "dpr": 1,
+  "landmark": "Home",
+  "data": {
+    "liveRangeTopInBorderPx": 14.203,
+    "rangeSubpixelPx": 0.203,
+    "baseline": {
+      "firstInkDeviceRow": 17,
+      "rangeTopDevicePx": 14.203,
+      "rangeMinusFirstInkRowPx": -2.797,
+      "rows": [
+        {
+          "deviceRow": 17,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 18,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 19,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 20,
+          "coverage": 0.321
+        },
+        {
+          "deviceRow": 21,
+          "coverage": 0.393
+        }
+      ]
+    },
+    "w7": {
+      "firstInkDeviceRow": 14,
+      "rangeTopDevicePx": 14.203,
+      "rangeMinusFirstInkRowPx": 0.203,
+      "rows": [
+        {
+          "deviceRow": 14,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 15,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 16,
+          "coverage": 0.179
+        },
+        {
+          "deviceRow": 17,
+          "coverage": 0.321
+        },
+        {
+          "deviceRow": 18,
+          "coverage": 0.393
+        }
+      ]
+    },
+    "rowDeltaBaselineToW7": 3,
+    "verdict": "INTEGER_ROW_LANDS_BELOW_RANGE_SUBPIXEL",
+    "implication": "First-ink device row sits at floor(Range×dpr); fractional 0.203px above row origin explains w7 −0.203px residual."
+  }
+}

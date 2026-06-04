@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>snapdom: FontFace API dynamic fonts</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+      .row { display: flex; gap: 16px; align-items: flex-start; }
+      .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; width: 520px; }
+      .title { font-size: 14px; opacity: 0.75; margin-bottom: 10px; }
+      #target {
+        font-family: "SnapdomDynFont", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.2;
+        letter-spacing: 0.2px;
+      }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; white-space: pre-wrap; }
+      img { max-width: 100%; height: auto; display: block; }
+      button { padding: 8px 12px; border-radius: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+      button:active { transform: translateY(1px); }
+    </style>
+  </head>
+  <body>
+    <h2>Dynamic FontFace API → embedFonts</h2>
+    <p class="mono">
+Goal: load a font via <code>new FontFace()</code> + <code>document.fonts.add()</code>,
+then capture <code>#target</code> with <code>embedFonts:true</code>.
+If FontFaceSet support works, the exported SVG/PNG should keep the custom font (even if no stylesheet has @font-face).
+    </p>
+
+    <div class="row">
+      <div class="card">
+        <div class="title">Live DOM (FontFace API)</div>
+        <div id="target">Hamburgefonstiv 0123456789 — The quick brown fox</div>
+        <div style="margin-top: 12px; display:flex; gap:8px; align-items:center;">
+          <button id="btn-load">1) Load font</button>
+          <button id="btn-capture">2) Capture (embedFonts)</button>
+        </div>
+        <div id="status" class="mono" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Captured PNG (toCanvas)</div>
+        <div id="out"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { snapdom } from "/dist/snapdom.mjs";
+
+      const statusEl = document.getElementById("status");
+      const out = document.getElementById("out");
+      const target = document.getElementById("target");
+
+      const log = (s) => { statusEl.textContent += s + "\n"; };
+
+      // Local font fixture (loaded via FontFace API; no <link> and no @font-face in stylesheets).
+      // Served by __localtests__/local-http-server.mjs as a static file.
+      const fontUrl = new URL("./fixtures/fonts/figtree-400.ttf", import.meta.url).href;
+
+      let loaded = false;
+      async function loadFont() {
+        if (loaded) return;
+        log("Loading FontFace…");
+        const ff = new FontFace("SnapdomDynFont", `url(${fontUrl})`, { style: "normal", weight: "400" });
+        await ff.load();
+        document.fonts.add(ff);
+        await document.fonts.ready;
+        loaded = true;
+        log("Font loaded + added to document.fonts.");
+      }
+
+      async function capturePng() {
+        out.textContent = "";
+        log("Capturing…");
+        const canvas = await snapdom.toCanvas(target, { embedFonts: true, scale: 1 });
+        const img = new Image();
+        img.src = canvas.toDataURL("image/png");
+        out.appendChild(img);
+        log("Done.");
+        return img.src;
+      }
+
+      async function captureSvg() {
+        log("Capturing SVG…");
+        const svg = await snapdom.toSvg(target, { embedFonts: true, scale: 1 });
+        log("SVG done.");
+        if (typeof svg === "string") return svg;
+        try {
+          return new XMLSerializer().serializeToString(svg);
+        } catch {
+          return String(svg);
+        }
+      }
+
+      function metrics() {
+        const cs = getComputedStyle(target);
+        const rect = target.getBoundingClientRect();
+        return {
+          fontFamily: cs.fontFamily,
+          fontSize: cs.fontSize,
+          width: rect.width,
+          height: rect.height,
+          dynCheck: document.fonts.check(`${cs.fontSize} "SnapdomDynFont"`),
+        };
+      }
+
+      window.__fontfaceDemo = { loadFont, capturePng, captureSvg, metrics };
+
+      document.getElementById("btn-load").addEventListener("click", () => loadFont().catch((e) => log(String(e))));
+      document.getElementById("btn-capture").addEventListener("click", () => capturePng().catch((e) => log(String(e))));
+    </script>
+  </body>
+</html>
+

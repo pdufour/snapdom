@@ -1,0 +1,274 @@
+{
+  "fixture": "fo-text-baseline-lh-matrix",
+  "purpose": "Line-height sweep on mini Home text leaf — live vs SVG vs canvas ink.",
+  "landmark": "Home",
+  "lhSweep": [
+    "normal",
+    "1",
+    "1.2",
+    "1.35",
+    "21.6px",
+    "48px",
+    "from-live"
+  ],
+  "lhAppliedOn": "live Home anchor + matching FO CSS inject",
+  "recipe": {
+    "id": "product-baseline",
+    "rasterPatch": "product-toCanvas"
+  },
+  "generatedAt": "2026-06-02T16:29:43.927Z",
+  "headed": true,
+  "port": 9944,
+  "dpr": 2,
+  "scale": 1,
+  "rows": [
+    {
+      "landmark": "Home",
+      "lhVariant": "normal",
+      "lhAppliedOnLive": "normal",
+      "lhInjected": "normal",
+      "injectCss": "foreignObject nav a{line-height:normal!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 4,
+      "halfLeadingStrutPx": 16,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "normal",
+        "fontSizePx": 16,
+        "lineHeightPx": 48,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 16,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 4
+      },
+      "recipeId": "lab-lh-matrix-normal",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "1",
+      "lhAppliedOnLive": "1",
+      "lhInjected": "1",
+      "injectCss": "foreignObject nav a{line-height:1!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 4,
+      "halfLeadingStrutPx": 0,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "16px",
+        "fontSizePx": 16,
+        "lineHeightPx": 16,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 0,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 4
+      },
+      "recipeId": "lab-lh-matrix-1",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "1.2",
+      "lhAppliedOnLive": "1.2",
+      "lhInjected": "1.2",
+      "injectCss": "foreignObject nav a{line-height:1.2!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 3.102,
+      "halfLeadingStrutPx": 1.6,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "19.2px",
+        "fontSizePx": 16,
+        "lineHeightPx": 19.2,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 1.6,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.3984375,
+        "svgPaintedTopInBorder": 14.3984375,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.1015625
+      },
+      "recipeId": "lab-lh-matrix-1-2",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "1.35",
+      "lhAppliedOnLive": "1.35",
+      "lhInjected": "1.35",
+      "injectCss": "foreignObject nav a{line-height:1.35!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 3.297,
+      "halfLeadingStrutPx": 2.8,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 2.8,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.203125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.296875
+      },
+      "recipeId": "lab-lh-matrix-1-35",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "21.6px",
+      "lhAppliedOnLive": "21.6px",
+      "lhInjected": "21.6px",
+      "injectCss": "foreignObject nav a{line-height:21.6px!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 3.305,
+      "halfLeadingStrutPx": 2.8,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 2.8,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.1953125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 3.3046875
+      },
+      "recipeId": "lab-lh-matrix-21-6px",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "48px",
+      "lhAppliedOnLive": "48px",
+      "lhInjected": "48px",
+      "injectCss": "foreignObject nav a{line-height:48px!important}",
+      "liveVsSvg": 0,
+      "liveVsCanvas": 4,
+      "halfLeadingStrutPx": 16,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "48px",
+        "fontSizePx": 16,
+        "lineHeightPx": 48,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 16,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.5,
+        "svgPaintedTopInBorder": 14.5,
+        "canvasPaintedTopInBorder": 18.5,
+        "liveVsSvgTopPx": 0,
+        "liveVsCanvasTopPx": 4
+      },
+      "recipeId": "lab-lh-matrix-48px",
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "landmark": "Home",
+      "lhVariant": "from-live",
+      "lhAppliedOnLive": null,
+      "lhInjected": "21.6px",
+      "injectCss": "foreignObject nav a{line-height:21.6px!important}",
+      "liveVsSvg": -0.008,
+      "liveVsCanvas": 3.297,
+      "halfLeadingStrutPx": 2.8,
+      "layoutLineBoxPx": 48,
+      "metrics": {
+        "tag": "A",
+        "computedLineHeight": "21.6px",
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "layoutLineBoxPx": 48,
+        "halfLeadingStrutPx": 2.8,
+        "heightGbcr": 48,
+        "display": "flex",
+        "alignSelf": "auto"
+      },
+      "threeWay": {
+        "livePaintedTopInBorder": 14.203125,
+        "svgPaintedTopInBorder": 14.1953125,
+        "canvasPaintedTopInBorder": 17.5,
+        "liveVsSvgTopPx": -0.0078125,
+        "liveVsCanvasTopPx": 3.296875
+      },
+      "recipeId": "lab-lh-matrix-from-live",
+      "dpr": 2,
+      "scale": 1
+    }
+  ],
+  "correlation": {
+    "pearsonR": {
+      "canvasDelta_vs_halfLeadingStrut": {
+        "r": 0.633,
+        "n": 7
+      },
+      "svgDelta_vs_halfLeadingStrut": {
+        "r": 0.204,
+        "n": 7
+      },
+      "canvasDelta_vs_layoutLineBoxPx": {
+        "r": null,
+        "n": 7
+      }
+    },
+    "olsSlope": {
+      "canvasDelta_on_halfLeadingStrut": 0.037
+    },
+    "canvasDeltaSpreadPx": 0.898,
+    "notes": [
+      "r(canvasΔ, halfLeadingStrut)=0.633; OLS slope=0.037; canvasΔ spread=0.898px.",
+      "Partial correlation — canvas drift partially tracks half-leading strut."
+    ]
+  }
+}

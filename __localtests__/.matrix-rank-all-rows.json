@@ -1,0 +1,713 @@
+{
+  "updatedAt": "2026-06-03T07:01:55.596Z",
+  "totalExpected": 141,
+  "parsedFrom": "chunk-offset-0-limit-141.log",
+  "parseNote": "lab header FO fix matrix (landmark …); canvas column index 4",
+  "rows": [
+    {
+      "id": "product-baseline",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "mp-capture-recipe-css",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "mp-h2-fo-normalize-capture",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "mp-decode-interval-prototype",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "mp-draw-image-pixelated",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "src-mirror-experimentalFoFlexTextLeafAlignStart",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "src-mirror-experimentalRasterSvgPatchFoHeightLinebox",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "src-mirror-experimentalRasterSvgPatchFoYHalfLeadingMeta",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "src-mirror-experimentalRasterSvgPatchComboLhFlexstart",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b11-w80-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b4-w07-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b4-w07-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b4-w07-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b4-w08-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b4-w08-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w02-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w02-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w03-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w03-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w03-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w04-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w04-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w04-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w04-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w05-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w05-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w06-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w06-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w07-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w07-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w07-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w07-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w08-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w08-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w08-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w08-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w09-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w09-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w09-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w09-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w10-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b5-w10-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w01-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w01-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w01-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w01-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w02-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w02-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w02-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w02-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w03-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w03-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w03-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w03-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w04-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w04-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w04-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w05-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w05-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w05-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w06-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w06-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w06-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w07-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w07-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w07-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w07-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w08-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w08-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w08-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w08-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w09-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w09-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w09-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w10-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b6-w10-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w01-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w02-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w02-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w02-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w02-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w03-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w03-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w03-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w04-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w04-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w04-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w04-004",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w05-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w05-002",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w05-003",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "loop-ai-b7-w06-001",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "tc-fix-drift-001-capture-fo-height-linepx",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-002-capture-fo-y-content-origin",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-003-rfork-fo-y-half-leading-dpr-scale",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-004-rfork-leaf-translate-y-half-leading",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-005-capture-leading-trim-both-edges",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-006-rfork-trim-text-box-leaf-decode",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "tc-fix-drift-009-capture-flex-item-min-width-zero",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-010-rfork-fo-overflow-hidden-linebox",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "tc-fix-drift-011-capture-align-self-flex-start-leaf",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-012-rfork-fo-align-items-flex-start",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "tc-fix-drift-013-capture-lh-used-pin-leaf",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-014-rfork-lh-meta-leaf-decode",
+      "canvasSigned": 16,
+      "absRank": 16
+    },
+    {
+      "id": "tc-fix-drift-019-rfork-combo-fo-y-linebox-height",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-020-rfork-combo-fo-y-leading-trim",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-022-rfork-fo-clip-inset-zero-linebox",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-030-rfork-box-sizing-border-box-decode",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-035-rfork-fo-height-unset-overflow-visible",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-036-rfork-combo-height-unset-w7-y",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-045-rfork-root-fo-only-half-leading",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-drift-049-capture-flex-cross-stretch-decouple",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-fix-w7-rfork-fo-y-half-leading-meta",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-reg-lock-w7-half-leading-meta",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "tc-reg-lock-src-mirror-w7",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "baseline-plateau-2797",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "w7-beats-baseline",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "fork-red-changes-canvas",
+      "canvasSigned": 13,
+      "absRank": 13
+    },
+    {
+      "id": "loop-ai-b5-w03-002",
+      "canvasSigned": 17,
+      "absRank": 17
+    },
+    {
+      "id": "loop-ai-b5-w05-003",
+      "canvasSigned": 17,
+      "absRank": 17
+    },
+    {
+      "id": "loop-ai-b7-w01-004",
+      "canvasSigned": 17,
+      "absRank": 17
+    },
+    {
+      "id": "tc-fix-drift-040-rfork-lh-normal-leaf-decode",
+      "canvasSigned": 17,
+      "absRank": 17
+    },
+    {
+      "id": "src-mirror-experimentalRasterMetaInkAlign",
+      "canvasSigned": 10,
+      "absRank": 10
+    },
+    {
+      "id": "tc-fix-drift-007-capture-inline-block-linebox-leaf",
+      "canvasSigned": 19,
+      "absRank": 19
+    },
+    {
+      "id": "tc-fix-drift-008-rfork-inline-block-linebox-decode",
+      "canvasSigned": 7,
+      "absRank": 7
+    },
+    {
+      "id": "loop-ai-b5-w05-004",
+      "canvasSigned": 6,
+      "absRank": 6
+    },
+    {
+      "id": "loop-ai-b5-w06-003",
+      "canvasSigned": 6,
+      "absRank": 6
+    },
+    {
+      "id": "loop-ai-b6-w05-003",
+      "canvasSigned": 6,
+      "absRank": 6
+    },
+    {
+      "id": "loop-ai-b5-w06-002",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b5-w10-001",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b5-w10-003",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b6-w04-001",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b6-w06-001",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b6-w10-002",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b6-w10-004",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b7-w01-002",
+      "canvasSigned": 0,
+      "absRank": 0
+    },
+    {
+      "id": "loop-ai-b10-w01-025",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b10-w01-035",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b6-w09-002",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b7-w01-001",
+      "canvasSigned": null,
+      "absRank": null
+    },
+    {
+      "id": "loop-ai-b7-w05-004",
+      "canvasSigned": null,
+      "absRank": null
+    }
+  ]
+}

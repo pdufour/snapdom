@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chromium-only — FO y half-leading nudge (w7)</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 12px 14px 24px; font: 14px/1.4 system-ui, sans-serif; background: #f8fafc; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    #fixture {
+      width: 500px;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+    }
+    #fixture .row { display: flex; align-items: stretch; min-height: 48px; }
+    #fixture .row a { display: flex; align-items: center; padding: 0 12px; color: #111; text-decoration: none; }
+    table { border-collapse: collapse; font: 12px ui-monospace, monospace; margin-top: 12px; background: #fff; }
+    th, td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    #metrics { font: 12px/1.5 ui-monospace, Menlo, monospace; margin-top: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Chromium-only: w7 FO y −½(lh−fs) before decode</h1>
+  <p style="font-size:13px;color:#475569;max-width:78ch">
+    Applies <code>foreignObject y="-…"</code> in the SVG string (same idea as lab
+    <code>fo-y-half-leading-meta</code>) without snapdom. Baseline vs nudge side-by-side.
+  </p>
+  <div id="fixture"><div class="row"><a href="#">Home</a></div></div>
+  <table>
+    <thead>
+      <tr><th>variant</th><th>svgΔ</th><th>canvasΔ</th><th>FO Δy</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p id="metrics">Booting…</p>
+  <script type="module">
+    import {
+      buildStaticMinimalNavFoSvg,
+      foreignObjectYNudgePatch,
+      halfLeadingFromComputed,
+      probeChromiumFoOnly,
+      findLandmark,
+    } from './chromium-fo-only-shared.js'
+
+    const root = document.getElementById('fixture')
+    const params = new URLSearchParams(location.search)
+    const dpr = Math.max(0.5, Number(params.get('dpr')) || 1)
+
+    function fmt(v) {
+      return v == null || !Number.isFinite(v) ? '—' : v.toFixed(3)
+    }
+
+    async function run() {
+      const el = findLandmark(root, 'Home')
+      const half = el ? halfLeadingFromComputed(el) : 2.8
+      const nudgeY = -half
+
+      const baseline = await probeChromiumFoOnly({
+        root,
+        dpr,
+        buildSvg: buildStaticMinimalNavFoSvg,
+      })
+
+      const nudged = await probeChromiumFoOnly({
+        root,
+        dpr,
+        buildSvg: buildStaticMinimalNavFoSvg,
+        svgPatcher: (svg) => foreignObjectYNudgePatch(svg, nudgeY),
+      })
+
+      const rows = [
+        { id: 'baseline', ...baseline, foDeltaY: 0 },
+        { id: 'fo-y-half-leading', ...nudged, foDeltaY: nudgeY, halfLeadingPx: half },
+      ]
+
+      const tbody = document.getElementById('rows')
+      tbody.innerHTML = rows
+        .map((r) => {
+          const t = r.threeWay
+          return `<tr>
+            <td>${r.id}</td>
+            <td>${fmt(t.liveVsSvgTopPx)}</td>
+            <td>${fmt(t.liveVsCanvasTopPx)}</td>
+            <td>${fmt(r.foDeltaY)}</td>
+          </tr>`
+        })
+        .join('')
+
+      const payload = {
+        pageId: 'minimal-nav-fo-y-nudge',
+        dpr,
+        halfLeadingPx: half,
+        variants: rows.map((r) => ({
+          id: r.id,
+          verdict: r.verdict,
+          foDeltaY: r.foDeltaY,
+          threeWay: r.threeWay,
+        })),
+      }
+
+      document.getElementById('metrics').textContent =
+        `½(lh−fs)=${fmt(half)} px · baseline canvasΔ ${fmt(baseline.threeWay.liveVsCanvasTopPx)} → ` +
+        `nudge canvasΔ ${fmt(nudged.threeWay.liveVsCanvasTopPx)}`
+
+      return payload
+    }
+
+    window.__chromiumFoOnlyProbe = {
+      ready: false,
+      pageId: 'minimal-nav-fo-y-nudge',
+      run,
+    }
+
+    run()
+      .then(() => { window.__chromiumFoOnlyProbe.ready = true })
+      .catch((err) => {
+        document.getElementById('metrics').textContent = err.message
+        window.__chromiumFoOnlyProbe.bootError = String(err)
+        window.__chromiumFoOnlyProbe.ready = true
+      })
+  </script>
+</body>
+</html>

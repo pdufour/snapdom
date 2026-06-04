@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>fo-ink-blackbox e2e</title>
+  <link rel="icon" href="data:," />
+  <script type="importmap">
+  { "imports": { "image-trim": "https://esm.sh/image-trim@1.0.0" } }
+  </script>
+  <style>
+    .band-host { position: absolute; left: -9999px; top: 0; }
+    .band { position: relative; width: 100px; height: 80px; background: #fff; overflow: hidden; }
+    .ink-bar { position: absolute; left: 15px; width: 50px; height: 12px; background: #000; }
+  </style>
+</head>
+<body>
+  <div id="band-host" class="band-host"></div>
+  <script type="module">
+    import {
+      INK_SCAN_CAP_CORE_DEFAULTS,
+      ensureInkScanBackend,
+      inkTopRowFromCanvasRegion,
+      registerImageTrimGetBorders,
+    } from './fo-ink-bounds-scan.mjs'
+
+    const BAND_W = 100
+    const BAND_H = 80
+    const BAR_H = 12
+    const BAR_X = 15
+    const BAR_W = 50
+    const TOL = 1
+    const STAGES = ['live', 'svg', 'canvas']
+
+    const SCAN_OPTS = {
+      mode: 'integer',
+      solidBand: true,
+      capCrest: true,
+      refineUpward: true,
+      ...INK_SCAN_CAP_CORE_DEFAULTS,
+    }
+
+    /** @type {{ id: string, path: string, inkTop: number, expectRow: number, kind: 'static'|'delta', base?: number, shift?: number }[]} */
+    const CASES = [
+      ...STAGES.flatMap((path) => [
+        { id: `${path}-border-top-0`, path, inkTop: 0, expectRow: 0, kind: 'static' },
+        { id: `${path}-border-top-5`, path, inkTop: 5, expectRow: 5, kind: 'static' },
+        { id: `${path}-baseline-40`, path, inkTop: 40, expectRow: 40, kind: 'static' },
+        { id: `${path}-baseline-40-down-5`, path, inkTop: 45, expectRow: 45, kind: 'static' },
+      ]),
+      ...STAGES.flatMap((path) => [
+        { id: `${path}-delta-0-to-5`, path, kind: 'delta', base: 0, shift: 5, inkTop: 0, expectRow: 5 },
+        { id: `${path}-delta-40-to-45`, path, kind: 'delta', base: 40, shift: 5, inkTop: 40, expectRow: 45 },
+        { id: `${path}-delta-5-to-0`, path, kind: 'delta', base: 5, shift: -5, inkTop: 5, expectRow: 0 },
+        { id: `${path}-delta-45-to-40`, path, kind: 'delta', base: 45, shift: -5, inkTop: 45, expectRow: 40 },
+      ]),
+    ]
+
+    function buildBandSvg(top) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${BAND_W}" height="${BAND_H}">
+  <rect width="100%" height="100%" fill="#fff"/>
+  <foreignObject width="${BAND_W}" height="${BAND_H}">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;width:${BAND_W}px;height:${BAND_H}px;background:#fff;position:relative">
+      <div style="position:absolute;top:${top}px;left:${BAR_X}px;width:${BAR_W}px;height:${BAR_H}px;background:#000"></div>
+    </div>
+  </foreignObject>
+</svg>`
+    }
+
+    function svgDataUrl(svgText) {
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`
+    }
+
+    function mountLive(top) {
+      const host = document.getElementById('band-host')
+      host.replaceChildren()
+      const band = document.createElement('div')
+      band.className = 'band'
+      const bar = document.createElement('div')
+      bar.className = 'ink-bar'
+      bar.style.top = `${top}px`
+      bar.style.height = `${BAR_H}px`
+      band.appendChild(bar)
+      host.appendChild(band)
+      return band
+    }
+
+    function rasterizeLive(band, canvas) {
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      const bandRect = band.getBoundingClientRect()
+      const bar = band.querySelector('.ink-bar')
+      const barRect = bar.getBoundingClientRect()
+      ctx.fillStyle = '#000'
+      ctx.fillRect(
+        barRect.left - bandRect.left,
+        barRect.top - bandRect.top,
+        barRect.width,
+        barRect.height,
+      )
+    }
+
+    async function rasterizeSvg(svgText, canvas) {
+      const img = new Image()
+      await new Promise((res, rej) => {
+        img.onload = () => res()
+        img.onerror = () => rej(new Error('svg load'))
+        img.src = svgDataUrl(svgText)
+      })
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, 0, BAND_W, BAND_H)
+    }
+
+    async function rasterizeCanvas(svgText, canvas) {
+      const img = new Image()
+      img.src = svgDataUrl(svgText)
+      await img.decode()
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, BAND_W, BAND_H)
+      ctx.drawImage(img, 0, 0, BAND_W, BAND_H)
+    }
+
+    function scanCanvas(canvas) {
+      const hit = inkTopRowFromCanvasRegion(
+        canvas.getContext('2d', { willReadFrequently: true }),
+        0, 0, BAND_W, BAND_H,
+        SCAN_OPTS,
+      )
+      return hit?.regionRow ?? hit?.row ?? null
+    }
+
+    async function scanStage(path, inkTop) {
+      const canvas = document.createElement('canvas')
+      canvas.width = BAND_W
+      canvas.height = BAND_H
+      if (path === 'live') {
+        rasterizeLive(mountLive(inkTop), canvas)
+      } else if (path === 'svg') {
+        await rasterizeSvg(buildBandSvg(inkTop), canvas)
+      } else {
+        await rasterizeCanvas(buildBandSvg(inkTop), canvas)
+      }
+      return scanCanvas(canvas)
+    }
+
+    async function runCase(c) {
+      if (c.kind === 'static') {
+        const row = await scanStage(c.path, c.inkTop)
+        const pass = row != null && Math.abs(row - c.expectRow) <= TOL
+        return {
+          id: c.id,
+          path: c.path,
+          inkTop: c.inkTop,
+          row,
+          expectRow: c.expectRow,
+          pass,
+          errors: pass ? [] : [`row=${row} expected ${c.expectRow}`],
+        }
+      }
+      const r0 = await scanStage(c.path, c.base)
+      const r1 = await scanStage(c.path, c.base + c.shift)
+      const delta = r1 != null && r0 != null ? r1 - r0 : null
+      const pass = delta != null && Math.abs(delta - c.shift) <= TOL
+      return {
+        id: c.id,
+        path: c.path,
+        base: c.base,
+        shift: c.shift,
+        r0,
+        r1,
+        delta,
+        pass,
+        errors: pass ? [] : [`Δ=${delta} expected ${c.shift} (r0=${r0} r1=${r1})`],
+      }
+    }
+
+    window.__foInkBlackboxE2e = {
+      ready: false,
+      bootError: null,
+      tol: TOL,
+      cases: CASES.map((c) => c.id),
+      async run() {
+        const trimMod = await import('image-trim')
+        registerImageTrimGetBorders(trimMod.getBorders)
+        await ensureInkScanBackend('auto')
+        const matrix = []
+        for (const c of CASES) {
+          matrix.push(await runCase(c))
+        }
+        return { tol: TOL, matrix, pass: matrix.every((r) => r.pass) }
+      },
+    }
+
+    try {
+      await document.fonts.ready
+      window.__foInkBlackboxE2e.ready = true
+    } catch (e) {
+      window.__foInkBlackboxE2e.bootError = String(e?.message || e)
+      window.__foInkBlackboxE2e.ready = true
+    }
+  </script>
+</body>
+</html>

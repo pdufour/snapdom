@@ -1,0 +1,199 @@
+{
+  "generatedAt": "2026-06-02T17:23:08.957Z",
+  "fixture": "mini-nav",
+  "recipeId": "product-baseline",
+  "landmarks": [
+    {
+      "landmark": "Home",
+      "dpr": 1,
+      "scale": 1,
+      "canvasDeltaSignedPx": 2.797,
+      "canvasOffsetPx": 2.797,
+      "svgOffsetPx": 0.008,
+      "strutFacts": {
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "halfLeadingFs": 2.8,
+        "halfLeadingFontBox": 1.8,
+        "halfLeadingUsed": 15,
+        "rangeTopInBorder": 14.203,
+        "capTopInBorder": 5.527,
+        "lineBoxTopInBorder": 13.2,
+        "rangeLineHeightPx": 19,
+        "halfLeadingFromRangeLineFs": 1.5,
+        "halfLeadingFromRangeLineFontBox": 0.5,
+        "rangeMinusLineBoxTop": 1.003,
+        "rangeMinusCapTop": 8.677,
+        "rangeSubpixelPx": 0.203,
+        "halfLeadingFsMinusRangeSubpixel": 2.597
+      },
+      "metricRank": {
+        "rows": [
+          {
+            "id": "halfLeadingFs",
+            "value": 2.8,
+            "deltaAbs": 0.003
+          },
+          {
+            "id": "halfLeadingFsMinusRangeSubpixel",
+            "value": 2.597,
+            "deltaAbs": 0.2
+          },
+          {
+            "id": "halfLeadingFontBox",
+            "value": 1.8,
+            "deltaAbs": 0.997
+          },
+          {
+            "id": "halfLeadingFromRangeLineFs",
+            "value": 1.5,
+            "deltaAbs": 1.297
+          },
+          {
+            "id": "rangeMinusLineBoxTop",
+            "value": 1.003,
+            "deltaAbs": 1.794
+          },
+          {
+            "id": "halfLeadingFromRangeLineFontBox",
+            "value": 0.5,
+            "deltaAbs": 2.297
+          },
+          {
+            "id": "rangeSubpixelPx",
+            "value": 0.203,
+            "deltaAbs": 2.594
+          },
+          {
+            "id": "capTopInBorder",
+            "value": 5.527,
+            "deltaAbs": 2.73
+          },
+          {
+            "id": "rangeMinusCapTop",
+            "value": 8.677,
+            "deltaAbs": 5.88
+          },
+          {
+            "id": "rangeTopInBorder",
+            "value": 14.203,
+            "deltaAbs": 11.406
+          },
+          {
+            "id": "halfLeadingUsed",
+            "value": 15,
+            "deltaAbs": 12.203
+          }
+        ],
+        "best": {
+          "id": "halfLeadingFs",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        },
+        "matches": [
+          {
+            "id": "halfLeadingFs",
+            "value": 2.8,
+            "deltaAbs": 0.003
+          }
+        ]
+      }
+    },
+    {
+      "landmark": "Products",
+      "dpr": 1,
+      "scale": 1,
+      "canvasDeltaSignedPx": 2.797,
+      "canvasOffsetPx": 2.797,
+      "svgOffsetPx": 0.008,
+      "strutFacts": {
+        "fontSizePx": 16,
+        "lineHeightPx": 21.6,
+        "halfLeadingFs": 2.8,
+        "halfLeadingFontBox": 1.8,
+        "halfLeadingUsed": 15,
+        "rangeTopInBorder": 14.203,
+        "capTopInBorder": 5.527,
+        "lineBoxTopInBorder": 13.2,
+        "rangeLineHeightPx": 19,
+        "halfLeadingFromRangeLineFs": 1.5,
+        "halfLeadingFromRangeLineFontBox": 0.5,
+        "rangeMinusLineBoxTop": 1.003,
+        "rangeMinusCapTop": 8.677,
+        "rangeSubpixelPx": 0.203,
+        "halfLeadingFsMinusRangeSubpixel": 2.597
+      },
+      "metricRank": {
+        "rows": [
+          {
+            "id": "halfLeadingFs",
+            "value": 2.8,
+            "deltaAbs": 0.003
+          },
+          {
+            "id": "halfLeadingFsMinusRangeSubpixel",
+            "value": 2.597,
+            "deltaAbs": 0.2
+          },
+          {
+            "id": "halfLeadingFontBox",
+            "value": 1.8,
+            "deltaAbs": 0.997
+          },
+          {
+            "id": "halfLeadingFromRangeLineFs",
+            "value": 1.5,
+            "deltaAbs": 1.297
+          },
+          {
+            "id": "rangeMinusLineBoxTop",
+            "value": 1.003,
+            "deltaAbs": 1.794
+          },
+          {
+            "id": "halfLeadingFromRangeLineFontBox",
+            "value": 0.5,
+            "deltaAbs": 2.297
+          },
+          {
+            "id": "rangeSubpixelPx",
+            "value": 0.203,
+            "deltaAbs": 2.594
+          },
+          {
+            "id": "capTopInBorder",
+            "value": 5.527,
+            "deltaAbs": 2.73
+          },
+          {
+            "id": "rangeMinusCapTop",
+            "value": 8.677,
+            "deltaAbs": 5.88
+          },
+          {
+            "id": "rangeTopInBorder",
+            "value": 14.203,
+            "deltaAbs": 11.406
+          },
+          {
+            "id": "halfLeadingUsed",
+            "value": 15,
+            "deltaAbs": 12.203
+          }
+        ],
+        "best": {
+          "id": "halfLeadingFs",
+          "value": 2.8,
+          "deltaAbs": 0.003
+        },
+        "matches": [
+          {
+            "id": "halfLeadingFs",
+            "value": 2.8,
+            "deltaAbs": 0.003
+          }
+        ]
+      }
+    }
+  ]
+}

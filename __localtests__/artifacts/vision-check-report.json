@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-06-03T06:43:46.359Z",
+  "reloadUrl": "http://127.0.0.1:9350/__localtests__/fo-fix-lab.html?recipe=product-baseline&auto=1&view=live&dpr=1&landmark=Blocks&includeInactive=1",
+  "recipe": "product-baseline",
+  "landmark": "Blocks",
+  "checker": {
+    "landmark": "Blocks",
+    "liveTop": 14.5,
+    "svgTop": 14.5,
+    "canvasTop": 14.5,
+    "liveTopInBorder": 14.5,
+    "svgTopInBorder": 14.5,
+    "canvasTopInBorder": 14.5,
+    "deltaSvgVsLive": 0,
+    "deltaCanvasVsLive": 0,
+    "svgHigher": false,
+    "canvasHigher": false,
+    "svgHigherPx": 0,
+    "canvasHigherPx": 0,
+    "svgHigherOnScreenPx": 0,
+    "canvasHigherOnScreenPx": 0,
+    "uiAligned": true,
+    "pass": true,
+    "inkPassThreshold": 0.06,
+    "checkThresholdPx": 0.5
+  },
+  "uiMetrics": "Landmark: Blocks · #capture-target root px\nLive top Y:   14.500 px\nSVG top Y:    14.500 px\nCanvas top Y: 14.500 px",
+  "uiVerdict": "SVG matches live (Δ≈0)Canvas matches live (Δ≈0)Root Δ stage−live: svg 0.00 · canvas 0.00 · layout aligned (ε 0.5px): yes",
+  "screenshots": {
+    "live": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/vision-check-live.png",
+    "svg": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/vision-check-svg.png",
+    "canvas": "/Users/pauldufour/Repos/snapdom/__localtests__/artifacts/vision-check-canvas.png"
+  },
+  "visionNote": "Inspect PNGs: compare block/nav vertical position vs live. Positive on-screen px = stage HIGHER than live."
+}
