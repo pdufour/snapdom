@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View lab</title>
+  <link rel="icon" href="data:," />
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --fixture-w: 500px;
+      --fixture-h: 48px;
+      --fixture-pad-y: 4px;
+      --stage-h: calc(var(--fixture-h) + 2 * var(--fixture-pad-y));
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #f4f4f5;
+      color: #111;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 14px;
+    }
+    #view-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      border: none;
+      font-size: 14px;
+    }
+    #view-controls legend {
+      padding: 0;
+      font-weight: 600;
+    }
+    #view-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    #view-controls input:disabled + span,
+    #view-controls label.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    main {
+      padding: 14px;
+    }
+    .stage-wrap {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      width: fit-content;
+    }
+    .compare-stage {
+      position: relative;
+      width: var(--fixture-w);
+      min-height: var(--stage-h);
+      padding: var(--fixture-pad-y) 0;
+      overflow: visible;
+    }
+    #capture-target {
+      width: var(--fixture-w);
+      height: var(--fixture-h);
+      position: relative;
+      z-index: 0;
+      font: 600 16px/1.35 system-ui, -apple-system, sans-serif;
+    }
+    nav.mini-nav {
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+      min-height: var(--fixture-h);
+    }
+    nav.mini-nav a {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      text-decoration: none;
+      color: #111;
+    }
+    #view-canvas,
+    #svg-slot {
+      position: absolute;
+      left: 0;
+      top: var(--fixture-pad-y);
+      width: var(--fixture-w);
+      height: var(--fixture-h);
+      pointer-events: none;
+      z-index: 1;
+    }
+    #view-canvas canvas,
+    #svg-slot img {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .compare-stage.view-live #view-canvas,
+    .compare-stage.view-live #svg-slot {
+      visibility: hidden;
+    }
+    .compare-stage.view-svg #capture-target,
+    .compare-stage.view-svg #view-canvas {
+      visibility: hidden;
+    }
+    .compare-stage.view-canvas #capture-target,
+    .compare-stage.view-canvas #svg-slot {
+      visibility: hidden;
+    }
+    .compare-stage.capturing #capture-target {
+      visibility: visible !important;
+    }
+    .compare-stage.capturing #view-canvas,
+    .compare-stage.capturing #svg-slot {
+      visibility: hidden !important;
+    }
+    #capture-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.85);
+      font: 600 14px/1.35 system-ui, sans-serif;
+      color: #1e40af;
+      pointer-events: none;
+    }
+    .compare-stage.capturing #capture-overlay {
+      display: flex;
+    }
+    #boot-error {
+      margin: 0;
+      padding: 10px 14px;
+      background: #fef2f2;
+      color: #991b1b;
+      font: 13px/1.4 ui-monospace, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    #boot-error:empty { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <fieldset id="view-controls" disabled>
+      <legend>View</legend>
+      <label title="Ctrl+1"><input type="radio" name="view" value="live" checked /><span>Live <kbd>1</kbd></span></label>
+      <label title="Ctrl+2"><input type="radio" name="view" value="svg" /><span>SVG <kbd>2</kbd></span></label>
+      <label title="Ctrl+3"><input type="radio" name="view" value="canvas" /><span>Canvas <kbd>3</kbd></span></label>
+    </fieldset>
+  </header>
+  <pre id="boot-error"></pre>
+  <main>
+    <div class="stage-wrap">
+      <div class="compare-stage view-live capturing" id="compare-stage">
+        <div id="capture-target">
+          <nav class="mini-nav" aria-label="Nav">
+            <a href="#">Home</a>
+            <a href="#">Products</a>
+          </nav>
+        </div>
+        <div id="view-canvas" aria-hidden="true"></div>
+        <div id="svg-slot" aria-hidden="true"></div>
+        <div id="capture-overlay">Capturing…</div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const compareStage = document.getElementById('compare-stage');
+    const viewControls = document.getElementById('view-controls');
+    const canvasSlot = document.getElementById('view-canvas');
+    const svgSlot = document.getElementById('svg-slot');
+    const bootError = document.getElementById('boot-error');
+    const captureTarget = document.getElementById('capture-target');
+    const CSS_W = 500;
+    const CSS_H = 48;
+
+    const VIEW_MODES = ['live', 'svg', 'canvas'];
+    let viewMode = 'live';
+    let hasSvgPreview = false;
+    let hasCanvasPreview = false;
+    let revokeSvgUrl = null;
+
+    function setView(mode, { syncUrl = true } = {}) {
+      if (!VIEW_MODES.includes(mode)) mode = 'live';
+      if (mode === 'svg' && !hasSvgPreview) mode = hasCanvasPreview ? 'canvas' : 'live';
+      if (mode === 'canvas' && !hasCanvasPreview) mode = hasSvgPreview ? 'svg' : 'live';
+      if (compareStage.classList.contains('capturing')) mode = 'live';
+
+      viewMode = mode;
+      compareStage.classList.remove('view-live', 'view-svg', 'view-canvas');
+      compareStage.classList.add(`view-${viewMode}`);
+      canvasSlot.setAttribute('aria-hidden', viewMode === 'canvas' ? 'false' : 'true');
+      svgSlot.setAttribute('aria-hidden', viewMode === 'svg' ? 'false' : 'true');
+
+      for (const input of viewControls.querySelectorAll('input[name="view"]')) {
+        input.checked = input.value === viewMode;
+        input.disabled = input.value === 'svg'
+          ? !hasSvgPreview
+          : input.value === 'canvas'
+            ? !hasCanvasPreview
+            : false;
+      }
+
+      if (syncUrl) {
+        const u = new URL(location.href);
+        if (viewMode === 'live') u.searchParams.delete('view');
+        else u.searchParams.set('view', viewMode);
+        history.replaceState(null, '', u);
+      }
+    }
+
+    function releaseSvgUrl() {
+      if (revokeSvgUrl) {
+        revokeSvgUrl();
+        revokeSvgUrl = null;
+      }
+    }
+
+    function mountSvgPreview(svgUrl) {
+      releaseSvgUrl();
+      svgSlot.replaceChildren();
+      if (!svgUrl) {
+        hasSvgPreview = false;
+        return;
+      }
+      const img = document.createElement('img');
+      img.alt = 'Captured SVG';
+      img.src = svgUrl;
+      img.style.width = `${CSS_W}px`;
+      img.style.height = `${CSS_H}px`;
+      svgSlot.replaceChildren(img);
+      hasSvgPreview = true;
+    }
+
+    function mountCanvasPreview(sourceCanvas) {
+      canvasSlot.replaceChildren();
+      if (!(sourceCanvas instanceof HTMLCanvasElement)) {
+        hasCanvasPreview = false;
+        return;
+      }
+      const display = document.createElement('canvas');
+      display.width = sourceCanvas.width;
+      display.height = sourceCanvas.height;
+      display.getContext('2d').drawImage(sourceCanvas, 0, 0);
+      display.style.width = `${CSS_W}px`;
+      display.style.height = `${CSS_H}px`;
+      canvasSlot.replaceChildren(display);
+      hasCanvasPreview = true;
+    }
+
+    function finishCaptureUi() {
+      compareStage.classList.remove('capturing');
+      viewControls.disabled = !hasSvgPreview && !hasCanvasPreview;
+      const urlView = params.get('view');
+      setView(VIEW_MODES.includes(urlView) ? urlView : 'live');
+    }
+
+    viewControls.addEventListener('change', (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.name !== 'view') return;
+      setView(input.value);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      const map = { 1: 'live', 2: 'svg', 3: 'canvas' };
+      const mode = map[event.key];
+      if (!mode) return;
+      event.preventDefault();
+      setView(mode);
+    });
+
+    async function boot() {
+      try {
+        const { snapdom } = await import('/dist/snapdom.mjs');
+        const opts = { scale: 1, dpr: window.devicePixelRatio || 1 };
+
+        const [svgUrl, canvas] = await Promise.all([
+          snapdom.toRaw(captureTarget, opts),
+          snapdom.toCanvas(captureTarget, opts),
+        ]);
+
+        mountSvgPreview(svgUrl);
+        mountCanvasPreview(canvas);
+      } catch (err) {
+        bootError.textContent = String(err?.stack || err);
+      } finally {
+        finishCaptureUi();
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>
